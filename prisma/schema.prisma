@@ -1,0 +1,588 @@
+// KinderCare Platform - Database Schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== ENUMS ====================
+
+enum UserRole {
+  PARENT
+  DAYCARE_OWNER
+  DAYCARE_STAFF
+  ADMIN
+}
+
+enum DaycareStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum BookingType {
+  TOUR
+  ENROLLMENT
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum SubscriptionPlan {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+  TRIALING
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+// ==================== AUTH & USERS ====================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  firstName     String
+  lastName      String
+  phone         String?
+  avatarUrl     String?
+  role          UserRole  @default(PARENT)
+  isActive      Boolean   @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Auth relations
+  accounts Account[]
+  sessions Session[]
+
+  // Parent relations
+  children     Child[]
+  bookings     Booking[]
+  reviews      Review[]
+  sentMessages Message[] @relation("SentMessages")
+
+  // Daycare staff relations
+  daycareStaff DaycareStaff[]
+
+  // Notifications
+  notifications Notification[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==================== PARENT-SPECIFIC ====================
+
+model Child {
+  id           String    @id @default(cuid())
+  parentId     String
+  firstName    String
+  lastName     String
+  dateOfBirth  DateTime
+  gender       String?
+  allergies    String?
+  specialNeeds String?
+  notes        String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent      User         @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  bookings    Booking[]
+  enrollments Enrollment[]
+
+  @@index([parentId])
+}
+
+// ==================== DAYCARE ====================
+
+model Daycare {
+  id          String @id @default(cuid())
+  slug        String @unique
+  name        String
+  description String? @db.Text
+
+  // Contact
+  email   String
+  phone   String
+  website String?
+
+  // Address
+  address String
+  city    String
+  state   String
+  zipCode String
+  country String @default("US")
+
+  // Geo coordinates
+  latitude  Float
+  longitude Float
+
+  // Details
+  capacity      Int
+  minAge        Int // in months
+  maxAge        Int // in months
+  openingTime   String // "07:00"
+  closingTime   String // "18:00"
+  operatingDays String[] // ["Mon", "Tue", ...]
+
+  // Pricing
+  pricePerMonth   Decimal  @db.Decimal(10, 2)
+  pricePerWeek    Decimal? @db.Decimal(10, 2)
+  pricePerDay     Decimal? @db.Decimal(10, 2)
+  registrationFee Decimal? @db.Decimal(10, 2)
+
+  // Status
+  status     DaycareStatus @default(PENDING)
+  isVerified Boolean       @default(false)
+  isFeatured Boolean       @default(false)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+
+  // Stripe
+  stripeAccountId String?  @unique
+  stripeOnboarded Boolean  @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  staff        DaycareStaff[]
+  photos       DaycarePhoto[]
+  programs     Program[]
+  amenities    DaycareAmenity[]
+  schedule     DaycareSchedule[]
+  bookings     Booking[]
+  reviews      Review[]
+  messages     MessageThread[]
+  subscription Subscription?
+  payments     Payment[]
+  enrollments  Enrollment[]
+  waitlist     WaitlistEntry[]
+
+  @@index([slug])
+  @@index([city, state])
+  @@index([status])
+  @@index([latitude, longitude])
+}
+
+model DaycareStaff {
+  id        String  @id @default(cuid())
+  daycareId String
+  userId    String
+  role      String // "owner", "manager", "staff"
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([daycareId, userId])
+  @@index([daycareId])
+  @@index([userId])
+}
+
+model DaycarePhoto {
+  id        String  @id @default(cuid())
+  daycareId String
+  url       String
+  caption   String?
+  order     Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+
+  @@index([daycareId])
+}
+
+model Program {
+  id          String  @id @default(cuid())
+  daycareId   String
+  name        String
+  description String? @db.Text
+  ageMin      Int // months
+  ageMax      Int // months
+  price       Decimal @db.Decimal(10, 2)
+  schedule    String? // "Full-time", "Part-time", "Before/After school"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+
+  @@index([daycareId])
+}
+
+model Amenity {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  icon     String?
+  category String?
+
+  daycares DaycareAmenity[]
+}
+
+model DaycareAmenity {
+  daycareId String
+  amenityId String
+
+  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+  amenity Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+
+  @@id([daycareId, amenityId])
+}
+
+model DaycareSchedule {
+  id        String  @id @default(cuid())
+  daycareId String
+  dayOfWeek Int // 0-6 (Sunday-Saturday)
+  openTime  String
+  closeTime String
+  isClosed  Boolean @default(false)
+
+  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+
+  @@unique([daycareId, dayOfWeek])
+}
+
+// ==================== BOOKINGS ====================
+
+model Booking {
+  id String @id @default(cuid())
+
+  parentId  String
+  daycareId String
+  childId   String?
+
+  type   BookingType
+  status BookingStatus @default(PENDING)
+
+  // For tours
+  scheduledAt  DateTime?
+  duration     Int? // minutes
+  notes        String?   @db.Text
+
+  // Confirmation
+  confirmedAt  DateTime?
+  cancelledAt  DateTime?
+  cancelReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent  User     @relation(fields: [parentId], references: [id])
+  daycare Daycare  @relation(fields: [daycareId], references: [id])
+  child   Child?   @relation(fields: [childId], references: [id])
+
+  @@index([parentId])
+  @@index([daycareId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+model Enrollment {
+  id        String @id @default(cuid())
+  daycareId String
+  childId   String
+
+  startDate   DateTime
+  endDate     DateTime?
+  status      String // "active", "pending", "completed", "cancelled"
+
+  schedule    String // "full-time", "part-time", etc.
+  monthlyRate Decimal @db.Decimal(10, 2)
+
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  daycare  Daycare   @relation(fields: [daycareId], references: [id])
+  child    Child     @relation(fields: [childId], references: [id])
+  payments Payment[]
+
+  @@index([daycareId])
+  @@index([childId])
+}
+
+model WaitlistEntry {
+  id           String   @id @default(cuid())
+  daycareId    String
+  parentEmail  String
+  parentName   String
+  parentPhone  String?
+  childAge     Int // months
+  desiredStart DateTime
+  notes        String?
+  position     Int
+
+  createdAt  DateTime  @default(now())
+  notifiedAt DateTime?
+
+  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+
+  @@index([daycareId])
+}
+
+// ==================== REVIEWS ====================
+
+model Review {
+  id        String @id @default(cuid())
+  daycareId String
+  userId    String
+
+  rating  Int // 1-5
+  title   String?
+  content String? @db.Text
+
+  // Detailed ratings
+  safetyRating      Int? // 1-5
+  cleanlinessRating Int?
+  staffRating       Int?
+  programRating     Int?
+  valueRating       Int?
+
+  isVerified Boolean @default(false)
+  isApproved Boolean @default(true)
+
+  // Response from daycare
+  response    String?   @db.Text
+  respondedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([daycareId, userId])
+  @@index([daycareId])
+  @@index([rating])
+}
+
+// ==================== MESSAGING ====================
+
+model MessageThread {
+  id        String  @id @default(cuid())
+  daycareId String
+  parentId  String
+  subject   String?
+
+  lastMessageAt DateTime?
+  isArchived    Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  daycare  Daycare   @relation(fields: [daycareId], references: [id])
+  messages Message[]
+
+  @@unique([daycareId, parentId])
+  @@index([daycareId])
+  @@index([parentId])
+}
+
+model Message {
+  id       String        @id @default(cuid())
+  threadId String
+  senderId String
+  content  String        @db.Text
+  status   MessageStatus @default(SENT)
+
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender User          @relation("SentMessages", fields: [senderId], references: [id])
+
+  @@index([threadId])
+  @@index([senderId])
+}
+
+// ==================== PAYMENTS & SUBSCRIPTIONS ====================
+
+model Subscription {
+  id        String @id @default(cuid())
+  daycareId String @unique
+
+  plan   SubscriptionPlan   @default(FREE)
+  status SubscriptionStatus @default(TRIALING)
+
+  // Stripe
+  stripeSubscriptionId String? @unique
+  stripePriceId        String?
+  stripeCustomerId     String?
+
+  // Dates
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  trialEndsAt        DateTime?
+  canceledAt         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+model Payment {
+  id           String  @id @default(cuid())
+  daycareId    String
+  enrollmentId String?
+
+  amount   Decimal       @db.Decimal(10, 2)
+  currency String        @default("usd")
+  status   PaymentStatus @default(PENDING)
+
+  // Type
+  type        String // "tuition", "registration", "subscription"
+  description String?
+
+  // Stripe
+  stripePaymentIntentId String? @unique
+  stripeChargeId        String?
+
+  // Commission (for platform)
+  platformFee Decimal? @db.Decimal(10, 2)
+  netAmount   Decimal? @db.Decimal(10, 2)
+
+  // Dates
+  paidAt     DateTime?
+  refundedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  daycare    Daycare     @relation(fields: [daycareId], references: [id])
+  enrollment Enrollment? @relation(fields: [enrollmentId], references: [id])
+
+  @@index([daycareId])
+  @@index([status])
+  @@index([type])
+}
+
+// ==================== NOTIFICATIONS ====================
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+
+  type  String // "booking_confirmed", "message_received", etc.
+  title String
+  body  String
+  data  Json?
+
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([readAt])
+}
+
+// ==================== ADMIN ====================
+
+model AuditLog {
+  id         String  @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String
+  oldData    Json?
+  newData    Json?
+  ipAddress  String?
+  userAgent  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model PlatformSettings {
+  id          String @id @default(cuid())
+  key         String @unique
+  value       Json
+  description String?
+
+  updatedAt DateTime @updatedAt
+}
