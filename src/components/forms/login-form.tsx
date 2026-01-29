@@ -51,8 +51,10 @@ export function LoginForm() {
         return;
       }
 
-      router.push("/dashboard");
       router.refresh();
+      // Small delay to ensure session is established
+      await new Promise(resolve => setTimeout(resolve, 100));
+      router.push("/parent");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

@@ -127,7 +127,7 @@ export async function loginWithCredentials(
 }
 
 export async function loginWithGoogle() {
-  await signIn("google", { redirectTo: "/dashboard" });
+  await signIn("google", { redirectTo: "/parent" });
 }
 
 export async function logout() {
