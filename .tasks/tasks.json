@@ -125,7 +125,7 @@
       "id": 4,
       "title": "Build Notifications System",
       "description": "Implement email and in-app notifications for bookings, messages, and updates",
-      "status": "pending",
+      "status": "done",
       "priority": "high",
       "complexity": 3,
       "phase": "1.4",
@@ -133,12 +133,12 @@
       "blockedBy": [],
       "blocks": [],
       "subtasks": [
-        { "id": "4.1", "title": "Set up email service (Resend/SendGrid)", "done": false },
-        { "id": "4.2", "title": "Create email templates", "done": false },
-        { "id": "4.3", "title": "Implement booking confirmation emails", "done": false },
-        { "id": "4.4", "title": "Add reminder emails (24h before tour)", "done": false },
-        { "id": "4.5", "title": "Build in-app notification system", "done": false },
-        { "id": "4.6", "title": "Create notification preferences in settings", "done": false }
+        { "id": "4.1", "title": "Set up email service (Resend/SendGrid)", "done": true },
+        { "id": "4.2", "title": "Create email templates", "done": true },
+        { "id": "4.3", "title": "Implement booking confirmation emails", "done": true },
+        { "id": "4.4", "title": "Add reminder emails (24h before tour)", "done": true },
+        { "id": "4.5", "title": "Build in-app notification system", "done": true },
+        { "id": "4.6", "title": "Create notification preferences in settings", "done": true }
       ],
       "acceptanceCriteria": [
         "Users receive email on booking confirmation",
@@ -153,9 +153,12 @@
         "src/components/notifications/*",
         "src/app/(parent)/dashboard/settings/*"
       ],
-      "notes": [],
+      "notes": [
+        "2026-01-29: Completed - Resend email service, 5 email templates, notification bell in sidebars, preferences in settings, cron for reminders"
+      ],
+      "completedAt": "2026-01-29T20:00:00Z",
       "createdAt": "2026-01-29T14:00:00Z",
-      "updatedAt": "2026-01-29T14:00:00Z"
+      "updatedAt": "2026-01-29T20:00:00Z"
     },
     {
       "id": 5,

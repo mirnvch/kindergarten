@@ -121,7 +121,20 @@ src/components/
   - 3.5: Admin moderation (уже было в /admin/reviews)
 - Создан `src/server/actions/reviews.ts`
 - Создано `src/components/reviews/` (review-form, reviews-section)
-- **Следующее:** Task #4 — Notifications
+
+- **Task #4: Notifications System — COMPLETED**
+- Завершены все 6 подзадач:
+  - 4.1: Resend email service setup (lazy initialization для build)
+  - 4.2: Email templates (booking confirmation, reminder, message, welcome, review response)
+  - 4.3: Booking confirmation emails
+  - 4.4: Reminder emails (cron job для 24h до тура)
+  - 4.5: In-app notifications (NotificationBell компонент с dropdown)
+  - 4.6: Notification preferences (switch toggles в settings)
+- Создан `src/lib/email.ts` с HTML email templates
+- Создан `src/server/actions/notifications.ts`
+- Создан `src/components/notifications/` (notification-bell, notification-preferences)
+- Добавлен `vercel.json` с cron для `/api/cron/reminders`
+- **Следующее:** Task #5 — Stripe Integration
 
 ### 2026-01-29 (Session 2)
 - **Task #1: Admin Panel — COMPLETED**
