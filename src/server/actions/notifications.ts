@@ -123,6 +123,7 @@ type NotificationType =
   | "review_received"
   | "review_response"
   | "enrollment_status"
+  | "waitlist_spot_available"
   | "welcome";
 
 interface CreateNotificationInput {

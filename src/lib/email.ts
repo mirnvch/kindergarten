@@ -256,6 +256,50 @@ export function welcomeEmail({
   `.trim();
 }
 
+export function waitlistSpotAvailableEmail(
+  parentName: string,
+  daycareName: string,
+  daycareSlug: string
+) {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spot Available!</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); padding: 30px; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">A Spot is Available! 🎉</h1>
+  </div>
+
+  <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+    <p>Hi ${parentName},</p>
+
+    <p>Great news! A spot has opened up at <strong>${daycareName}</strong>!</p>
+
+    <p>You were on our waitlist, and we wanted to let you know right away so you can secure this spot for your child.</p>
+
+    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #38ef7d;">
+      <p style="margin: 5px 0;"><strong>Next Steps:</strong></p>
+      <ol style="margin: 10px 0; padding-left: 20px;">
+        <li>Visit the daycare page</li>
+        <li>Contact them to confirm your interest</li>
+        <li>Complete the enrollment process</li>
+      </ol>
+      <p style="margin: 5px 0; color: #666; font-size: 14px;"><em>Note: Spots fill up quickly, so please respond as soon as possible!</em></p>
+    </div>
+
+    <a href="${process.env.NEXT_PUBLIC_APP_URL}/daycare/${daycareSlug}" style="display: inline-block; background: #38ef7d; color: #333; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px; font-weight: 600;">View Daycare</a>
+
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">Best regards,<br>The KinderCare Team</p>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
 export function reviewResponseEmail({
   parentName,
   daycareName,

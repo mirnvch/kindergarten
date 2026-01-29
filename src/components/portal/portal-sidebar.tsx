@@ -16,6 +16,7 @@ import {
   Star,
   Receipt,
   Wallet,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ const navigation = [
   { name: "Bookings", href: "/portal/bookings", icon: Calendar },
   { name: "Messages", href: "/portal/messages", icon: MessageSquare },
   { name: "Enrollments", href: "/portal/enrollments", icon: Users },
+  { name: "Waitlist", href: "/portal/waitlist", icon: ClipboardList },
   { name: "Reviews", href: "/portal/reviews", icon: Star },
   { name: "Analytics", href: "/portal/analytics", icon: BarChart3 },
   { name: "Billing", href: "/portal/billing", icon: Receipt },

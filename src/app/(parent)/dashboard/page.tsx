@@ -11,25 +11,28 @@ import {
   Heart,
   Plus,
   ArrowRight,
+  ClipboardList,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import type { DashboardBooking } from "@/types";
+import { WaitlistEntriesList } from "@/components/waitlist/waitlist-entries-list";
 
 export const metadata: Metadata = {
   title: "Dashboard | KinderCare",
   description: "Manage your children and bookings",
 };
 
-async function getParentDashboardData(userId: string) {
+async function getParentDashboardData(userId: string, userEmail: string) {
   const [
     childrenCount,
     upcomingTours,
     pendingEnrollments,
     unreadMessages,
     upcomingBookings,
+    waitlistEntries,
   ] = await Promise.all([
     db.child.count({
       where: { parentId: userId },
@@ -68,6 +71,18 @@ async function getParentDashboardData(userId: string) {
       orderBy: { scheduledAt: "asc" },
       take: 5,
     }),
+    db.waitlistEntry.findMany({
+      where: {
+        parentEmail: userEmail,
+        notifiedAt: null,
+      },
+      include: {
+        daycare: {
+          select: { id: true, name: true, slug: true, city: true, state: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
 
   return {
@@ -76,8 +91,10 @@ async function getParentDashboardData(userId: string) {
       upcomingTours,
       pendingEnrollments,
       unreadMessages,
+      waitlistCount: waitlistEntries.length,
     },
     upcomingBookings,
+    waitlistEntries,
   };
 }
 
@@ -85,8 +102,8 @@ export default async function ParentDashboardPage() {
   const session = await auth();
   if (!session?.user) return null;
 
-  const data = await getParentDashboardData(session.user.id);
-  const { stats, upcomingBookings } = data;
+  const data = await getParentDashboardData(session.user.id, session.user.email || "");
+  const { stats, upcomingBookings, waitlistEntries } = data;
 
   return (
     <div className="space-y-6">
@@ -99,7 +116,7 @@ export default async function ParentDashboardPage() {
       </div>
 
       {/* Stats grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">My Children</CardTitle>
@@ -145,6 +162,17 @@ export default async function ParentDashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.unreadMessages}</div>
             <p className="text-xs text-muted-foreground">From daycares</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Waitlist</CardTitle>
+            <ClipboardList className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.waitlistCount}</div>
+            <p className="text-xs text-muted-foreground">Daycares waiting</p>
           </CardContent>
         </Card>
       </div>
@@ -248,6 +276,23 @@ export default async function ParentDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Waitlist section */}
+      {waitlistEntries.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <ClipboardList className="h-5 w-5" />
+                My Waitlist
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <WaitlistEntriesList entries={waitlistEntries} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 
 import { getDaycareBySlug } from "@/server/actions/daycare";
+import { isDaycareFull } from "@/server/actions/waitlist";
+import { auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +33,7 @@ import type {
 } from "@/types";
 import { ReviewsSection } from "@/components/reviews/reviews-section";
 import { canUserReview } from "@/server/actions/reviews";
+import { WaitlistForm } from "@/components/waitlist/waitlist-form";
 
 interface DaycarePageProps {
   params: Promise<{ slug: string }>;
@@ -63,7 +66,12 @@ export default async function DaycarePage({ params }: DaycarePageProps) {
     notFound();
   }
 
-  const reviewStatus = await canUserReview(daycare.id);
+  const [reviewStatus, capacityStatus, session] = await Promise.all([
+    canUserReview(daycare.id),
+    isDaycareFull(daycare.id),
+    auth(),
+  ]);
+
   const primaryPhoto = daycare.photos.find((p: DaycarePhoto) => p.isPrimary) || daycare.photos[0];
 
   return (
@@ -282,11 +290,23 @@ export default async function DaycarePage({ params }: DaycarePageProps) {
                     Schedule a Tour
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full" size="lg" asChild>
-                  <Link href={`/daycare/${daycare.slug}/enroll`}>
-                    Apply for Enrollment
-                  </Link>
-                </Button>
+                {capacityStatus.isFull ? (
+                  <WaitlistForm
+                    daycareId={daycare.id}
+                    daycareName={daycare.name}
+                    defaultEmail={session?.user?.email || ""}
+                    defaultName={session?.user?.firstName ? `${session.user.firstName} ${session.user.lastName}` : ""}
+                    spotsAvailable={capacityStatus.spotsAvailable}
+                    capacity={capacityStatus.capacity}
+                    enrolled={capacityStatus.enrolled}
+                  />
+                ) : (
+                  <Button variant="outline" className="w-full" size="lg" asChild>
+                    <Link href={`/daycare/${daycare.slug}/enroll`}>
+                      Apply for Enrollment
+                    </Link>
+                  </Button>
+                )}
               </div>
 
               <Separator className="my-6" />
@@ -298,7 +318,14 @@ export default async function DaycarePage({ params }: DaycarePageProps) {
                   <div>
                     <div className="font-medium">Capacity</div>
                     <div className="text-muted-foreground">
-                      {daycare.capacity} children
+                      {capacityStatus.enrolled}/{capacityStatus.capacity} children
+                      {capacityStatus.isFull ? (
+                        <Badge variant="destructive" className="ml-2 text-xs">Full</Badge>
+                      ) : (
+                        <Badge variant="secondary" className="ml-2 text-xs">
+                          {capacityStatus.spotsAvailable} spots left
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>
