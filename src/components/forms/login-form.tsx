@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { loginWithCredentials, loginWithGoogle } from "@/server/actions/auth";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -44,17 +44,19 @@ export function LoginForm() {
     setError(null);
 
     try {
-      const result = await loginWithCredentials(data);
+      const result = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
 
-      if (!result.success) {
-        setError(result.error || "Login failed");
+      if (result?.error) {
+        setError("Invalid email or password");
         return;
       }
 
-      router.refresh();
-      // Small delay to ensure session is established
-      await new Promise(resolve => setTimeout(resolve, 100));
       router.push("/parent");
+      router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -65,7 +67,7 @@ export function LoginForm() {
   async function handleGoogleLogin() {
     setIsLoading(true);
     try {
-      await loginWithGoogle();
+      await signIn("google", { callbackUrl: "/parent" });
     } catch {
       setError("Failed to sign in with Google");
       setIsLoading(false);
