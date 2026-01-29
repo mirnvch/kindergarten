@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getParentBookings } from "@/server/actions/bookings";
 import { BookingCard } from "@/components/parent/booking-card";
+import type { BookingWithRelations } from "@/types";
 
 export const metadata: Metadata = {
   title: "My Bookings | KinderCare",
@@ -42,7 +43,7 @@ export default async function BookingsPage() {
           {upcomingBookings.length === 0 ? (
             <EmptyState type="upcoming" />
           ) : (
-            upcomingBookings.map((booking) => (
+            upcomingBookings.map((booking: BookingWithRelations) => (
               <BookingCard key={booking.id} booking={booking} />
             ))
           )}
@@ -52,7 +53,7 @@ export default async function BookingsPage() {
           {pastBookings.length === 0 ? (
             <EmptyState type="past" />
           ) : (
-            pastBookings.map((booking) => (
+            pastBookings.map((booking: BookingWithRelations) => (
               <BookingCard
                 key={booking.id}
                 booking={booking}

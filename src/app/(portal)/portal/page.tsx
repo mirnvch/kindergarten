@@ -15,6 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import type { PortalDashboardBooking } from "@/types";
 
 export const metadata: Metadata = {
   title: "Dashboard | KinderCare Portal",
@@ -220,7 +221,7 @@ export default async function PortalDashboardPage() {
               </p>
             ) : (
               <div className="space-y-4">
-                {upcomingBookings.map((booking) => (
+                {upcomingBookings.map((booking: PortalDashboardBooking) => (
                   <div
                     key={booking.id}
                     className="flex items-center justify-between"

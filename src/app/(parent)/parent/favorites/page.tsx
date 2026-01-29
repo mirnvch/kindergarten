@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getFavorites } from "@/server/actions/favorites";
 import { formatCurrency, formatAgeRange } from "@/lib/utils";
 import { FavoriteButton } from "@/components/parent/favorite-button";
+import type { FavoriteItem } from "@/types";
 
 export const metadata: Metadata = {
   title: "Favorites | KinderCare",
@@ -43,7 +44,7 @@ export default async function FavoritesPage() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {favorites.map((fav) => (
+          {favorites.map((fav: FavoriteItem) => (
             <FavoriteCard key={fav.id} favorite={fav} />
           ))}
         </div>

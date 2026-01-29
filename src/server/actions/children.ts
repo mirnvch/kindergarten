@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import type { Child, ChildWithRelations } from "@/types";
 
 const childSchema = z.object({
   firstName: z.string().min(1, "First name is required").max(50),
@@ -44,7 +45,7 @@ export async function createChild(data: ChildFormData) {
   redirect("/parent/children");
 }
 
-export async function getChildren() {
+export async function getChildren(): Promise<Child[]> {
   const session = await auth();
   if (!session?.user || session.user.role !== "PARENT") {
     throw new Error("Unauthorized");
@@ -58,7 +59,7 @@ export async function getChildren() {
   return children;
 }
 
-export async function getChildById(id: string) {
+export async function getChildById(id: string): Promise<ChildWithRelations | null> {
   const session = await auth();
   if (!session?.user || session.user.role !== "PARENT") {
     throw new Error("Unauthorized");

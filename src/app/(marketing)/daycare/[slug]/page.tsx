@@ -23,6 +23,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { formatTime, formatAgeRange, getInitials } from "@/lib/utils";
+import type {
+  DaycarePhoto,
+  DaycareProgram,
+  DaycareReview,
+  Amenity,
+} from "@/types";
 
 interface DaycarePageProps {
   params: Promise<{ slug: string }>;
@@ -55,7 +61,7 @@ export default async function DaycarePage({ params }: DaycarePageProps) {
     notFound();
   }
 
-  const primaryPhoto = daycare.photos.find((p) => p.isPrimary) || daycare.photos[0];
+  const primaryPhoto = daycare.photos.find((p: DaycarePhoto) => p.isPrimary) || daycare.photos[0];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -91,7 +97,7 @@ export default async function DaycarePage({ params }: DaycarePageProps) {
           {/* Thumbnail gallery */}
           {daycare.photos.length > 1 && (
             <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
-              {daycare.photos.slice(0, 6).map((photo, index) => (
+              {daycare.photos.slice(0, 6).map((photo: DaycarePhoto, index: number) => (
                 <div
                   key={photo.id}
                   className="relative w-24 h-24 rounded-md overflow-hidden flex-shrink-0"
@@ -139,7 +145,7 @@ export default async function DaycarePage({ params }: DaycarePageProps) {
                   <div>
                     <h3 className="font-semibold mb-3">Amenities</h3>
                     <div className="flex flex-wrap gap-2">
-                      {daycare.amenities.map((amenity) => (
+                      {daycare.amenities.map((amenity: Amenity) => (
                         <Badge key={amenity.id} variant="secondary">
                           {amenity.icon && <span className="mr-1">{amenity.icon}</span>}
                           {amenity.name}
@@ -175,7 +181,7 @@ export default async function DaycarePage({ params }: DaycarePageProps) {
                 </p>
               ) : (
                 <div className="grid gap-4">
-                  {daycare.programs.map((program) => (
+                  {daycare.programs.map((program: DaycareProgram) => (
                     <Card key={program.id}>
                       <CardHeader className="pb-2">
                         <div className="flex items-start justify-between">
@@ -209,7 +215,7 @@ export default async function DaycarePage({ params }: DaycarePageProps) {
                 </p>
               ) : (
                 <div className="space-y-6">
-                  {daycare.reviews.map((review) => (
+                  {daycare.reviews.map((review: DaycareReview) => (
                     <div key={review.id}>
                       <div className="flex items-start gap-4">
                         <Avatar>
@@ -305,11 +311,15 @@ export default async function DaycarePage({ params }: DaycarePageProps) {
 
               {/* CTA Buttons */}
               <div className="space-y-3 mb-6">
-                <Button className="w-full" size="lg">
-                  Schedule a Tour
+                <Button className="w-full" size="lg" asChild>
+                  <Link href={`/daycare/${daycare.slug}/book`}>
+                    Schedule a Tour
+                  </Link>
                 </Button>
-                <Button variant="outline" className="w-full" size="lg">
-                  Send Message
+                <Button variant="outline" className="w-full" size="lg" asChild>
+                  <Link href={`/daycare/${daycare.slug}/enroll`}>
+                    Apply for Enrollment
+                  </Link>
                 </Button>
               </div>
 

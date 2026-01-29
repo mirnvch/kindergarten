@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import type { FavoriteItem } from "@/types";
 
 export async function toggleFavorite(daycareId: string) {
   const session = await auth();
@@ -40,7 +41,7 @@ export async function toggleFavorite(daycareId: string) {
   }
 }
 
-export async function getFavorites() {
+export async function getFavorites(): Promise<FavoriteItem[]> {
   const session = await auth();
   if (!session?.user || session.user.role !== "PARENT") {
     throw new Error("Unauthorized");

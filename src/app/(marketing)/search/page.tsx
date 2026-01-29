@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { searchDaycares, type SearchFilters } from "@/server/actions/daycare";
+import { searchDaycares, type SearchFilters, type DaycareSearchResult } from "@/server/actions/daycare";
 import { SearchFilters as SearchFiltersComponent } from "@/components/search/search-filters";
 import { DaycareCard } from "@/components/daycare/daycare-card";
 import { Button } from "@/components/ui/button";
@@ -69,7 +69,7 @@ async function SearchResults({ filters }: { filters: SearchFilters }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {daycares.map((daycare) => (
+        {daycares.map((daycare: DaycareSearchResult) => (
           <DaycareCard key={daycare.id} daycare={daycare} />
         ))}
       </div>

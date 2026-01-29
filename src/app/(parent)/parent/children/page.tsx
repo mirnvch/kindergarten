@@ -4,6 +4,7 @@ import { Plus, Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getChildren } from "@/server/actions/children";
 import { ChildCard } from "@/components/parent/child-card";
+import type { Child } from "@/types";
 
 export const metadata: Metadata = {
   title: "My Children | KinderCare",
@@ -49,7 +50,7 @@ export default async function ChildrenPage() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {children.map((child) => (
+          {children.map((child: Child) => (
             <ChildCard key={child.id} child={child} />
           ))}
         </div>

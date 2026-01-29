@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
+import type { DashboardBooking } from "@/types";
 
 export const metadata: Metadata = {
   title: "Dashboard | KinderCare",
@@ -176,7 +177,7 @@ export default async function ParentDashboardPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {upcomingBookings.map((booking) => (
+                {upcomingBookings.map((booking: DashboardBooking) => (
                   <div
                     key={booking.id}
                     className="flex items-center justify-between"
