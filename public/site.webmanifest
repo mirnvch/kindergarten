@@ -1,0 +1,16 @@
+{
+  "name": "KinderCare",
+  "short_name": "KinderCare",
+  "description": "Find trusted daycare for your child",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
