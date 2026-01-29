@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Star, BadgeCheck } from "lucide-react";
+import { MapPin, Star, BadgeCheck, Crown, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import type { DaycareSearchResult } from "@/server/actions/daycare";
 
 interface DaycareCardProps {
@@ -18,9 +19,15 @@ function formatAge(months: number): string {
 }
 
 export function DaycareCard({ daycare }: DaycareCardProps) {
+  const isPremium = daycare.subscriptionPlan !== "FREE";
+  const isTopTier = daycare.subscriptionPlan === "PROFESSIONAL" || daycare.subscriptionPlan === "ENTERPRISE";
+
   return (
     <Link href={`/daycare/${daycare.slug}`}>
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+      <Card className={cn(
+        "overflow-hidden hover:shadow-lg transition-shadow h-full",
+        isTopTier && "ring-2 ring-primary/20"
+      )}>
         <div className="relative aspect-[4/3]">
           {daycare.primaryPhoto ? (
             <Image
@@ -34,11 +41,26 @@ export function DaycareCard({ daycare }: DaycareCardProps) {
               <span className="text-muted-foreground text-sm">No image</span>
             </div>
           )}
-          {daycare.isFeatured && (
-            <Badge className="absolute top-2 left-2 bg-yellow-500 hover:bg-yellow-600">
-              Featured
-            </Badge>
-          )}
+          <div className="absolute top-2 left-2 flex gap-1.5">
+            {daycare.isFeatured && (
+              <Badge className="bg-yellow-500 hover:bg-yellow-600">
+                <Star className="h-3 w-3 mr-1 fill-current" />
+                Featured
+              </Badge>
+            )}
+            {daycare.subscriptionPlan === "ENTERPRISE" && (
+              <Badge className="bg-purple-600 hover:bg-purple-700">
+                <Crown className="h-3 w-3 mr-1" />
+                Enterprise
+              </Badge>
+            )}
+            {daycare.subscriptionPlan === "PROFESSIONAL" && !daycare.isFeatured && (
+              <Badge className="bg-blue-600 hover:bg-blue-700">
+                <Sparkles className="h-3 w-3 mr-1" />
+                Pro
+              </Badge>
+            )}
+          </div>
         </div>
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-2">

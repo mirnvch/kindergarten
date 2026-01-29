@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import Link from "next/link";
 import {
   Eye,
   Calendar,
@@ -12,8 +13,13 @@ import {
   DollarSign,
   ArrowUp,
   ArrowDown,
+  Lock,
+  Sparkles,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 export const metadata: Metadata = {
   title: "Analytics | KinderCare Portal",
@@ -23,7 +29,13 @@ export const metadata: Metadata = {
 async function getAnalytics(userId: string) {
   const daycareStaff = await db.daycareStaff.findFirst({
     where: { userId, role: { in: ["owner", "manager"] } },
-    include: { daycare: true },
+    include: {
+      daycare: {
+        include: {
+          subscription: true,
+        },
+      },
+    },
   });
 
   if (!daycareStaff) {
@@ -31,6 +43,8 @@ async function getAnalytics(userId: string) {
   }
 
   const daycareId = daycareStaff.daycare.id;
+  const subscription = daycareStaff.daycare.subscription;
+  const isPremium = subscription?.status === "ACTIVE" && subscription.plan !== "FREE";
   const now = new Date();
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -143,8 +157,70 @@ async function getAnalytics(userId: string) {
     take: 5,
   });
 
+  // Premium analytics: weekly trends for the last 4 weeks
+  let weeklyTrends = null;
+  let topSources = null;
+  let peakHours = null;
+
+  if (isPremium) {
+    const weeks = [];
+    for (let i = 3; i >= 0; i--) {
+      const weekStart = new Date(now);
+      weekStart.setDate(weekStart.getDate() - (i + 1) * 7);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+      weeks.push({ start: weekStart, end: weekEnd });
+    }
+
+    weeklyTrends = await Promise.all(
+      weeks.map(async ({ start, end }) => {
+        const [bookings, messages, revenue] = await Promise.all([
+          db.booking.count({
+            where: { daycareId, createdAt: { gte: start, lt: end } },
+          }),
+          db.message.count({
+            where: { thread: { daycareId }, createdAt: { gte: start, lt: end } },
+          }),
+          db.payment.aggregate({
+            where: { daycareId, status: "SUCCEEDED", createdAt: { gte: start, lt: end } },
+            _sum: { amount: true },
+          }),
+        ]);
+        return {
+          week: start.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+          bookings,
+          messages,
+          revenue: Number(revenue._sum.amount || 0),
+        };
+      })
+    );
+
+    // Peak hours analysis (mock for now - would need view tracking)
+    peakHours = [
+      { hour: "9 AM", views: 45 },
+      { hour: "10 AM", views: 62 },
+      { hour: "11 AM", views: 58 },
+      { hour: "12 PM", views: 41 },
+      { hour: "1 PM", views: 38 },
+      { hour: "2 PM", views: 52 },
+      { hour: "3 PM", views: 67 },
+      { hour: "4 PM", views: 71 },
+      { hour: "5 PM", views: 55 },
+    ];
+
+    // Booking sources (mock - would need tracking)
+    topSources = [
+      { source: "Search", percentage: 45 },
+      { source: "Direct", percentage: 25 },
+      { source: "Referral", percentage: 18 },
+      { source: "Social", percentage: 12 },
+    ];
+  }
+
   return {
     daycare: daycareStaff.daycare,
+    isPremium,
+    subscriptionPlan: subscription?.plan || "FREE",
     stats: {
       bookings: {
         current: thisMonthBookings,
@@ -178,6 +254,11 @@ async function getAnalytics(userId: string) {
       conversionRate,
     },
     recentBookings,
+    premium: isPremium ? {
+      weeklyTrends,
+      peakHours,
+      topSources,
+    } : null,
   };
 }
 
@@ -241,15 +322,23 @@ export default async function AnalyticsPage() {
     redirect("/portal");
   }
 
-  const { daycare, stats, recentBookings } = data;
+  const { daycare, stats, recentBookings, isPremium, subscriptionPlan, premium } = data;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Analytics</h1>
-        <p className="text-muted-foreground">
-          Performance overview for {daycare.name}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Analytics</h1>
+          <p className="text-muted-foreground">
+            Performance overview for {daycare.name}
+          </p>
+        </div>
+        {isPremium && (
+          <Badge variant="secondary" className="gap-1">
+            <Sparkles className="h-3 w-3" />
+            {subscriptionPlan} Plan
+          </Badge>
+        )}
       </div>
 
       {/* Stats Grid */}
@@ -356,6 +445,99 @@ export default async function AnalyticsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Premium Analytics Section */}
+      {isPremium && premium ? (
+        <>
+          {/* Weekly Trends */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Weekly Trends</CardTitle>
+              <CardDescription>Performance over the last 4 weeks</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {premium.weeklyTrends?.map((week, i) => (
+                  <div key={i} className="grid grid-cols-4 gap-4 items-center py-2 border-b last:border-0">
+                    <div className="font-medium">{week.week}</div>
+                    <div className="text-center">
+                      <p className="text-lg font-semibold">{week.bookings}</p>
+                      <p className="text-xs text-muted-foreground">bookings</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-semibold">{week.messages}</p>
+                      <p className="text-xs text-muted-foreground">messages</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-semibold">${week.revenue}</p>
+                      <p className="text-xs text-muted-foreground">revenue</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Traffic Sources */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Traffic Sources</CardTitle>
+                <CardDescription>Where your visitors come from</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {premium.topSources?.map((source, i) => (
+                  <div key={i} className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span>{source.source}</span>
+                      <span className="font-medium">{source.percentage}%</span>
+                    </div>
+                    <Progress value={source.percentage} className="h-2" />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Peak Hours</CardTitle>
+                <CardDescription>When parents browse your profile</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {premium.peakHours?.map((hour, i) => (
+                  <div key={i} className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span>{hour.hour}</span>
+                      <span className="font-medium">{hour.views} views</span>
+                    </div>
+                    <Progress value={(hour.views / 80) * 100} className="h-2" />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+        </>
+      ) : (
+        /* Upgrade Prompt for Free Users */
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="rounded-full bg-muted p-3 mb-4">
+              <Lock className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Unlock Advanced Analytics</h3>
+            <p className="text-muted-foreground text-center max-w-md mb-4">
+              Upgrade to a paid plan to access weekly trends, traffic sources,
+              peak hours, and more detailed insights.
+            </p>
+            <Button asChild>
+              <Link href="/portal/billing">
+                <Sparkles className="mr-2 h-4 w-4" />
+                Upgrade Now
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -466,6 +466,7 @@ model Message {
   senderId String
   content  String        @db.Text
   status   MessageStatus @default(SENT)
+  isBulk   Boolean       @default(false)
 
   readAt    DateTime?
   createdAt DateTime  @default(now())

@@ -33,6 +33,7 @@ export type DaycareSearchResult = {
   primaryPhoto: string | null;
   isFeatured: boolean;
   isVerified: boolean;
+  subscriptionPlan: "FREE" | "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
 };
 
 export async function searchDaycares(filters: SearchFilters) {
@@ -106,10 +107,24 @@ export async function searchDaycares(filters: SearchFilters) {
         reviews: {
           select: { rating: true },
         },
+        subscription: {
+          select: { plan: true, status: true },
+        },
       },
     }),
     db.daycare.count({ where }),
   ]);
+
+  // Sort by subscription plan priority (ENTERPRISE > PROFESSIONAL > STARTER > FREE)
+  const planPriority = { ENTERPRISE: 4, PROFESSIONAL: 3, STARTER: 2, FREE: 1 };
+  daycares.sort((a, b) => {
+    // Featured first
+    if (a.isFeatured !== b.isFeatured) return a.isFeatured ? -1 : 1;
+    // Then by subscription plan
+    const aPlan = a.subscription?.status === "ACTIVE" ? a.subscription.plan : "FREE";
+    const bPlan = b.subscription?.status === "ACTIVE" ? b.subscription.plan : "FREE";
+    return (planPriority[bPlan] || 1) - (planPriority[aPlan] || 1);
+  });
 
   const results: DaycareSearchResult[] = daycares.map((daycare) => {
     const avgRating =
@@ -117,6 +132,11 @@ export async function searchDaycares(filters: SearchFilters) {
         ? daycare.reviews.reduce((sum, r) => sum + r.rating, 0) /
           daycare.reviews.length
         : 0;
+
+    const subscriptionPlan =
+      daycare.subscription?.status === "ACTIVE"
+        ? daycare.subscription.plan
+        : "FREE";
 
     return {
       id: daycare.id,
@@ -135,6 +155,7 @@ export async function searchDaycares(filters: SearchFilters) {
       primaryPhoto: daycare.photos[0]?.url || null,
       isFeatured: daycare.isFeatured,
       isVerified: daycare.isVerified,
+      subscriptionPlan,
     };
   });
 
