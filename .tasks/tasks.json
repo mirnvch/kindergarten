@@ -204,7 +204,7 @@
       "id": 6,
       "title": "Premium Features",
       "description": "Implement premium features for paid daycare plans",
-      "status": "pending",
+      "status": "done",
       "priority": "medium",
       "complexity": 3,
       "phase": "2.2",
@@ -212,10 +212,10 @@
       "blockedBy": [5],
       "blocks": [],
       "subtasks": [
-        { "id": "6.1", "title": "Add featured listings badge and boost", "done": false },
-        { "id": "6.2", "title": "Implement priority in search results", "done": false },
-        { "id": "6.3", "title": "Build advanced analytics for premium", "done": false },
-        { "id": "6.4", "title": "Add bulk messaging feature", "done": false }
+        { "id": "6.1", "title": "Add featured listings badge and boost", "done": true },
+        { "id": "6.2", "title": "Implement priority in search results", "done": true },
+        { "id": "6.3", "title": "Build advanced analytics for premium", "done": true },
+        { "id": "6.4", "title": "Add bulk messaging feature", "done": true }
       ],
       "acceptanceCriteria": [
         "Premium daycares appear first in search",
@@ -228,7 +228,10 @@
         "src/server/actions/search.ts",
         "src/components/daycare/*"
       ],
-      "notes": [],
+      "notes": [
+        "2026-01-29: Added subscription-based search priority, premium badges (Enterprise crown, Pro sparkles), advanced analytics with weekly trends/traffic/peak hours, bulk messaging for PRO/ENTERPRISE"
+      ],
+      "completedAt": "2026-01-29T22:00:00Z",
       "createdAt": "2026-01-29T14:00:00Z",
       "updatedAt": "2026-01-29T14:00:00Z"
     },

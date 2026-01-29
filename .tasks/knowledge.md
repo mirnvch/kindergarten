@@ -145,7 +145,18 @@ src/components/
   - `/portal/payments` - Stripe Connect для получения платежей
   - Обновлена `/pricing` страница с PRICING_PLANS config
 - Компоненты: `src/components/billing/` (plan-card, billing-history, buttons)
-- **Следующее:** Task #6 — Premium Features
+- **Task #6: Premium Features — COMPLETED**
+- Завершены все 4 подзадачи:
+  - 6.1: Featured badge + premium badges (Enterprise crown, Pro sparkles)
+  - 6.2: Subscription-based search priority (ENTERPRISE > PRO > STARTER > FREE)
+  - 6.3: Advanced analytics (weekly trends, traffic sources, peak hours) + upgrade prompt
+  - 6.4: Bulk messaging для PRO/ENTERPRISE (send to all/enrolled/waitlisted/toured)
+- Создан `src/server/actions/bulk-messaging.ts`
+- Создан `src/components/portal/bulk-message-dialog.tsx`
+- Создана страница `/portal/messages`
+- Обновлён `daycare-card.tsx` с premium badges
+- Обновлён `analytics/page.tsx` с premium analytics
+- **Следующее:** Task #7 — Waitlist System
 
 ### 2026-01-29 (Session 2)
 - **Task #1: Admin Panel — COMPLETED**
