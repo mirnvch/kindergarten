@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { SettingsForm } from "@/components/settings/settings-form";
+import { NotificationPreferences } from "@/components/notifications/notification-preferences";
+import { getNotificationPreferences } from "@/server/actions/notifications";
 
 export const metadata: Metadata = {
   title: "Settings | KinderCare",
@@ -32,6 +34,8 @@ export default async function SettingsPage() {
     redirect("/login");
   }
 
+  const notificationPrefs = await getNotificationPreferences();
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -44,6 +48,16 @@ export default async function SettingsPage() {
 
       {/* Settings form */}
       <SettingsForm user={user} />
+
+      {/* Notification preferences */}
+      <NotificationPreferences
+        initialPreferences={notificationPrefs || {
+          emailBookings: true,
+          emailMessages: true,
+          emailMarketing: false,
+          pushEnabled: false,
+        }}
+      />
     </div>
   );
 }

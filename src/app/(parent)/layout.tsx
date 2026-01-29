@@ -5,6 +5,7 @@ import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ParentSidebar } from "@/components/parent/parent-sidebar";
+import { getUnreadNotificationsCount } from "@/server/actions/notifications";
 
 export default async function ParentLayout({
   children,
@@ -28,6 +29,8 @@ export default async function ParentLayout({
     role: session.user.role,
   };
 
+  const notificationCount = await getUnreadNotificationsCount();
+
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Mobile header */}
@@ -40,7 +43,7 @@ export default async function ParentLayout({
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-72 p-0">
-            <ParentSidebar user={user} />
+            <ParentSidebar user={user} notificationCount={notificationCount} />
           </SheetContent>
         </Sheet>
         <Link href="/dashboard" className="flex items-center gap-2">
@@ -54,7 +57,7 @@ export default async function ParentLayout({
       <div className="flex">
         {/* Desktop sidebar */}
         <aside className="hidden w-72 border-r bg-background md:block">
-          <ParentSidebar user={user} />
+          <ParentSidebar user={user} notificationCount={notificationCount} />
         </aside>
 
         {/* Main content */}

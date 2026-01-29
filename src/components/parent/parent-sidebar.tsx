@@ -14,9 +14,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -34,19 +34,23 @@ interface ParentSidebarProps {
     email: string;
     role: string;
   };
+  notificationCount?: number;
 }
 
-export function ParentSidebar({ user }: ParentSidebarProps) {
+export function ParentSidebar({ user, notificationCount = 0 }: ParentSidebarProps) {
   const pathname = usePathname();
 
   return (
     <div className="flex h-screen flex-col">
       {/* Logo */}
-      <div className="flex h-16 items-center gap-2 border-b px-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-          <span className="text-lg font-bold text-primary-foreground">K</span>
+      <div className="flex h-16 items-center justify-between border-b px-6">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <span className="text-lg font-bold text-primary-foreground">K</span>
+          </div>
+          <span className="font-bold">KinderCare</span>
         </div>
-        <span className="font-bold">KinderCare</span>
+        <NotificationBell initialCount={notificationCount} />
       </div>
 
       {/* User info */}

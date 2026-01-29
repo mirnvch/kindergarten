@@ -5,6 +5,7 @@ import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { PortalSidebar } from "@/components/portal/portal-sidebar";
+import { getUnreadNotificationsCount } from "@/server/actions/notifications";
 
 export default async function PortalLayout({
   children,
@@ -31,6 +32,8 @@ export default async function PortalLayout({
     role: session.user.role,
   };
 
+  const notificationCount = await getUnreadNotificationsCount();
+
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Mobile header */}
@@ -43,7 +46,7 @@ export default async function PortalLayout({
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-72 p-0">
-            <PortalSidebar user={user} />
+            <PortalSidebar user={user} notificationCount={notificationCount} />
           </SheetContent>
         </Sheet>
         <Link href="/portal" className="flex items-center gap-2">
@@ -57,7 +60,7 @@ export default async function PortalLayout({
       <div className="flex">
         {/* Desktop sidebar */}
         <aside className="hidden w-72 border-r bg-background md:block">
-          <PortalSidebar user={user} />
+          <PortalSidebar user={user} notificationCount={notificationCount} />
         </aside>
 
         {/* Main content */}

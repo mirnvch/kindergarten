@@ -1,0 +1,299 @@
+import { Resend } from "resend";
+
+// Lazy initialize Resend to avoid build-time errors
+let resend: Resend | null = null;
+
+function getResend() {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
+
+const FROM_EMAIL = process.env.FROM_EMAIL || "KinderCare <noreply@kindercare.app>";
+
+export interface SendEmailOptions {
+  to: string | string[];
+  subject: string;
+  html: string;
+  replyTo?: string;
+}
+
+export async function sendEmail({ to, subject, html, replyTo }: SendEmailOptions) {
+  const client = getResend();
+
+  if (!client) {
+    console.warn("[Email] RESEND_API_KEY not set, skipping email");
+    return { success: true, data: { id: "mock" } };
+  }
+
+  try {
+    const { data, error } = await client.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject,
+      html,
+      replyTo,
+    });
+
+    if (error) {
+      console.error("[Email] Failed to send:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    console.error("[Email] Exception:", err);
+    return { success: false, error: "Failed to send email" };
+  }
+}
+
+// Email templates
+
+export function bookingConfirmationEmail({
+  parentName,
+  daycareName,
+  date,
+  time,
+  childName,
+  address,
+}: {
+  parentName: string;
+  daycareName: string;
+  date: string;
+  time: string;
+  childName: string;
+  address: string;
+}) {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking Confirmed</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">Booking Confirmed! ✓</h1>
+  </div>
+
+  <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+    <p>Hi ${parentName},</p>
+
+    <p>Your tour at <strong>${daycareName}</strong> has been confirmed!</p>
+
+    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
+      <p style="margin: 5px 0;"><strong>Date:</strong> ${date}</p>
+      <p style="margin: 5px 0;"><strong>Time:</strong> ${time}</p>
+      <p style="margin: 5px 0;"><strong>Child:</strong> ${childName}</p>
+      <p style="margin: 5px 0;"><strong>Address:</strong> ${address}</p>
+    </div>
+
+    <p>Please arrive 5-10 minutes early. If you need to reschedule, please contact the daycare directly.</p>
+
+    <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/bookings" style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px;">View Booking</a>
+
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">Best regards,<br>The KinderCare Team</p>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+export function bookingReminderEmail({
+  parentName,
+  daycareName,
+  date,
+  time,
+  childName,
+  address,
+}: {
+  parentName: string;
+  daycareName: string;
+  date: string;
+  time: string;
+  childName: string;
+  address: string;
+}) {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tour Reminder</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 30px; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">Tour Reminder 🔔</h1>
+  </div>
+
+  <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+    <p>Hi ${parentName},</p>
+
+    <p>This is a friendly reminder that your tour at <strong>${daycareName}</strong> is tomorrow!</p>
+
+    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f5576c;">
+      <p style="margin: 5px 0;"><strong>Date:</strong> ${date}</p>
+      <p style="margin: 5px 0;"><strong>Time:</strong> ${time}</p>
+      <p style="margin: 5px 0;"><strong>Child:</strong> ${childName}</p>
+      <p style="margin: 5px 0;"><strong>Address:</strong> ${address}</p>
+    </div>
+
+    <p><strong>Tips for your visit:</strong></p>
+    <ul style="padding-left: 20px;">
+      <li>Arrive 5-10 minutes early</li>
+      <li>Bring any questions you have</li>
+      <li>Feel free to bring your child along</li>
+    </ul>
+
+    <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/bookings" style="display: inline-block; background: #f5576c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px;">View Details</a>
+
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">See you tomorrow!<br>The KinderCare Team</p>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+export function newMessageEmail({
+  recipientName,
+  senderName,
+  messagePreview,
+  threadId,
+}: {
+  recipientName: string;
+  senderName: string;
+  messagePreview: string;
+  threadId: string;
+}) {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Message</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 30px; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">New Message 💬</h1>
+  </div>
+
+  <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+    <p>Hi ${recipientName},</p>
+
+    <p>You have a new message from <strong>${senderName}</strong>:</p>
+
+    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4facfe;">
+      <p style="margin: 0; color: #555; font-style: italic;">"${messagePreview}"</p>
+    </div>
+
+    <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/messages/${threadId}" style="display: inline-block; background: #4facfe; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px;">Reply Now</a>
+
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">Best regards,<br>The KinderCare Team</p>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+export function welcomeEmail({
+  userName,
+  role,
+}: {
+  userName: string;
+  role: "PARENT" | "DAYCARE_OWNER";
+}) {
+  const isParent = role === "PARENT";
+  const dashboardUrl = isParent
+    ? `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`
+    : `${process.env.NEXT_PUBLIC_APP_URL}/portal`;
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to KinderCare</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">Welcome to KinderCare! 🎉</h1>
+  </div>
+
+  <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+    <p>Hi ${userName},</p>
+
+    <p>Thank you for joining KinderCare! We're excited to have you on board.</p>
+
+    ${isParent ? `
+    <p><strong>As a parent, you can:</strong></p>
+    <ul style="padding-left: 20px;">
+      <li>Search for daycares in your area</li>
+      <li>Book tours and visits</li>
+      <li>Message daycare providers directly</li>
+      <li>Read and write reviews</li>
+    </ul>
+    ` : `
+    <p><strong>As a daycare owner, you can:</strong></p>
+    <ul style="padding-left: 20px;">
+      <li>Create and manage your daycare profile</li>
+      <li>Receive and manage bookings</li>
+      <li>Communicate with parents</li>
+      <li>Track analytics and performance</li>
+    </ul>
+    `}
+
+    <a href="${dashboardUrl}" style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px;">Go to Dashboard</a>
+
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">Need help? Reply to this email and we'll be happy to assist.<br><br>Best regards,<br>The KinderCare Team</p>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+export function reviewResponseEmail({
+  parentName,
+  daycareName,
+  responsePreview,
+  reviewId,
+}: {
+  parentName: string;
+  daycareName: string;
+  responsePreview: string;
+  reviewId: string;
+}) {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Response to Your Review</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); padding: 30px; border-radius: 10px 10px 0 0;">
+    <h1 style="color: #333; margin: 0; font-size: 24px;">Response to Your Review</h1>
+  </div>
+
+  <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+    <p>Hi ${parentName},</p>
+
+    <p><strong>${daycareName}</strong> has responded to your review:</p>
+
+    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #a8edea;">
+      <p style="margin: 0; color: #555; font-style: italic;">"${responsePreview}"</p>
+    </div>
+
+    <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/reviews/${reviewId}" style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px;">View Full Response</a>
+
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">Best regards,<br>The KinderCare Team</p>
+  </div>
+</body>
+</html>
+  `.trim();
+}
