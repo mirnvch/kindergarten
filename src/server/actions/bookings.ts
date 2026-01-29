@@ -97,8 +97,8 @@ export async function cancelBooking(id: string, reason?: string) {
     },
   });
 
-  revalidatePath("/parent/bookings");
-  revalidatePath("/parent");
+  revalidatePath("/dashboard/bookings");
+  revalidatePath("/dashboard");
 }
 
 // ==================== SLOT AVAILABILITY ====================
@@ -306,8 +306,8 @@ export async function createTourBooking(input: TourBookingInput) {
     },
   });
 
-  revalidatePath("/parent/bookings");
-  revalidatePath("/parent");
+  revalidatePath("/dashboard/bookings");
+  revalidatePath("/dashboard");
   revalidatePath(`/daycare/${daycare.slug}`);
 
   redirect(`/booking/${booking.id}/confirmation`);
@@ -382,8 +382,8 @@ export async function createEnrollmentRequest(input: EnrollmentInput) {
     },
   });
 
-  revalidatePath("/parent/bookings");
-  revalidatePath("/parent");
+  revalidatePath("/dashboard/bookings");
+  revalidatePath("/dashboard");
   revalidatePath(`/daycare/${daycare.slug}`);
 
   redirect(`/booking/${booking.id}/confirmation`);

@@ -1,25 +1,19 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { UserRole } from "@prisma/client";
 import type { Adapter } from "next-auth/adapters";
+import authConfig from "./auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(db) as Adapter,
-  session: { strategy: "jwt" },
-  trustHost: true,
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
+    // Keep Google from config
+    ...authConfig.providers.filter((p) => p.id !== "credentials"),
+    // Override Credentials with full authorize function
     Credentials({
       name: "credentials",
       credentials: {
@@ -53,11 +47,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           name: `${user.firstName} ${user.lastName}`,
           image: user.avatarUrl,
+          role: user.role,
+          firstName: user.firstName,
+          lastName: user.lastName,
         };
       },
     }),
   ],
   callbacks: {
+    ...authConfig.callbacks,
     async signIn({ user, account }) {
       // Allow OAuth without email verification
       if (account?.provider !== "credentials") {
@@ -98,15 +96,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       return token;
     },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as UserRole;
-        session.user.firstName = token.firstName as string;
-        session.user.lastName = token.lastName as string;
-      }
-      return session;
-    },
   },
   events: {
     async linkAccount({ user }) {
@@ -119,7 +108,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 });
 
-// Types for extended session
+// Types for extended session and user
 declare module "next-auth" {
   interface Session {
     user: {
@@ -131,9 +120,15 @@ declare module "next-auth" {
       image?: string | null;
     };
   }
+
+  interface User {
+    role?: UserRole;
+    firstName?: string;
+    lastName?: string;
+  }
 }
 
-declare module "next-auth/jwt" {
+declare module "@auth/core/jwt" {
   interface JWT {
     id: string;
     role: UserRole;

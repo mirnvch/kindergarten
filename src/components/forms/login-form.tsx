@@ -55,7 +55,7 @@ export function LoginForm() {
         return;
       }
 
-      router.push("/parent");
+      router.push("/dashboard");
       router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");
@@ -67,7 +67,7 @@ export function LoginForm() {
   async function handleGoogleLogin() {
     setIsLoading(true);
     try {
-      await signIn("google", { callbackUrl: "/parent" });
+      await signIn("google", { callbackUrl: "/dashboard" });
     } catch {
       setError("Failed to sign in with Google");
       setIsLoading(false);

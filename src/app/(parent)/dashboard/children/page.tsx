@@ -25,7 +25,7 @@ export default async function ChildrenPage() {
           </p>
         </div>
         <Button asChild>
-          <Link href="/parent/children/new">
+          <Link href="/dashboard/children/new">
             <Plus className="mr-2 h-4 w-4" />
             Add Child
           </Link>
@@ -42,7 +42,7 @@ export default async function ChildrenPage() {
             daycares.
           </p>
           <Button asChild>
-            <Link href="/parent/children/new">
+            <Link href="/dashboard/children/new">
               <Plus className="mr-2 h-4 w-4" />
               Add Your First Child
             </Link>

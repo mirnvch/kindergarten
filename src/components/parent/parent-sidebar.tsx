@@ -19,12 +19,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 
 const navigation = [
-  { name: "Dashboard", href: "/parent", icon: LayoutDashboard },
-  { name: "My Children", href: "/parent/children", icon: Baby },
-  { name: "Bookings", href: "/parent/bookings", icon: Calendar },
-  { name: "Favorites", href: "/parent/favorites", icon: Heart },
-  { name: "Messages", href: "/parent/messages", icon: MessageSquare },
-  { name: "Settings", href: "/parent/settings", icon: Settings },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "My Children", href: "/dashboard/children", icon: Baby },
+  { name: "Bookings", href: "/dashboard/bookings", icon: Calendar },
+  { name: "Favorites", href: "/dashboard/favorites", icon: Heart },
+  { name: "Messages", href: "/dashboard/messages", icon: MessageSquare },
+  { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
 interface ParentSidebarProps {
@@ -69,7 +69,7 @@ export function ParentSidebar({ user }: ParentSidebarProps) {
         {navigation.map((item) => {
           const isActive =
             pathname === item.href ||
-            (item.href !== "/parent" && pathname.startsWith(item.href));
+            (item.href !== "/dashboard" && pathname.startsWith(item.href));
           return (
             <Link
               key={item.name}

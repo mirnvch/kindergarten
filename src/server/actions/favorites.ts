@@ -26,7 +26,7 @@ export async function toggleFavorite(daycareId: string) {
     await db.favorite.delete({
       where: { id: existing.id },
     });
-    revalidatePath("/parent/favorites");
+    revalidatePath("/dashboard/favorites");
     return { favorited: false };
   } else {
     // Add to favorites
@@ -36,7 +36,7 @@ export async function toggleFavorite(daycareId: string) {
         daycareId,
       },
     });
-    revalidatePath("/parent/favorites");
+    revalidatePath("/dashboard/favorites");
     return { favorited: true };
   }
 }

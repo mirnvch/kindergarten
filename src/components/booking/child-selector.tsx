@@ -24,7 +24,7 @@ export function ChildSelector({
   childList,
   selectedChildId,
   onSelectChild,
-  addChildUrl = "/parent/children/new",
+  addChildUrl = "/dashboard/children/new",
 }: ChildSelectorProps) {
   if (childList.length === 0) {
     return (

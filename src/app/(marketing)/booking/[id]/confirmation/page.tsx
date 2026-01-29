@@ -222,7 +222,7 @@ export default async function ConfirmationPage({
         {/* Action buttons */}
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button asChild className="flex-1">
-            <Link href="/parent/bookings">
+            <Link href="/dashboard/bookings">
               View All Bookings
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

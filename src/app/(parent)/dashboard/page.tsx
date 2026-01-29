@@ -157,7 +157,7 @@ export default async function ParentDashboardPage() {
             <div className="flex items-center justify-between">
               <CardTitle>Upcoming Bookings</CardTitle>
               <Button variant="ghost" size="sm" asChild>
-                <Link href="/parent/bookings">
+                <Link href="/dashboard/bookings">
                   View all
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
@@ -228,19 +228,19 @@ export default async function ParentDashboardPage() {
               </Link>
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/parent/children/new">
+              <Link href="/dashboard/children/new">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Child Profile
               </Link>
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/parent/favorites">
+              <Link href="/dashboard/favorites">
                 <Heart className="mr-2 h-4 w-4" />
                 View Favorites
               </Link>
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
-              <Link href="/parent/messages">
+              <Link href="/dashboard/messages">
                 <MessageSquare className="mr-2 h-4 w-4" />
                 View Messages
               </Link>

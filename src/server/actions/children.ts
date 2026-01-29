@@ -40,9 +40,9 @@ export async function createChild(data: ChildFormData) {
     },
   });
 
-  revalidatePath("/parent/children");
-  revalidatePath("/parent");
-  redirect("/parent/children");
+  revalidatePath("/dashboard/children");
+  revalidatePath("/dashboard");
+  redirect("/dashboard/children");
 }
 
 export async function getChildren(): Promise<Child[]> {
@@ -123,10 +123,10 @@ export async function updateChild(id: string, data: ChildFormData) {
     },
   });
 
-  revalidatePath("/parent/children");
+  revalidatePath("/dashboard/children");
   revalidatePath(`/parent/children/${id}`);
-  revalidatePath("/parent");
-  redirect("/parent/children");
+  revalidatePath("/dashboard");
+  redirect("/dashboard/children");
 }
 
 export async function deleteChild(id: string) {
@@ -148,6 +148,6 @@ export async function deleteChild(id: string) {
     where: { id },
   });
 
-  revalidatePath("/parent/children");
-  revalidatePath("/parent");
+  revalidatePath("/dashboard/children");
+  revalidatePath("/dashboard");
 }
