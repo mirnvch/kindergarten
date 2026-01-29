@@ -93,6 +93,7 @@ model User {
   bookings     Booking[]
   reviews      Review[]
   sentMessages Message[] @relation("SentMessages")
+  favorites    Favorite[]
 
   // Daycare staff relations
   daycareStaff DaycareStaff[]
@@ -230,6 +231,7 @@ model Daycare {
   payments     Payment[]
   enrollments  Enrollment[]
   waitlist     WaitlistEntry[]
+  favorites    Favorite[]
 
   @@index([slug])
   @@index([city, state])
@@ -585,4 +587,20 @@ model PlatformSettings {
   description String?
 
   updatedAt DateTime @updatedAt
+}
+
+// ==================== FAVORITES ====================
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  daycareId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, daycareId])
+  @@index([userId])
+  @@index([daycareId])
 }

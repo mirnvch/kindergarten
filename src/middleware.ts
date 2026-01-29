@@ -3,11 +3,12 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 // Routes that require authentication
-const protectedRoutes = ["/dashboard", "/portal", "/admin"];
+const protectedRoutes = ["/dashboard", "/portal", "/admin", "/parent"];
 
 // Routes that require specific roles
 const roleRoutes: Record<string, string[]> = {
   "/dashboard": ["PARENT"],
+  "/parent": ["PARENT"],
   "/portal": ["DAYCARE_OWNER", "DAYCARE_STAFF"],
   "/admin": ["ADMIN"],
 };
@@ -65,6 +66,7 @@ function getDefaultRedirect(role?: string): string {
     case "DAYCARE_STAFF":
       return "/portal";
     case "PARENT":
+      return "/parent";
     default:
       return "/dashboard";
   }
