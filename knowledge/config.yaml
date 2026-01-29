@@ -1,0 +1,52 @@
+# KinderCare Knowledge Base Configuration
+
+version: "1.0"
+
+# Topic taxonomy - valid topics for facts
+topics:
+  age:
+    description: "Age calculations, ranges, compatibility"
+    subtopics: ["months", "ranges", "eligibility"]
+
+  pricing:
+    description: "Pricing logic, currencies, fees"
+    subtopics: ["monthly", "weekly", "daily", "registration", "commission"]
+
+  booking:
+    description: "Tour bookings, scheduling"
+    subtopics: ["status", "transitions", "tours", "confirmation"]
+
+  enrollment:
+    description: "Child enrollment, waitlist"
+    subtopics: ["status", "waitlist", "capacity"]
+
+  reviews:
+    description: "Rating system, review policies"
+    subtopics: ["scale", "detailed", "verification", "responses"]
+
+  stripe:
+    description: "Payment processing, subscriptions"
+    subtopics: ["webhooks", "connect", "subscriptions", "payouts"]
+
+  users:
+    description: "User roles, authentication"
+    subtopics: ["roles", "auth", "permissions"]
+
+  search:
+    description: "Search functionality, geo queries"
+    subtopics: ["geo", "filters", "sorting"]
+
+# Fact statuses
+statuses:
+  - active      # Current, valid fact
+  - superseded  # Replaced by newer fact
+  - deprecated  # No longer applicable
+
+# Default settings
+defaults:
+  org: "kindercare"
+
+# Search settings
+search:
+  max_results: 20
+  default_format: "compact"

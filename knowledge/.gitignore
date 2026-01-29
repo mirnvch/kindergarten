@@ -1,0 +1,12 @@
+# SQLite cache (rebuilt from JSONL)
+*.db
+*.db-shm
+*.db-wal
+
+# Editor temp files
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
