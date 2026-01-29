@@ -134,7 +134,18 @@ src/components/
 - Создан `src/server/actions/notifications.ts`
 - Создан `src/components/notifications/` (notification-bell, notification-preferences)
 - Добавлен `vercel.json` с cron для `/api/cron/reminders`
-- **Следующее:** Task #5 — Stripe Integration
+- **Task #5: Stripe Integration — COMPLETED**
+- Backend уже был реализован:
+  - `src/lib/stripe.ts` - client + plans
+  - `src/server/actions/stripe.ts` - checkout, portal, connect
+  - `src/app/api/webhooks/stripe/route.ts` - webhook handlers
+  - `src/config/pricing.ts` - pricing plans config
+- Добавлен UI:
+  - `/portal/billing` - subscription management, upgrade, billing history
+  - `/portal/payments` - Stripe Connect для получения платежей
+  - Обновлена `/pricing` страница с PRICING_PLANS config
+- Компоненты: `src/components/billing/` (plan-card, billing-history, buttons)
+- **Следующее:** Task #6 — Premium Features
 
 ### 2026-01-29 (Session 2)
 - **Task #1: Admin Panel — COMPLETED**

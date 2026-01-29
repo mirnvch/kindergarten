@@ -164,7 +164,7 @@
       "id": 5,
       "title": "Stripe Integration",
       "description": "Integrate Stripe for subscription payments and platform monetization",
-      "status": "pending",
+      "status": "done",
       "priority": "high",
       "complexity": 5,
       "phase": "2.1",
@@ -172,13 +172,13 @@
       "blockedBy": [2],
       "blocks": [6, 14],
       "subtasks": [
-        { "id": "5.1", "title": "Set up Stripe account and API keys", "done": false },
-        { "id": "5.2", "title": "Create subscription plans (FREE, STARTER, PRO, ENTERPRISE)", "done": false },
-        { "id": "5.3", "title": "Build checkout flow", "done": false },
-        { "id": "5.4", "title": "Implement webhook handlers", "done": false },
-        { "id": "5.5", "title": "Add billing portal integration", "done": false },
-        { "id": "5.6", "title": "Create billing history page", "done": false },
-        { "id": "5.7", "title": "Set up Stripe Connect for daycare payouts", "done": false }
+        { "id": "5.1", "title": "Set up Stripe account and API keys", "done": true },
+        { "id": "5.2", "title": "Create subscription plans (FREE, STARTER, PRO, ENTERPRISE)", "done": true },
+        { "id": "5.3", "title": "Build checkout flow", "done": true },
+        { "id": "5.4", "title": "Implement webhook handlers", "done": true },
+        { "id": "5.5", "title": "Add billing portal integration", "done": true },
+        { "id": "5.6", "title": "Create billing history page", "done": true },
+        { "id": "5.7", "title": "Set up Stripe Connect for daycare payouts", "done": true }
       ],
       "acceptanceCriteria": [
         "Daycares can subscribe to paid plans",
@@ -193,9 +193,12 @@
         "src/server/actions/billing.ts",
         "src/app/(portal)/portal/billing/*"
       ],
-      "notes": [],
+      "notes": [
+        "2026-01-29: Backend already existed (stripe.ts, webhooks, actions). Added UI: billing page, payments page, pricing page update"
+      ],
+      "completedAt": "2026-01-29T21:00:00Z",
       "createdAt": "2026-01-29T14:00:00Z",
-      "updatedAt": "2026-01-29T14:00:00Z"
+      "updatedAt": "2026-01-29T21:00:00Z"
     },
     {
       "id": 6,
