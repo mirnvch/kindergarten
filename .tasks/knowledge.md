@@ -97,6 +97,22 @@ src/components/
 
 ## Session Notes
 
+### 2026-01-29 (Session 4)
+- **Task #7: Waitlist System — COMPLETED**
+- Завершены все 4 подзадачи:
+  - 7.1: Waitlist join button на заполненных садах
+  - 7.2: Portal waitlist management page
+  - 7.3: Auto-notification при освобождении места
+  - 7.4: Waitlist position в parent dashboard
+- Создан `src/server/actions/waitlist.ts`
+- Создан `src/components/waitlist/` (waitlist-form, waitlist-entries-list)
+- Создан `src/components/portal/waitlist-table.tsx`
+- Создана страница `/portal/waitlist`
+- Добавлен email template `waitlistSpotAvailableEmail`
+- Добавлен тестовый садик "OC Toddler School" (Irvine, CA)
+- Исправлен next.config.ts для внешних изображений (Unsplash)
+- **Следующее:** Task #8-14
+
 ### 2026-01-29 (Session 3)
 - **Task #2: Enhance Daycare Portal — COMPLETED**
 - Завершены все 7 подзадач:
