@@ -4,36 +4,32 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Building2,
-  Calendar,
-  MessageSquare,
   Users,
-  CreditCard,
+  Building2,
+  MessageSquare,
+  Star,
   Settings,
   LogOut,
   ExternalLink,
+  Shield,
   BarChart3,
-  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 
 const navigation = [
-  { name: "Dashboard", href: "/portal", icon: LayoutDashboard },
-  { name: "My Daycare", href: "/portal/daycare", icon: Building2 },
-  { name: "Bookings", href: "/portal/bookings", icon: Calendar },
-  { name: "Messages", href: "/portal/messages", icon: MessageSquare },
-  { name: "Enrollments", href: "/portal/enrollments", icon: Users },
-  { name: "Reviews", href: "/portal/reviews", icon: Star },
-  { name: "Analytics", href: "/portal/analytics", icon: BarChart3 },
-  { name: "Payments", href: "/portal/payments", icon: CreditCard },
-  { name: "Settings", href: "/portal/settings", icon: Settings },
+  { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { name: "Users", href: "/admin/users", icon: Users },
+  { name: "Daycares", href: "/admin/daycares", icon: Building2 },
+  { name: "Reviews", href: "/admin/reviews", icon: Star },
+  { name: "Messages", href: "/admin/messages", icon: MessageSquare },
+  { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+  { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
-interface PortalSidebarProps {
+interface AdminSidebarProps {
   user: {
     firstName: string;
     lastName: string;
@@ -42,23 +38,23 @@ interface PortalSidebarProps {
   };
 }
 
-export function PortalSidebar({ user }: PortalSidebarProps) {
+export function AdminSidebar({ user }: AdminSidebarProps) {
   const pathname = usePathname();
 
   return (
     <div className="flex h-screen flex-col">
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 border-b px-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-          <span className="text-lg font-bold text-primary-foreground">K</span>
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600">
+          <Shield className="h-4 w-4 text-white" />
         </div>
-        <span className="font-bold">KinderCare Portal</span>
+        <span className="font-bold">Admin Panel</span>
       </div>
 
       {/* User info */}
       <div className="flex items-center gap-3 p-4 border-b">
         <Avatar>
-          <AvatarFallback>
+          <AvatarFallback className="bg-red-100 text-red-600">
             {getInitials(user.firstName, user.lastName)}
           </AvatarFallback>
         </Avatar>
@@ -66,14 +62,15 @@ export function PortalSidebar({ user }: PortalSidebarProps) {
           <p className="text-sm font-medium truncate">
             {user.firstName} {user.lastName}
           </p>
-          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+          <p className="text-xs text-muted-foreground truncate">{user.role}</p>
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-4">
         {navigation.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href ||
+            (item.href !== "/admin" && pathname.startsWith(item.href));
           return (
             <Link
               key={item.name}
@@ -81,7 +78,7 @@ export function PortalSidebar({ user }: PortalSidebarProps) {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-red-600 text-white"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >

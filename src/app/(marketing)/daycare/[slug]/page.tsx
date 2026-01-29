@@ -29,6 +29,8 @@ import type {
   DaycareReview,
   Amenity,
 } from "@/types";
+import { ReviewsSection } from "@/components/reviews/reviews-section";
+import { canUserReview } from "@/server/actions/reviews";
 
 interface DaycarePageProps {
   params: Promise<{ slug: string }>;
@@ -61,6 +63,7 @@ export default async function DaycarePage({ params }: DaycarePageProps) {
     notFound();
   }
 
+  const reviewStatus = await canUserReview(daycare.id);
   const primaryPhoto = daycare.photos.find((p: DaycarePhoto) => p.isPrimary) || daycare.photos[0];
 
   return (
@@ -209,56 +212,19 @@ export default async function DaycarePage({ params }: DaycarePageProps) {
             </TabsContent>
 
             <TabsContent value="reviews" className="mt-6">
-              {daycare.reviews.length === 0 ? (
-                <p className="text-muted-foreground">
-                  No reviews yet. Be the first to review!
-                </p>
-              ) : (
-                <div className="space-y-6">
-                  {daycare.reviews.map((review: DaycareReview) => (
-                    <div key={review.id}>
-                      <div className="flex items-start gap-4">
-                        <Avatar>
-                          <AvatarFallback>
-                            {getInitials(
-                              review.user.firstName,
-                              review.user.lastName
-                            )}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">
-                              {review.user.firstName} {review.user.lastName.charAt(0)}.
-                            </span>
-                            <div className="flex items-center">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`h-4 w-4 ${
-                                    i < review.rating
-                                      ? "fill-yellow-400 text-yellow-400"
-                                      : "text-muted"
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          {review.title && (
-                            <h4 className="font-medium mt-1">{review.title}</h4>
-                          )}
-                          {review.content && (
-                            <p className="text-muted-foreground mt-1">
-                              {review.content}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <Separator className="mt-6" />
-                    </div>
-                  ))}
-                </div>
-              )}
+              <ReviewsSection
+                daycareId={daycare.id}
+                daycareName={daycare.name}
+                daycareSlug={daycare.slug}
+                reviews={daycare.reviews.map((r: DaycareReview) => ({
+                  ...r,
+                  createdAt: r.createdAt,
+                }))}
+                reviewCount={daycare.reviewCount}
+                avgRating={daycare.rating}
+                canReview={reviewStatus.canReview}
+                canReviewReason={reviewStatus.reason}
+              />
             </TabsContent>
           </Tabs>
         </div>

@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Task Manager Schema",
+  "description": "Schema for KinderCare task management system",
+
+  "definitions": {
+    "status": {
+      "type": "string",
+      "enum": ["backlog", "pending", "in_progress", "review", "done", "cancelled"]
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"]
+    },
+    "complexity": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "1=trivial, 2=simple, 3=medium, 4=complex, 5=very complex"
+    },
+    "subtask": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "done": { "type": "boolean" }
+      },
+      "required": ["id", "title", "done"]
+    },
+    "task": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "$ref": "#/definitions/status" },
+        "priority": { "$ref": "#/definitions/priority" },
+        "complexity": { "$ref": "#/definitions/complexity" },
+        "phase": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "blockedBy": { "type": "array", "items": { "type": "integer" } },
+        "blocks": { "type": "array", "items": { "type": "integer" } },
+        "subtasks": { "type": "array", "items": { "$ref": "#/definitions/subtask" } },
+        "acceptanceCriteria": { "type": "array", "items": { "type": "string" } },
+        "affectedFiles": { "type": "array", "items": { "type": "string" } },
+        "notes": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "status", "priority"]
+    }
+  },
+
+  "type": "object",
+  "properties": {
+    "version": { "type": "string" },
+    "project": { "type": "string" },
+    "lastTaskId": { "type": "integer" },
+    "currentTaskId": { "type": ["integer", "null"] },
+    "tasks": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/task" }
+    }
+  },
+  "required": ["version", "project", "tasks"]
+}

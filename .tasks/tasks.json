@@ -1,0 +1,492 @@
+{
+  "version": "1.0.0",
+  "project": "KinderCare",
+  "lastTaskId": 14,
+  "currentTaskId": null,
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Build Admin Panel",
+      "description": "Create admin dashboard for platform management including user oversight, daycare moderation, and system settings",
+      "status": "done",
+      "priority": "high",
+      "complexity": 4,
+      "phase": "1.1",
+      "tags": ["admin", "dashboard", "core"],
+      "blockedBy": [],
+      "blocks": [14],
+      "subtasks": [
+        { "id": "1.1", "title": "Create admin layout and navigation", "done": true },
+        { "id": "1.2", "title": "Build platform stats dashboard (users, daycares, bookings, revenue)", "done": true },
+        { "id": "1.3", "title": "Implement user management (list, view, suspend, delete)", "done": true },
+        { "id": "1.4", "title": "Implement daycare moderation (approve, reject, suspend)", "done": true },
+        { "id": "1.5", "title": "Add content moderation for reviews and messages", "done": true },
+        { "id": "1.6", "title": "Create platform settings page", "done": true }
+      ],
+      "acceptanceCriteria": [
+        "Admin can view platform statistics",
+        "Admin can manage all users",
+        "Admin can approve/reject/suspend daycares",
+        "Admin can moderate content",
+        "Only ADMIN role can access"
+      ],
+      "affectedFiles": [
+        "src/app/(admin)/*",
+        "src/server/actions/admin/*",
+        "src/components/admin/*"
+      ],
+      "notes": [
+        "2026-01-29: Completed daycare moderation - added daycares page with approve/reject/suspend/reactivate/delete/toggle featured actions",
+        "2026-01-29: Completed content moderation - added reviews page (approve/reject/delete/verify) and messages page (archive/delete threads)",
+        "2026-01-29: Completed settings page - site config, feature flags, pricing, moderation settings"
+      ],
+      "completedAt": "2026-01-29T17:00:00Z",
+      "createdAt": "2026-01-29T14:00:00Z",
+      "updatedAt": "2026-01-29T16:00:00Z"
+    },
+    {
+      "id": 2,
+      "title": "Enhance Daycare Portal",
+      "description": "Complete daycare owner portal with profile management, scheduling, pricing, and analytics",
+      "status": "done",
+      "priority": "high",
+      "complexity": 4,
+      "phase": "1.2",
+      "tags": ["portal", "daycare", "core"],
+      "blockedBy": [],
+      "blocks": [5],
+      "subtasks": [
+        { "id": "2.1", "title": "Build daycare profile editor (photos, description)", "done": true },
+        { "id": "2.2", "title": "Add programs management", "done": true },
+        { "id": "2.3", "title": "Implement schedule management (hours, holidays)", "done": true },
+        { "id": "2.4", "title": "Create pricing management", "done": true },
+        { "id": "2.5", "title": "Add amenities selection", "done": true },
+        { "id": "2.6", "title": "Build staff management", "done": true },
+        { "id": "2.7", "title": "Create analytics dashboard (views, bookings, conversion)", "done": true }
+      ],
+      "acceptanceCriteria": [
+        "Daycare owner can edit full profile",
+        "Can manage programs and pricing",
+        "Can set schedule and holidays",
+        "Can view analytics",
+        "Can manage staff accounts"
+      ],
+      "affectedFiles": [
+        "src/app/(portal)/*",
+        "src/server/actions/portal/*",
+        "src/components/portal/*"
+      ],
+      "notes": [
+        "2026-01-29: Completed all 7 subtasks - profile/photos, programs, schedule, pricing, amenities, staff, analytics"
+      ],
+      "completedAt": "2026-01-29T18:00:00Z",
+      "createdAt": "2026-01-29T14:00:00Z",
+      "updatedAt": "2026-01-29T18:00:00Z"
+    },
+    {
+      "id": 3,
+      "title": "Implement Reviews System",
+      "description": "Build review and rating system for parents to review daycares after visits",
+      "status": "done",
+      "priority": "high",
+      "complexity": 3,
+      "phase": "1.3",
+      "tags": ["reviews", "ratings", "core"],
+      "blockedBy": [],
+      "blocks": [],
+      "subtasks": [
+        { "id": "3.1", "title": "Create review submission form", "done": true },
+        { "id": "3.2", "title": "Build review display on daycare pages", "done": true },
+        { "id": "3.3", "title": "Add daycare response functionality", "done": true },
+        { "id": "3.4", "title": "Implement rating aggregation", "done": true },
+        { "id": "3.5", "title": "Add review moderation in admin", "done": true }
+      ],
+      "acceptanceCriteria": [
+        "Parents can leave reviews after tour/enrollment",
+        "Reviews show rating (1-5 stars) and text",
+        "Daycares can respond to reviews",
+        "Average rating displayed on daycare cards",
+        "Admin can moderate reviews"
+      ],
+      "affectedFiles": [
+        "src/app/(marketing)/daycare/[slug]/reviews/*",
+        "src/server/actions/reviews.ts",
+        "src/components/reviews/*",
+        "prisma/schema.prisma (Review model)"
+      ],
+      "notes": [
+        "2026-01-29: Completed - review form, reviews section, portal response page, rating aggregation already in place"
+      ],
+      "completedAt": "2026-01-29T19:00:00Z",
+      "createdAt": "2026-01-29T14:00:00Z",
+      "updatedAt": "2026-01-29T19:00:00Z"
+    },
+    {
+      "id": 4,
+      "title": "Build Notifications System",
+      "description": "Implement email and in-app notifications for bookings, messages, and updates",
+      "status": "pending",
+      "priority": "high",
+      "complexity": 3,
+      "phase": "1.4",
+      "tags": ["notifications", "email", "core"],
+      "blockedBy": [],
+      "blocks": [],
+      "subtasks": [
+        { "id": "4.1", "title": "Set up email service (Resend/SendGrid)", "done": false },
+        { "id": "4.2", "title": "Create email templates", "done": false },
+        { "id": "4.3", "title": "Implement booking confirmation emails", "done": false },
+        { "id": "4.4", "title": "Add reminder emails (24h before tour)", "done": false },
+        { "id": "4.5", "title": "Build in-app notification system", "done": false },
+        { "id": "4.6", "title": "Create notification preferences in settings", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "Users receive email on booking confirmation",
+        "Reminder email sent 24h before tour",
+        "In-app notifications for new messages",
+        "Users can configure notification preferences",
+        "Notification bell in header with unread count"
+      ],
+      "affectedFiles": [
+        "src/lib/email.ts",
+        "src/server/actions/notifications.ts",
+        "src/components/notifications/*",
+        "src/app/(parent)/dashboard/settings/*"
+      ],
+      "notes": [],
+      "createdAt": "2026-01-29T14:00:00Z",
+      "updatedAt": "2026-01-29T14:00:00Z"
+    },
+    {
+      "id": 5,
+      "title": "Stripe Integration",
+      "description": "Integrate Stripe for subscription payments and platform monetization",
+      "status": "pending",
+      "priority": "high",
+      "complexity": 5,
+      "phase": "2.1",
+      "tags": ["payments", "stripe", "monetization"],
+      "blockedBy": [2],
+      "blocks": [6, 14],
+      "subtasks": [
+        { "id": "5.1", "title": "Set up Stripe account and API keys", "done": false },
+        { "id": "5.2", "title": "Create subscription plans (FREE, STARTER, PRO, ENTERPRISE)", "done": false },
+        { "id": "5.3", "title": "Build checkout flow", "done": false },
+        { "id": "5.4", "title": "Implement webhook handlers", "done": false },
+        { "id": "5.5", "title": "Add billing portal integration", "done": false },
+        { "id": "5.6", "title": "Create billing history page", "done": false },
+        { "id": "5.7", "title": "Set up Stripe Connect for daycare payouts", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "Daycares can subscribe to paid plans",
+        "Payments processed securely via Stripe",
+        "Webhooks handle subscription lifecycle",
+        "Users can manage billing in portal",
+        "Daycares can receive payouts"
+      ],
+      "affectedFiles": [
+        "src/lib/stripe.ts",
+        "src/app/api/webhooks/stripe/*",
+        "src/server/actions/billing.ts",
+        "src/app/(portal)/portal/billing/*"
+      ],
+      "notes": [],
+      "createdAt": "2026-01-29T14:00:00Z",
+      "updatedAt": "2026-01-29T14:00:00Z"
+    },
+    {
+      "id": 6,
+      "title": "Premium Features",
+      "description": "Implement premium features for paid daycare plans",
+      "status": "pending",
+      "priority": "medium",
+      "complexity": 3,
+      "phase": "2.2",
+      "tags": ["premium", "monetization"],
+      "blockedBy": [5],
+      "blocks": [],
+      "subtasks": [
+        { "id": "6.1", "title": "Add featured listings badge and boost", "done": false },
+        { "id": "6.2", "title": "Implement priority in search results", "done": false },
+        { "id": "6.3", "title": "Build advanced analytics for premium", "done": false },
+        { "id": "6.4", "title": "Add bulk messaging feature", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "Premium daycares appear first in search",
+        "Featured badge displayed on listings",
+        "Premium users see advanced analytics",
+        "Can send bulk messages to parents"
+      ],
+      "affectedFiles": [
+        "src/app/(marketing)/search/*",
+        "src/server/actions/search.ts",
+        "src/components/daycare/*"
+      ],
+      "notes": [],
+      "createdAt": "2026-01-29T14:00:00Z",
+      "updatedAt": "2026-01-29T14:00:00Z"
+    },
+    {
+      "id": 7,
+      "title": "Waitlist System",
+      "description": "Build waitlist functionality for full daycares",
+      "status": "pending",
+      "priority": "medium",
+      "complexity": 2,
+      "phase": "2.3",
+      "tags": ["waitlist", "booking"],
+      "blockedBy": [],
+      "blocks": [],
+      "subtasks": [
+        { "id": "7.1", "title": "Add waitlist join button on full daycares", "done": false },
+        { "id": "7.2", "title": "Create waitlist management for daycares", "done": false },
+        { "id": "7.3", "title": "Implement auto-notification when spot available", "done": false },
+        { "id": "7.4", "title": "Show waitlist position to parents", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "Parents can join waitlist",
+        "Daycares see waitlist in portal",
+        "Auto email when spot opens",
+        "Parents see their position"
+      ],
+      "affectedFiles": [
+        "src/server/actions/waitlist.ts",
+        "src/app/(marketing)/daycare/[slug]/*",
+        "src/app/(portal)/portal/waitlist/*"
+      ],
+      "notes": [],
+      "createdAt": "2026-01-29T14:00:00Z",
+      "updatedAt": "2026-01-29T14:00:00Z"
+    },
+    {
+      "id": 8,
+      "title": "Search Improvements",
+      "description": "Enhance search with map view, geolocation, and advanced filters",
+      "status": "pending",
+      "priority": "medium",
+      "complexity": 4,
+      "phase": "3.1",
+      "tags": ["search", "maps", "ux"],
+      "blockedBy": [],
+      "blocks": [],
+      "subtasks": [
+        { "id": "8.1", "title": "Integrate map library (Mapbox/Google Maps)", "done": false },
+        { "id": "8.2", "title": "Add map view toggle on search", "done": false },
+        { "id": "8.3", "title": "Implement geolocation search", "done": false },
+        { "id": "8.4", "title": "Add advanced filters (rating, availability, certifications)", "done": false },
+        { "id": "8.5", "title": "Build saved searches feature", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "Users can view daycares on map",
+        "Search by current location",
+        "Filter by rating and availability",
+        "Can save and reuse searches"
+      ],
+      "affectedFiles": [
+        "src/app/(marketing)/search/*",
+        "src/components/search/*",
+        "src/lib/maps.ts"
+      ],
+      "notes": [],
+      "createdAt": "2026-01-29T14:00:00Z",
+      "updatedAt": "2026-01-29T14:00:00Z"
+    },
+    {
+      "id": 9,
+      "title": "Booking Enhancements",
+      "description": "Improve booking flow with calendar, recurring bookings, and rescheduling",
+      "status": "pending",
+      "priority": "medium",
+      "complexity": 3,
+      "phase": "3.2",
+      "tags": ["booking", "calendar", "ux"],
+      "blockedBy": [],
+      "blocks": [],
+      "subtasks": [
+        { "id": "9.1", "title": "Build calendar view for available slots", "done": false },
+        { "id": "9.2", "title": "Add recurring booking option", "done": false },
+        { "id": "9.3", "title": "Display cancellation policy", "done": false },
+        { "id": "9.4", "title": "Implement rescheduling functionality", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "Calendar shows available time slots",
+        "Can book recurring visits",
+        "Clear cancellation policy shown",
+        "Can reschedule existing bookings"
+      ],
+      "affectedFiles": [
+        "src/app/(marketing)/daycare/[slug]/book/*",
+        "src/components/booking/*",
+        "src/server/actions/bookings.ts"
+      ],
+      "notes": [],
+      "createdAt": "2026-01-29T14:00:00Z",
+      "updatedAt": "2026-01-29T14:00:00Z"
+    },
+    {
+      "id": 10,
+      "title": "Real-time Communication",
+      "description": "Upgrade messaging to real-time with WebSocket support",
+      "status": "pending",
+      "priority": "medium",
+      "complexity": 4,
+      "phase": "3.3",
+      "tags": ["messaging", "realtime", "websocket"],
+      "blockedBy": [],
+      "blocks": [],
+      "subtasks": [
+        { "id": "10.1", "title": "Set up WebSocket server (Socket.io/Pusher)", "done": false },
+        { "id": "10.2", "title": "Implement real-time message delivery", "done": false },
+        { "id": "10.3", "title": "Add file/image sharing", "done": false },
+        { "id": "10.4", "title": "Implement read receipts", "done": false },
+        { "id": "10.5", "title": "Create message templates for daycares", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "Messages appear instantly without refresh",
+        "Can share images in chat",
+        "See when messages are read",
+        "Daycares can use templates"
+      ],
+      "affectedFiles": [
+        "src/app/(parent)/dashboard/messages/*",
+        "src/lib/socket.ts",
+        "src/server/actions/messages.ts"
+      ],
+      "notes": [],
+      "createdAt": "2026-01-29T14:00:00Z",
+      "updatedAt": "2026-01-29T14:00:00Z"
+    },
+    {
+      "id": 11,
+      "title": "Mobile PWA",
+      "description": "Convert app to Progressive Web App with offline support",
+      "status": "pending",
+      "priority": "low",
+      "complexity": 3,
+      "phase": "3.4",
+      "tags": ["pwa", "mobile", "offline"],
+      "blockedBy": [],
+      "blocks": [],
+      "subtasks": [
+        { "id": "11.1", "title": "Configure PWA manifest", "done": false },
+        { "id": "11.2", "title": "Set up service worker", "done": false },
+        { "id": "11.3", "title": "Optimize UI for mobile", "done": false },
+        { "id": "11.4", "title": "Implement offline caching", "done": false },
+        { "id": "11.5", "title": "Add push notifications", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "App installable on mobile",
+        "Works offline for cached content",
+        "Mobile-optimized layouts",
+        "Push notifications work"
+      ],
+      "affectedFiles": [
+        "public/manifest.json",
+        "src/app/sw.ts",
+        "next.config.ts"
+      ],
+      "notes": [],
+      "createdAt": "2026-01-29T14:00:00Z",
+      "updatedAt": "2026-01-29T14:00:00Z"
+    },
+    {
+      "id": 12,
+      "title": "Verification System",
+      "description": "Build daycare verification with license checks and badges",
+      "status": "pending",
+      "priority": "medium",
+      "complexity": 3,
+      "phase": "4.1",
+      "tags": ["verification", "trust", "security"],
+      "blockedBy": [],
+      "blocks": [],
+      "subtasks": [
+        { "id": "12.1", "title": "Create verification request form", "done": false },
+        { "id": "12.2", "title": "Build admin verification workflow", "done": false },
+        { "id": "12.3", "title": "Add verified badge to listings", "done": false },
+        { "id": "12.4", "title": "Document upload for licenses", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "Daycares can submit verification request",
+        "Admin can review and approve",
+        "Verified badge shown on profile",
+        "License documents stored securely"
+      ],
+      "affectedFiles": [
+        "src/app/(portal)/portal/verification/*",
+        "src/app/(admin)/admin/verifications/*",
+        "src/server/actions/verification.ts"
+      ],
+      "notes": [],
+      "createdAt": "2026-01-29T14:00:00Z",
+      "updatedAt": "2026-01-29T14:00:00Z"
+    },
+    {
+      "id": 13,
+      "title": "Security Enhancements",
+      "description": "Add 2FA, session management, and GDPR compliance",
+      "status": "pending",
+      "priority": "medium",
+      "complexity": 3,
+      "phase": "4.2",
+      "tags": ["security", "2fa", "gdpr"],
+      "blockedBy": [],
+      "blocks": [],
+      "subtasks": [
+        { "id": "13.1", "title": "Implement two-factor authentication", "done": false },
+        { "id": "13.2", "title": "Add login attempt tracking", "done": false },
+        { "id": "13.3", "title": "Build session management UI", "done": false },
+        { "id": "13.4", "title": "Create data export feature (GDPR)", "done": false },
+        { "id": "13.5", "title": "Add account deletion option", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "Users can enable 2FA",
+        "Suspicious logins flagged",
+        "Can view and revoke sessions",
+        "Can export personal data",
+        "Can delete account"
+      ],
+      "affectedFiles": [
+        "src/app/(parent)/dashboard/settings/security/*",
+        "src/server/actions/security.ts",
+        "src/lib/auth.ts"
+      ],
+      "notes": [],
+      "createdAt": "2026-01-29T14:00:00Z",
+      "updatedAt": "2026-01-29T14:00:00Z"
+    },
+    {
+      "id": 14,
+      "title": "Analytics Dashboard",
+      "description": "Build comprehensive analytics for platform and daycares",
+      "status": "pending",
+      "priority": "low",
+      "complexity": 4,
+      "phase": "5.1",
+      "tags": ["analytics", "dashboard", "metrics"],
+      "blockedBy": [1, 5],
+      "blocks": [],
+      "subtasks": [
+        { "id": "14.1", "title": "Set up analytics tracking", "done": false },
+        { "id": "14.2", "title": "Build admin analytics dashboard", "done": false },
+        { "id": "14.3", "title": "Create daycare analytics page", "done": false },
+        { "id": "14.4", "title": "Implement booking funnel tracking", "done": false },
+        { "id": "14.5", "title": "Add export to CSV/PDF", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "Admin sees platform metrics",
+        "Daycares see their performance",
+        "Conversion funnel visible",
+        "Can export reports"
+      ],
+      "affectedFiles": [
+        "src/app/(admin)/admin/analytics/*",
+        "src/app/(portal)/portal/analytics/*",
+        "src/lib/analytics.ts"
+      ],
+      "notes": [],
+      "createdAt": "2026-01-29T14:00:00Z",
+      "updatedAt": "2026-01-29T14:00:00Z"
+    }
+  ]
+}
