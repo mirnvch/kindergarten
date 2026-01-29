@@ -123,7 +123,7 @@ We are affiliated with the California Home Schooling Association, Association Mo
       data: {
         daycareId: daycare.id,
         url: "https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=800",
-        alt: "Montessori classroom",
+        caption: "Montessori classroom",
         isPrimary: true,
         order: 0,
       },
@@ -132,7 +132,7 @@ We are affiliated with the California Home Schooling Association, Association Mo
       data: {
         daycareId: daycare.id,
         url: "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=800",
-        alt: "Children learning",
+        caption: "Children learning",
         isPrimary: false,
         order: 1,
       },
@@ -141,7 +141,7 @@ We are affiliated with the California Home Schooling Association, Association Mo
       data: {
         daycareId: daycare.id,
         url: "https://images.unsplash.com/photo-1544776193-352d25ca82cd?w=800",
-        alt: "Outdoor play area",
+        caption: "Outdoor play area",
         isPrimary: false,
         order: 2,
       },
