@@ -3,61 +3,16 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { PRICING_PLANS, PLATFORM_COMMISSION } from "@/config/pricing";
+import { SubscriptionPlan } from "@prisma/client";
 
 export const metadata: Metadata = {
   title: "Pricing | KinderCare",
   description: "Simple, transparent pricing for daycare providers",
 };
 
-const plans = [
-  {
-    name: "Free",
-    price: "$0",
-    description: "Get started with the basics",
-    features: [
-      "Basic listing",
-      "Up to 5 photos",
-      "Receive booking requests",
-      "Parent messaging",
-    ],
-    cta: "Get Started",
-    href: "/register/daycare",
-    popular: false,
-  },
-  {
-    name: "Pro",
-    price: "$49",
-    period: "/month",
-    description: "Everything you need to grow",
-    features: [
-      "Featured listing",
-      "Unlimited photos",
-      "Priority in search",
-      "Analytics dashboard",
-      "Custom booking page",
-      "Email notifications",
-    ],
-    cta: "Start Free Trial",
-    href: "/register/daycare",
-    popular: true,
-  },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    description: "For multi-location providers",
-    features: [
-      "Everything in Pro",
-      "Multiple locations",
-      "API access",
-      "Dedicated support",
-      "Custom integrations",
-      "SLA guarantee",
-    ],
-    cta: "Contact Sales",
-    href: "/contact",
-    popular: false,
-  },
-];
+const planOrder: SubscriptionPlan[] = ["FREE", "STARTER", "PROFESSIONAL", "ENTERPRISE"];
 
 export default function PricingPage() {
   return (
@@ -70,52 +25,120 @@ export default function PricingPage() {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-        {plans.map((plan) => (
-          <Card
-            key={plan.name}
-            className={plan.popular ? "border-primary shadow-lg" : ""}
-          >
-            {plan.popular && (
-              <div className="bg-primary text-primary-foreground text-center py-1 text-sm font-medium">
-                Most Popular
-              </div>
-            )}
-            <CardHeader>
-              <CardTitle className="text-2xl">{plan.name}</CardTitle>
-              <div className="mt-2">
-                <span className="text-4xl font-bold">{plan.price}</span>
-                {plan.period && (
-                  <span className="text-muted-foreground">{plan.period}</span>
-                )}
-              </div>
-              <p className="text-muted-foreground">{plan.description}</p>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3 mb-6">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>{feature}</span>
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+        {planOrder.map((planKey) => {
+          const plan = PRICING_PLANS[planKey];
+          const commission = PLATFORM_COMMISSION[planKey];
+
+          return (
+            <Card
+              key={planKey}
+              className={plan.popular ? "border-primary shadow-lg relative" : "relative"}
+            >
+              {plan.popular && (
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  Most Popular
+                </Badge>
+              )}
+              <CardHeader className="pt-8">
+                <CardTitle className="text-xl">{plan.name}</CardTitle>
+                <div className="mt-2">
+                  {plan.price === 0 ? (
+                    <span className="text-4xl font-bold">Free</span>
+                  ) : (
+                    <>
+                      <span className="text-4xl font-bold">${plan.price}</span>
+                      <span className="text-muted-foreground">/month</span>
+                    </>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">{plan.description}</p>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 mb-6">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2 text-sm">
+                      <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                  <li className="flex items-start gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span>{Math.round(commission * 100)}% platform fee</span>
                   </li>
-                ))}
-              </ul>
-              <Button
-                asChild
-                className="w-full"
-                variant={plan.popular ? "default" : "outline"}
-              >
-                <Link href={plan.href}>{plan.cta}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+                </ul>
+
+                <div className="text-xs text-muted-foreground mb-4 space-y-1">
+                  <div className="flex justify-between">
+                    <span>Photos:</span>
+                    <span>{plan.limits.photos === -1 ? "Unlimited" : plan.limits.photos}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Programs:</span>
+                    <span>{plan.limits.programs === -1 ? "Unlimited" : plan.limits.programs}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Team members:</span>
+                    <span>{plan.limits.teamMembers === -1 ? "Unlimited" : plan.limits.teamMembers}</span>
+                  </div>
+                </div>
+
+                <Button
+                  asChild
+                  className="w-full"
+                  variant={plan.popular ? "default" : "outline"}
+                >
+                  <Link href={planKey === "ENTERPRISE" ? "/contact" : "/register/daycare"}>
+                    {planKey === "FREE" ? "Get Started" : planKey === "ENTERPRISE" ? "Contact Sales" : "Start Free Trial"}
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      <div className="text-center mt-12">
+      <div className="text-center mt-12 space-y-2">
         <p className="text-muted-foreground">
-          All plans include a 14-day free trial. No credit card required.
+          All paid plans include a 14-day free trial. No credit card required.
         </p>
+        <p className="text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <Link href="/portal/billing" className="text-primary hover:underline">
+            Manage your subscription
+          </Link>
+        </p>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="max-w-3xl mx-auto mt-20">
+        <h2 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h2>
+        <div className="space-y-6">
+          <div>
+            <h3 className="font-medium mb-2">Can I change plans later?</h3>
+            <p className="text-muted-foreground text-sm">
+              Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately.
+            </p>
+          </div>
+          <div>
+            <h3 className="font-medium mb-2">What payment methods do you accept?</h3>
+            <p className="text-muted-foreground text-sm">
+              We accept all major credit cards (Visa, Mastercard, American Express) through our secure payment processor, Stripe.
+            </p>
+          </div>
+          <div>
+            <h3 className="font-medium mb-2">Is there a contract or commitment?</h3>
+            <p className="text-muted-foreground text-sm">
+              No contracts or long-term commitments. You can cancel your subscription at any time.
+            </p>
+          </div>
+          <div>
+            <h3 className="font-medium mb-2">What&apos;s the platform fee?</h3>
+            <p className="text-muted-foreground text-sm">
+              The platform fee is a small percentage taken from payments you receive from parents. Higher tier plans have lower fees.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

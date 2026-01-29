@@ -14,6 +14,8 @@ import {
   ExternalLink,
   BarChart3,
   Star,
+  Receipt,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,7 +31,8 @@ const navigation = [
   { name: "Enrollments", href: "/portal/enrollments", icon: Users },
   { name: "Reviews", href: "/portal/reviews", icon: Star },
   { name: "Analytics", href: "/portal/analytics", icon: BarChart3 },
-  { name: "Payments", href: "/portal/payments", icon: CreditCard },
+  { name: "Billing", href: "/portal/billing", icon: Receipt },
+  { name: "Payments", href: "/portal/payments", icon: Wallet },
   { name: "Settings", href: "/portal/settings", icon: Settings },
 ];
 
