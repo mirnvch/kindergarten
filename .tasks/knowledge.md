@@ -120,6 +120,21 @@ src/components/
   - Сообщения приходят без перезагрузки
   - Pusher WebSocket подключение
   - Typing indicators
+- **Security Audit — COMPLETED:**
+  - Добавлен rate limiting для `sendMessage` (30/min) и `startNewThread` (10/min)
+  - Добавлена валидация длины сообщения (max 5000 символов)
+  - Добавлена валидация длины subject (max 200 символов)
+  - Добавлена валидация URL вложений (только trusted storage: Supabase, UploadThing)
+  - Добавлена валидация типов файлов (jpeg, png, gif, webp, pdf, txt)
+  - Добавлена валидация daycareId формата (CUID)
+  - Проверка статуса daycare (APPROVED) при создании thread
+  - Создан load test script: `scripts/load-test-messages.ts`
+- **Security Constants (messages.ts):**
+  - `MAX_MESSAGE_LENGTH = 5000` (5KB)
+  - `MAX_SUBJECT_LENGTH = 200`
+  - `MAX_ATTACHMENTS = 5`
+  - `ALLOWED_ATTACHMENT_TYPES` — whitelist
+  - `ALLOWED_URL_PREFIXES` — trusted storage only
 - **Следующее:** Task #11-14 (PWA, Verification, Security, Analytics)
 
 ### 2026-01-30 (Session 6)

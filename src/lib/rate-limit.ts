@@ -30,7 +30,9 @@ export type RateLimitType =
   | "review"        // Review submission: 5/hour
   | "waitlist"      // Waitlist join: 10/hour
   | "bulk-message"  // Bulk messaging: 3/hour
-  | "search";       // Search requests: 30/min
+  | "search"        // Search requests: 30/min
+  | "message"       // Message sending: 30/min (prevents spam)
+  | "thread";       // Thread creation: 10/min
 
 type Duration = `${number} ms` | `${number} s` | `${number} m` | `${number} h` | `${number} d`;
 
@@ -42,6 +44,8 @@ const RATE_LIMITS: Record<RateLimitType, { requests: number; window: Duration }>
   "waitlist":     { requests: 10,  window: "1 h" },
   "bulk-message": { requests: 3,   window: "1 h" },
   "search":       { requests: 30,  window: "1 m" },
+  "message":      { requests: 30,  window: "1 m" },  // Prevent message spam
+  "thread":       { requests: 10,  window: "1 m" },  // Prevent thread creation spam
 };
 
 // Cache rate limiters to avoid recreating them

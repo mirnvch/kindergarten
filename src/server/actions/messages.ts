@@ -4,6 +4,17 @@ import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { triggerNewMessage, triggerMessageRead, triggerThreadUpdate } from "@/lib/pusher";
+import { rateLimit } from "@/lib/rate-limit";
+
+// Security constants
+const MAX_MESSAGE_LENGTH = 5000; // 5KB max message
+const MAX_SUBJECT_LENGTH = 200;
+const MAX_ATTACHMENTS = 5;
+const ALLOWED_ATTACHMENT_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf", "text/plain"];
+const ALLOWED_URL_PREFIXES = [
+  "https://bahutqmwxqgsyqwsghqe.supabase.co/", // Supabase Storage
+  "https://utfs.io/", // UploadThing
+];
 
 export async function getMessageThreads() {
   const session = await auth();
@@ -194,8 +205,46 @@ export async function sendMessage(
     return { success: false, error: "Not authenticated" };
   }
 
-  if (!content.trim() && (!attachments || attachments.length === 0)) {
+  // Rate limiting
+  const rateLimitResult = await rateLimit(session.user.id, "message");
+  if (!rateLimitResult.success) {
+    const retryAfter = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
+    return {
+      success: false,
+      error: `Too many messages. Please wait ${retryAfter} seconds.`
+    };
+  }
+
+  // Content validation
+  const trimmedContent = content.trim();
+  if (!trimmedContent && (!attachments || attachments.length === 0)) {
     return { success: false, error: "Message cannot be empty" };
+  }
+
+  if (trimmedContent.length > MAX_MESSAGE_LENGTH) {
+    return {
+      success: false,
+      error: `Message too long. Maximum ${MAX_MESSAGE_LENGTH} characters allowed.`
+    };
+  }
+
+  // Attachment validation
+  if (attachments && attachments.length > MAX_ATTACHMENTS) {
+    return { success: false, error: `Maximum ${MAX_ATTACHMENTS} attachments allowed.` };
+  }
+
+  if (attachments) {
+    for (const att of attachments) {
+      // Validate URL prefix (only allow trusted storage)
+      const isAllowedUrl = ALLOWED_URL_PREFIXES.some(prefix => att.url.startsWith(prefix));
+      if (!isAllowedUrl) {
+        return { success: false, error: "Invalid attachment URL" };
+      }
+      // Validate file type
+      if (!ALLOWED_ATTACHMENT_TYPES.includes(att.type)) {
+        return { success: false, error: `File type ${att.type} not allowed` };
+      }
+    }
   }
 
   try {
@@ -237,7 +286,7 @@ export async function sendMessage(
       data: {
         threadId,
         senderId: session.user.id,
-        content: content.trim(),
+        content: trimmedContent,
         status: "SENT",
         ...(attachments && attachments.length > 0 && {
           attachments: {
@@ -285,7 +334,7 @@ export async function sendMessage(
 
     for (const recipientId of recipientIds) {
       await triggerThreadUpdate(recipientId, threadId, {
-        lastMessage: content.trim().slice(0, 100),
+        lastMessage: trimmedContent.slice(0, 100),
       });
     }
 
@@ -306,6 +355,36 @@ export async function startNewThread(daycareId: string, subject: string, message
     return { success: false, error: "Not authenticated" };
   }
 
+  // Rate limiting for thread creation
+  const rateLimitResult = await rateLimit(session.user.id, "thread");
+  if (!rateLimitResult.success) {
+    const retryAfter = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
+    return {
+      success: false,
+      error: `Too many requests. Please wait ${retryAfter} seconds.`
+    };
+  }
+
+  // Validate inputs
+  const trimmedSubject = subject.trim().slice(0, MAX_SUBJECT_LENGTH);
+  const trimmedMessage = message.trim();
+
+  if (!trimmedMessage) {
+    return { success: false, error: "Message cannot be empty" };
+  }
+
+  if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
+    return {
+      success: false,
+      error: `Message too long. Maximum ${MAX_MESSAGE_LENGTH} characters allowed.`
+    };
+  }
+
+  // Validate daycareId format (CUID)
+  if (!/^c[a-z0-9]{24}$/.test(daycareId)) {
+    return { success: false, error: "Invalid daycare ID" };
+  }
+
   try {
     // Check if thread already exists
     let thread = await db.messageThread.findUnique({
@@ -318,12 +397,22 @@ export async function startNewThread(daycareId: string, subject: string, message
     });
 
     if (!thread) {
+      // Verify daycare exists and is active
+      const daycare = await db.daycare.findUnique({
+        where: { id: daycareId },
+        select: { id: true, status: true },
+      });
+
+      if (!daycare || daycare.status !== "APPROVED") {
+        return { success: false, error: "Daycare not found or inactive" };
+      }
+
       // Create new thread
       thread = await db.messageThread.create({
         data: {
           daycareId,
           parentId: session.user.id,
-          subject,
+          subject: trimmedSubject || null,
           lastMessageAt: new Date(),
         },
       });
@@ -334,7 +423,7 @@ export async function startNewThread(daycareId: string, subject: string, message
       data: {
         threadId: thread.id,
         senderId: session.user.id,
-        content: message.trim(),
+        content: trimmedMessage,
         status: "SENT",
       },
     });
