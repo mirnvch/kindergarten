@@ -47,17 +47,32 @@ export default {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const userRole = auth?.user?.role as UserRole | undefined;
+      const requires2FA = auth?.user?.requires2FA as boolean | undefined;
+      const twoFactorVerified = auth?.user?.twoFactorVerified as boolean | undefined;
 
       const protectedRoutes = ["/dashboard", "/portal", "/admin"];
       const authRoutes = ["/login", "/register"];
+      const twoFactorRoute = "/login/verify-2fa";
+
+      const pathname = nextUrl.pathname;
+
+      // Allow access to 2FA verification page
+      if (pathname.startsWith(twoFactorRoute)) {
+        return true;
+      }
+
+      // If user requires 2FA but hasn't verified, redirect to 2FA page
+      if (isLoggedIn && requires2FA && !twoFactorVerified) {
+        const url = new URL(twoFactorRoute, nextUrl);
+        url.searchParams.set("callbackUrl", pathname);
+        return Response.redirect(url);
+      }
 
       const roleRoutes: Record<string, string[]> = {
         "/dashboard": ["PARENT"],
         "/portal": ["DAYCARE_OWNER", "DAYCARE_STAFF"],
         "/admin": ["ADMIN"],
       };
-
-      const pathname = nextUrl.pathname;
 
       // Redirect logged-in users away from auth pages
       if (isLoggedIn && authRoutes.some((route) => pathname.startsWith(route))) {
@@ -98,6 +113,8 @@ export default {
         session.user.role = token.role as UserRole;
         session.user.firstName = token.firstName as string;
         session.user.lastName = token.lastName as string;
+        session.user.requires2FA = token.requires2FA as boolean | undefined;
+        session.user.twoFactorVerified = token.twoFactorVerified as boolean | undefined;
       }
       return session;
     },
