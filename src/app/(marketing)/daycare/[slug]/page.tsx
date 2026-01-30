@@ -34,6 +34,7 @@ import type {
 import { ReviewsSection } from "@/components/reviews/reviews-section";
 import { canUserReview } from "@/server/actions/reviews";
 import { WaitlistForm } from "@/components/waitlist/waitlist-form";
+import { ContactDaycareButton } from "@/components/daycare/contact-button";
 
 interface DaycarePageProps {
   params: Promise<{ slug: string }>;
@@ -307,6 +308,11 @@ export default async function DaycarePage({ params }: DaycarePageProps) {
                     </Link>
                   </Button>
                 )}
+                <ContactDaycareButton
+                  daycareId={daycare.id}
+                  daycareName={daycare.name}
+                  isAuthenticated={!!session?.user}
+                />
               </div>
 
               <Separator className="my-6" />

@@ -103,6 +103,25 @@ src/components/
 
 ## Session Notes
 
+### 2026-01-30 (Session 7)
+- **Real-time Messaging TESTED & WORKING**
+- Исправлены проблемы:
+  - DATABASE_URL в Vercel указывал на старую VPS БД (212.74.231.49)
+  - Обновлено на Supabase (aws-1-eu-west-1.pooler.supabase.com)
+  - Schema не была синхронизирована с Supabase (MessageThread, Message tables)
+  - `npx prisma db push --url="$DIRECT_URL"` для синхронизации
+  - Sign out не работал (CSRF token) — исправлено через server action logout
+  - Добавлена страница `/portal/messages/[threadId]` для owner
+  - Добавлена кнопка "Contact Daycare" на страницу садика
+- Тестовые аккаунты:
+  - Parent: `test.parent@kindergarten.com` / `Test123!`
+  - Owner: `test.owner@kindergarten.com` / `Test123!`
+- **Real-time features работают:**
+  - Сообщения приходят без перезагрузки
+  - Pusher WebSocket подключение
+  - Typing indicators
+- **Следующее:** Task #11-14 (PWA, Verification, Security, Analytics)
+
 ### 2026-01-30 (Session 6)
 - **Task #8: Search Improvements — COMPLETED**
   - Mapbox GL map view with markers/popups
