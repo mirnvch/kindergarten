@@ -33,6 +33,10 @@ export async function initiate2FASetup(): Promise<
     return { success: false, error: "Not authenticated" };
   }
 
+  if (!session.user.email) {
+    return { success: false, error: "Email is required for 2FA setup" };
+  }
+
   // Rate limit
   const rateLimitResult = await rateLimit(session.user.id, "2fa-setup");
   if (!rateLimitResult.success) {
@@ -51,7 +55,7 @@ export async function initiate2FASetup(): Promise<
 
     // Generate new secret
     const secret = generateSecret();
-    const otpUri = generateTotpUri(secret, session.user.email);
+    const otpUri = generateTotpUri(secret, session.user.email!);
     const qrCode = await generateQRCode(otpUri);
 
     // Store encrypted secret (not enabled yet)
@@ -76,7 +80,7 @@ export async function initiate2FASetup(): Promise<
       data: { qrCode, secret },
     };
   } catch (error) {
-    console.error("[2FA] Setup initiation failed:", error);
+    console.error("[2FA] Setup initiation failed:", error instanceof Error ? error.message : error);
     return { success: false, error: "Failed to initiate 2FA setup" };
   }
 }
@@ -114,7 +118,7 @@ export async function verify2FASetup(
 
     // Decrypt and verify the token
     const secret = decryptSecret(twoFactorAuth.secret);
-    const isValid = verifyToken(secret, token);
+    const isValid = await verifyToken(secret, token);
 
     if (!isValid) {
       return { success: false, error: "Invalid verification code" };
@@ -189,7 +193,7 @@ export async function disable2FA(
 
     // Verify the token
     const secret = decryptSecret(twoFactorAuth.secret);
-    const isValid = verifyToken(secret, token);
+    const isValid = await verifyToken(secret, token);
 
     if (!isValid) {
       return { success: false, error: "Invalid verification code" };
@@ -271,7 +275,7 @@ export async function verify2FAToken(
     }
 
     const secret = decryptSecret(twoFactorAuth.secret);
-    const isValid = verifyToken(secret, token);
+    const isValid = await verifyToken(secret, token);
 
     if (!isValid) {
       return { success: false, error: "Invalid verification code" };
@@ -362,7 +366,7 @@ export async function regenerateBackupCodes(
 
     // Verify the token
     const secret = decryptSecret(twoFactorAuth.secret);
-    const isValid = verifyToken(secret, token);
+    const isValid = await verifyToken(secret, token);
 
     if (!isValid) {
       return { success: false, error: "Invalid verification code" };

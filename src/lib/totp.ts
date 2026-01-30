@@ -1,4 +1,4 @@
-import { generateSecret as otpGenerateSecret, generateURI, verifySync } from "otplib";
+import { generateSecret as otpGenerateSecret, generateURI, verify } from "otplib";
 import QRCode from "qrcode";
 import crypto from "crypto";
 
@@ -86,13 +86,11 @@ export async function generateQRCode(otpUri: string): Promise<string> {
 /**
  * Verify a TOTP token
  */
-export function verifyToken(secret: string, token: string): boolean {
+export async function verifyToken(secret: string, token: string): Promise<boolean> {
   try {
-    const result = verifySync({
+    const result = await verify({
       secret,
       token,
-      strategy: "totp",
-      epochTolerance: 30, // Allow 1 step (30 seconds) tolerance
     });
     return result.valid;
   } catch {
