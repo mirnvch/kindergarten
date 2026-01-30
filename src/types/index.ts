@@ -99,7 +99,7 @@ export type PortalBooking = Prisma.BookingGetPayload<{
 /**
  * Child basic info
  */
-export type Child = Prisma.ChildGetPayload<{}>;
+export type Child = Prisma.ChildGetPayload<object>;
 
 /**
  * Child with enrollments and bookings
@@ -134,12 +134,12 @@ export type ChildWithRelations = Prisma.ChildGetPayload<{
 /**
  * Daycare photo
  */
-export type DaycarePhoto = Prisma.DaycarePhotoGetPayload<{}>;
+export type DaycarePhoto = Prisma.DaycarePhotoGetPayload<object>;
 
 /**
  * Daycare program (raw from Prisma)
  */
-export type DaycareProgramRaw = Prisma.ProgramGetPayload<{}>;
+export type DaycareProgramRaw = Prisma.ProgramGetPayload<object>;
 
 /**
  * Daycare program (transformed with price as number)
@@ -160,7 +160,7 @@ export type DaycareAmenityWithDetails = Prisma.DaycareAmenityGetPayload<{
 /**
  * Amenity (transformed - extracted from junction table)
  */
-export type Amenity = Prisma.AmenityGetPayload<{}>;
+export type Amenity = Prisma.AmenityGetPayload<object>;
 
 /**
  * Daycare review with user

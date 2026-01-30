@@ -244,7 +244,7 @@ export function generateRecurringDates(config: RecurrenceConfig): Date[] {
     return [new Date(startDate)];
   }
 
-  let currentDate = new Date(startDate);
+  const currentDate = new Date(startDate);
 
   while (currentDate <= endDate && dates.length < MAX_OCCURRENCES) {
     dates.push(new Date(currentDate));

@@ -31,10 +31,16 @@ export function CancelDialog({ bookingId, scheduledAt, children }: CancelDialogP
   const [reason, setReason] = useState("");
 
   // Check if cancellation is allowed (24 hours before)
-  const hoursUntilBooking = scheduledAt
-    ? (scheduledAt.getTime() - Date.now()) / (1000 * 60 * 60)
-    : Infinity;
-  const canCancel = hoursUntilBooking >= 24;
+  const [canCancel, setCanCancel] = useState(true);
+
+  // Recalculate when dialog opens
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen && scheduledAt) {
+      const hoursUntilBooking = (scheduledAt.getTime() - Date.now()) / (1000 * 60 * 60);
+      setCanCancel(hoursUntilBooking >= 24);
+    }
+    setOpen(newOpen);
+  };
 
   const handleCancel = () => {
     startTransition(async () => {
@@ -51,7 +57,7 @@ export function CancelDialog({ bookingId, scheduledAt, children }: CancelDialogP
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>

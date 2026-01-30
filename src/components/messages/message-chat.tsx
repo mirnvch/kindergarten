@@ -108,9 +108,12 @@ export function MessageChat({ thread }: MessageChatProps) {
     scrollToBottom();
   }, [messages]);
 
-  // Update messages when thread changes
+  // Update messages when thread changes - use timeout to avoid cascading renders
   useEffect(() => {
-    setMessages(thread.messages);
+    const timeoutId = setTimeout(() => {
+      setMessages(thread.messages);
+    }, 0);
+    return () => clearTimeout(timeoutId);
   }, [thread.messages]);
 
   const handleSend = async () => {

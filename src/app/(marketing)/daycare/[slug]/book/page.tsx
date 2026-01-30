@@ -84,7 +84,7 @@ export default async function BookTourPage({ params }: BookTourPageProps) {
             daycareId={daycare.id}
             daycareName={daycare.name}
             availability={availability}
-            children={children}
+            childProfiles={children}
           />
         </div>
 

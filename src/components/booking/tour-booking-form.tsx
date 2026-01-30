@@ -33,14 +33,14 @@ interface TourBookingFormProps {
   daycareId: string;
   daycareName: string;
   availability: DayAvailability[];
-  children: Child[];
+  childProfiles: Child[];
 }
 
 export function TourBookingForm({
   daycareId,
   daycareName,
   availability,
-  children,
+  childProfiles,
 }: TourBookingFormProps) {
   const [isPending, startTransition] = useTransition();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -174,7 +174,7 @@ export function TourBookingForm({
           </div>
         </div>
         <ChildSelector
-          childList={children}
+          childList={childProfiles}
           selectedChildId={selectedChildId}
           onSelectChild={setSelectedChildId}
         />
@@ -240,9 +240,9 @@ export function TourBookingForm({
           <p>
             <span className="text-muted-foreground">Child:</span>{" "}
             {selectedChildId
-              ? children.find((c) => c.id === selectedChildId)?.firstName +
+              ? childProfiles.find((c) => c.id === selectedChildId)?.firstName +
                 " " +
-                children.find((c) => c.id === selectedChildId)?.lastName
+                childProfiles.find((c) => c.id === selectedChildId)?.lastName
               : "Not selected"}
           </p>
           <p>

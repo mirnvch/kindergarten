@@ -36,14 +36,14 @@ interface EnrollmentFormProps {
   daycareId: string;
   daycareName: string;
   programs: Program[];
-  children: Child[];
+  childProfiles: Child[];
 }
 
 export function EnrollmentForm({
   daycareId,
   daycareName,
   programs,
-  children,
+  childProfiles,
 }: EnrollmentFormProps) {
   const [isPending, startTransition] = useTransition();
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
@@ -89,7 +89,7 @@ export function EnrollmentForm({
     });
   };
 
-  const selectedChild = children.find((c) => c.id === selectedChildId);
+  const selectedChild = childProfiles.find((c) => c.id === selectedChildId);
   const selectedProgram = programs.find((p) => p.id === selectedProgramId);
 
   return (
@@ -106,7 +106,7 @@ export function EnrollmentForm({
           </div>
         </div>
         <ChildSelector
-          childList={children}
+          childList={childProfiles}
           selectedChildId={selectedChildId}
           onSelectChild={setSelectedChildId}
         />

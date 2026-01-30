@@ -93,7 +93,7 @@ export default async function EnrollPage({ params }: EnrollPageProps) {
             daycareId={daycare.id}
             daycareName={daycare.name}
             programs={programs}
-            children={children}
+            childProfiles={children}
           />
         </div>
 

@@ -18,7 +18,11 @@ export function SearchMap({ daycares, center, zoom = 10 }: SearchMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
-  const [mapError, setMapError] = useState<string | null>(null);
+  // Check token availability at render time to avoid setState in effect
+  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+  const [mapError, setMapError] = useState<string | null>(
+    !token ? "Mapbox token not configured" : null
+  );
 
   // Calculate center from daycares if not provided
   const defaultCenter: [number, number] = center || (() => {
@@ -32,13 +36,7 @@ export function SearchMap({ daycares, center, zoom = 10 }: SearchMapProps) {
   })();
 
   useEffect(() => {
-    if (!mapContainer.current) return;
-
-    const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-    if (!token) {
-      setMapError("Mapbox token not configured");
-      return;
-    }
+    if (!mapContainer.current || !token) return;
 
     mapboxgl.accessToken = token;
 
@@ -58,7 +56,8 @@ export function SearchMap({ daycares, center, zoom = 10 }: SearchMapProps) {
         map.current?.remove();
       };
     } catch {
-      setMapError("Failed to initialize map");
+      // Defer setState to avoid synchronous update in effect
+      queueMicrotask(() => setMapError("Failed to initialize map"));
     }
   }, []);
 
@@ -109,7 +108,7 @@ export function SearchMap({ daycares, center, zoom = 10 }: SearchMapProps) {
       daycares.forEach((d) => bounds.extend([d.longitude, d.latitude]));
       map.current.fitBounds(bounds, { padding: 50, maxZoom: 14 });
     }
-  }, [daycares]);
+  }, [daycares, token]);
 
   if (mapError) {
     return (

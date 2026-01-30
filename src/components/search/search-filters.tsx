@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { Search, SlidersHorizontal, MapPin, List, Map, Star, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -230,7 +230,7 @@ export function SearchFilters({ onViewChange, currentView = "list" }: SearchFilt
     currentMinRating ||
     currentLat;
 
-  const FilterControls = () => (
+  const filterControls = useMemo(() => (
     <div className="space-y-4">
       <div>
         <Label>State</Label>
@@ -329,7 +329,7 @@ export function SearchFilters({ onViewChange, currentView = "list" }: SearchFilt
         Clear Filters
       </Button>
     </div>
-  );
+  ), [currentState, currentCity, priceValue, ageValue, currentMinRating, handlePriceChange, handleAgeChange, handleRatingChange, updateFilters, router]);
 
   return (
     <div className="space-y-4">
@@ -406,7 +406,7 @@ export function SearchFilters({ onViewChange, currentView = "list" }: SearchFilt
               <SheetTitle>Filters</SheetTitle>
             </SheetHeader>
             <div className="mt-4">
-              <FilterControls />
+              {filterControls}
             </div>
           </SheetContent>
         </Sheet>

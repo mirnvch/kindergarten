@@ -1,6 +1,5 @@
 import { db } from "@/lib/db";
 import { SettingsForm } from "@/components/admin/settings-form";
-import { DEFAULT_SETTINGS } from "@/server/actions/admin/settings";
 
 async function getSettings() {
   const settings = await db.platformSettings.findMany();

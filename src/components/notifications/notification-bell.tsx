@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import { Bell, Check, Trash2, MessageSquare, Calendar, Star, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,16 +47,18 @@ export function NotificationBell({ initialCount = 0 }: { initialCount?: number }
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (isOpen) {
-      loadNotifications();
-    }
-  }, [isOpen]);
-
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     const data = await getNotifications(10);
     setNotifications(data as Notification[]);
     setUnreadCount(data.filter((n) => !n.readAt).length);
+  }, []);
+
+  // Load notifications when dropdown opens
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (open) {
+      void loadNotifications();
+    }
   };
 
   const handleMarkAsRead = (id: string) => {
@@ -94,7 +96,7 @@ export function NotificationBell({ initialCount = 0 }: { initialCount?: number }
   };
 
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+    <DropdownMenu open={isOpen} onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
