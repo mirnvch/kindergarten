@@ -92,10 +92,44 @@ src/components/
 - `STRIPE_SECRET_KEY` — Stripe API (Phase 2)
 - `STRIPE_WEBHOOK_SECRET` — Stripe webhooks
 - `RESEND_API_KEY` — Email service (Phase 1.4)
+- `UPSTASH_REDIS_REST_URL` — Upstash Redis URL (rate limiting, caching)
+- `UPSTASH_REDIS_REST_TOKEN` — Upstash Redis token
+- `QSTASH_TOKEN` — Upstash QStash token (email queue)
+- `QSTASH_CURRENT_SIGNING_KEY` — QStash webhook verification
+- `QSTASH_NEXT_SIGNING_KEY` — QStash webhook verification (rotation)
 
 ---
 
 ## Session Notes
+
+### 2026-01-30 (Session 5)
+- **Scalability Sprint — 10 TASKS COMPLETED**
+- Выявлены и исправлены критические проблемы производительности:
+  - #15: Database indexes (8 compound indexes)
+  - #16: Connection pool (max: 20, min: 5, timeouts)
+  - #17: Rate limiting (Upstash, 6 action types)
+  - #18: N+1 fix in bulk messaging (3000 queries → 6)
+  - #19: Message pagination (cursor-based, 50/page)
+  - #20: Email queue (QStash, 3 retries)
+  - #21: Webhook idempotency (WebhookEvent table)
+  - #22: Redis caching layer (notifications count)
+  - #23: SQL aggregation (groupBy + _avg instead of in-memory)
+  - #24: Health endpoint (/api/health)
+- Новые файлы:
+  - `src/lib/rate-limit.ts`
+  - `src/lib/queue.ts`
+  - `src/lib/cache.ts`
+  - `src/app/api/queue/email/route.ts`
+  - `src/app/api/health/route.ts`
+- Модели Prisma:
+  - `WebhookEvent` (idempotency)
+- **Требуется в Vercel:**
+  - UPSTASH_REDIS_REST_URL
+  - UPSTASH_REDIS_REST_TOKEN
+  - QSTASH_TOKEN
+  - QSTASH_CURRENT_SIGNING_KEY
+  - QSTASH_NEXT_SIGNING_KEY
+- **Следующее:** Task #8-14 (features) или deploy
 
 ### 2026-01-29 (Session 4)
 - **Task #7: Waitlist System — COMPLETED**

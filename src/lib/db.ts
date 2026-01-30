@@ -19,6 +19,11 @@ function createPrismaClient() {
   // For production with a standard PostgreSQL URL
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
+    // Connection pool settings for high concurrency
+    max: 20,                      // Maximum connections in pool
+    min: 5,                       // Minimum idle connections
+    idleTimeoutMillis: 30000,     // Close idle connections after 30s
+    connectionTimeoutMillis: 5000, // Fail if can't connect in 5s
   });
 
   const adapter = new PrismaPg(pool);

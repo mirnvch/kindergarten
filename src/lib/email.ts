@@ -1,9 +1,10 @@
 import { Resend } from "resend";
+import { queueEmail } from "./queue";
 
 // Lazy initialize Resend to avoid build-time errors
 let resend: Resend | null = null;
 
-function getResend() {
+export function getResend() {
   if (!resend && process.env.RESEND_API_KEY) {
     resend = new Resend(process.env.RESEND_API_KEY);
   }
@@ -19,6 +20,9 @@ export interface SendEmailOptions {
   replyTo?: string;
 }
 
+/**
+ * Send email synchronously (blocks until sent)
+ */
 export async function sendEmail({ to, subject, html, replyTo }: SendEmailOptions) {
   const client = getResend();
 
@@ -46,6 +50,24 @@ export async function sendEmail({ to, subject, html, replyTo }: SendEmailOptions
     console.error("[Email] Exception:", err);
     return { success: false, error: "Failed to send email" };
   }
+}
+
+/**
+ * Send email asynchronously via queue (returns immediately)
+ * Falls back to sync send if queue not configured
+ */
+export async function sendEmailAsync({ to, subject, html }: Omit<SendEmailOptions, "replyTo">) {
+  const recipient = Array.isArray(to) ? to[0] : to;
+
+  // Try to queue
+  const { queued } = await queueEmail({ to: recipient, subject, html });
+
+  if (queued) {
+    return { success: true, queued: true };
+  }
+
+  // Fallback to sync send
+  return sendEmail({ to, subject, html });
 }
 
 // Email templates

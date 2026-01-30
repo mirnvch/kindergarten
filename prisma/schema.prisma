@@ -92,7 +92,7 @@ model User {
   children     Child[]
   bookings     Booking[]
   reviews      Review[]
-  sentMessages Message[] @relation("SentMessages")
+  sentMessages Message[]  @relation("SentMessages")
   favorites    Favorite[]
 
   // Daycare staff relations
@@ -144,7 +144,7 @@ model VerificationToken {
 // ==================== PARENT-SPECIFIC ====================
 
 model Child {
-  id           String    @id @default(cuid())
+  id           String   @id @default(cuid())
   parentId     String
   firstName    String
   lastName     String
@@ -152,7 +152,7 @@ model Child {
   gender       String?
   allergies    String?
   specialNeeds String?
-  notes        String?   @db.Text
+  notes        String?  @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -167,8 +167,8 @@ model Child {
 // ==================== DAYCARE ====================
 
 model Daycare {
-  id          String @id @default(cuid())
-  slug        String @unique
+  id          String  @id @default(cuid())
+  slug        String  @unique
   name        String
   description String? @db.Text
 
@@ -212,8 +212,8 @@ model Daycare {
   metaDescription String?
 
   // Stripe
-  stripeAccountId String?  @unique
-  stripeOnboarded Boolean  @default(false)
+  stripeAccountId String? @unique
+  stripeOnboarded Boolean @default(false)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -336,9 +336,9 @@ model Booking {
   status BookingStatus @default(PENDING)
 
   // For tours
-  scheduledAt  DateTime?
-  duration     Int? // minutes
-  notes        String?   @db.Text
+  scheduledAt DateTime?
+  duration    Int? // minutes
+  notes       String?   @db.Text
 
   // Confirmation
   confirmedAt  DateTime?
@@ -348,14 +348,16 @@ model Booking {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  parent  User     @relation(fields: [parentId], references: [id])
-  daycare Daycare  @relation(fields: [daycareId], references: [id])
-  child   Child?   @relation(fields: [childId], references: [id])
+  parent  User    @relation(fields: [parentId], references: [id])
+  daycare Daycare @relation(fields: [daycareId], references: [id])
+  child   Child?  @relation(fields: [childId], references: [id])
 
   @@index([parentId])
   @@index([daycareId])
   @@index([status])
   @@index([scheduledAt])
+  @@index([daycareId, status, scheduledAt]) // Compound for availability queries
+  @@index([createdAt]) // Sorting by creation time
 }
 
 model Enrollment {
@@ -363,9 +365,9 @@ model Enrollment {
   daycareId String
   childId   String
 
-  startDate   DateTime
-  endDate     DateTime?
-  status      String // "active", "pending", "completed", "cancelled"
+  startDate DateTime
+  endDate   DateTime?
+  status    String // "active", "pending", "completed", "cancelled"
 
   schedule    String // "full-time", "part-time", etc.
   monthlyRate Decimal @db.Decimal(10, 2)
@@ -400,6 +402,7 @@ model WaitlistEntry {
   daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
 
   @@index([daycareId])
+  @@index([daycareId, position]) // Position updates and ordering
 }
 
 // ==================== REVIEWS ====================
@@ -436,6 +439,7 @@ model Review {
   @@unique([daycareId, userId])
   @@index([daycareId])
   @@index([rating])
+  @@index([createdAt]) // Recent reviews sorting
 }
 
 // ==================== MESSAGING ====================
@@ -458,6 +462,7 @@ model MessageThread {
   @@unique([daycareId, parentId])
   @@index([daycareId])
   @@index([parentId])
+  @@index([daycareId, updatedAt]) // Recent threads for portal
 }
 
 model Message {
@@ -476,6 +481,8 @@ model Message {
 
   @@index([threadId])
   @@index([senderId])
+  @@index([threadId, createdAt]) // Pagination in chat
+  @@index([readAt]) // Unread messages queries
 }
 
 // ==================== PAYMENTS & SUBSCRIPTIONS ====================
@@ -559,7 +566,7 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([readAt])
+  @@index([userId, readAt]) // Compound for unread count queries
 }
 
 model NotificationPreference {
@@ -598,12 +605,22 @@ model AuditLog {
 }
 
 model PlatformSettings {
-  id          String @id @default(cuid())
-  key         String @unique
+  id          String  @id @default(cuid())
+  key         String  @unique
   value       Json
   description String?
 
   updatedAt DateTime @updatedAt
+}
+
+// ==================== WEBHOOK EVENTS (Idempotency) ====================
+
+model WebhookEvent {
+  id          String   @id // Stripe event ID
+  type        String
+  processedAt DateTime @default(now())
+
+  @@index([processedAt])
 }
 
 // ==================== FAVORITES ====================

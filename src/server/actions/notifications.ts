@@ -2,6 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { cacheGetOrSet, invalidateCache, CACHE_TTL } from "@/lib/cache";
 import { revalidatePath } from "next/cache";
 import {
   sendEmail,
@@ -18,12 +19,18 @@ export async function getUnreadNotificationsCount() {
   const session = await auth();
   if (!session?.user?.id) return 0;
 
-  return db.notification.count({
-    where: {
-      userId: session.user.id,
-      readAt: null,
-    },
-  });
+  // Cache for 30 seconds to reduce DB load
+  return cacheGetOrSet(
+    `notifications:${session.user.id}:count`,
+    () =>
+      db.notification.count({
+        where: {
+          userId: session.user.id,
+          readAt: null,
+        },
+      }),
+    CACHE_TTL.SHORT
+  );
 }
 
 export async function getNotifications(limit = 10) {
@@ -58,6 +65,9 @@ export async function markNotificationAsRead(notificationId: string) {
       },
     });
 
+    // Invalidate cache
+    await invalidateCache.notifications(session.user.id);
+
     revalidatePath("/dashboard");
     revalidatePath("/portal");
     return { success: true };
@@ -82,6 +92,9 @@ export async function markAllNotificationsAsRead() {
         readAt: new Date(),
       },
     });
+
+    // Invalidate cache
+    await invalidateCache.notifications(session.user.id);
 
     revalidatePath("/dashboard");
     revalidatePath("/portal");

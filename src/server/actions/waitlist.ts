@@ -2,6 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { rateLimit } from "@/lib/rate-limit";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createNotification } from "./notifications";
@@ -30,6 +31,12 @@ const updateWaitlistEntrySchema = z.object({
 export async function joinWaitlist(data: z.infer<typeof joinWaitlistSchema>) {
   try {
     const validated = joinWaitlistSchema.parse(data);
+
+    // Rate limit by email: 10 waitlist joins per hour
+    const rateLimitResult = await rateLimit(validated.parentEmail, "waitlist");
+    if (!rateLimitResult.success) {
+      return { success: false, error: "Too many requests. Please try again later." };
+    }
 
     // Check if daycare exists
     const daycare = await db.daycare.findUnique({

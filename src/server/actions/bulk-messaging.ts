@@ -2,6 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { rateLimit } from "@/lib/rate-limit";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createNotification } from "./notifications";
@@ -44,6 +45,16 @@ export async function sendBulkMessage(data: BulkMessageInput) {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: "Unauthorized" };
+  }
+
+  // Rate limit: 3 bulk messages per hour per user
+  const rateLimitResult = await rateLimit(session.user.id, "bulk-message");
+  if (!rateLimitResult.success) {
+    const retryAfter = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
+    return {
+      success: false,
+      error: `Too many bulk messages. Please try again in ${Math.ceil(retryAfter / 60)} minutes.`
+    };
   }
 
   const access = await checkPremiumAccess(session.user.id);
@@ -112,47 +123,99 @@ export async function sendBulkMessage(data: BulkMessageInput) {
       return { success: false, error: "No recipients found for the selected group" };
     }
 
-    // Create message threads and messages for each recipient
-    const results = await Promise.allSettled(
-      recipients.map(async (recipient) => {
-        // Find or create thread
-        let thread = await db.messageThread.findFirst({
-          where: { daycareId: daycare.id, parentId: recipient.userId },
-        });
+    // OPTIMIZED: Batch operations instead of N+1 queries
+    const recipientUserIds = recipients.map((r) => r.userId);
 
-        if (!thread) {
-          thread = await db.messageThread.create({
-            data: {
-              daycareId: daycare.id,
-              parentId: recipient.userId,
-              subject: validated.subject,
-            },
-          });
-        }
+    // 1. Pre-fetch ALL existing threads in one query
+    const existingThreads = await db.messageThread.findMany({
+      where: {
+        daycareId: daycare.id,
+        parentId: { in: recipientUserIds },
+      },
+      select: { id: true, parentId: true },
+    });
 
-        // Create message
-        await db.message.create({
-          data: {
-            threadId: thread.id,
-            senderId: session.user!.id,
-            content: `**${validated.subject}**\n\n${validated.content}`,
-            isBulk: true,
-          },
-        });
+    const threadsByParent = new Map(existingThreads.map((t) => [t.parentId, t.id]));
 
-        // Create notification
-        await createNotification({
-          userId: recipient.userId,
-          type: "message_received",
-          title: `Message from ${daycare.name}`,
-          body: validated.subject,
-          data: { threadId: thread.id, daycareId: daycare.id },
-        });
-      })
+    // 2. Find recipients without threads
+    const recipientsWithoutThreads = recipientUserIds.filter(
+      (userId) => !threadsByParent.has(userId)
     );
 
-    const sent = results.filter((r) => r.status === "fulfilled").length;
-    const failed = results.filter((r) => r.status === "rejected").length;
+    // 3. Create missing threads in batch using transaction
+    let sent = 0;
+    let failed = 0;
+
+    try {
+      await db.$transaction(async (tx) => {
+        // Create missing threads
+        if (recipientsWithoutThreads.length > 0) {
+          await tx.messageThread.createMany({
+            data: recipientsWithoutThreads.map((parentId) => ({
+              daycareId: daycare.id,
+              parentId,
+              subject: validated.subject,
+            })),
+            skipDuplicates: true,
+          });
+
+          // Fetch newly created threads
+          const newThreads = await tx.messageThread.findMany({
+            where: {
+              daycareId: daycare.id,
+              parentId: { in: recipientsWithoutThreads },
+            },
+            select: { id: true, parentId: true },
+          });
+
+          newThreads.forEach((t) => threadsByParent.set(t.parentId, t.id));
+        }
+
+        // 4. Create all messages in batch
+        const messagesData = recipientUserIds
+          .map((userId) => {
+            const threadId = threadsByParent.get(userId);
+            if (!threadId) return null;
+            return {
+              threadId,
+              senderId: session.user!.id,
+              content: `**${validated.subject}**\n\n${validated.content}`,
+              isBulk: true,
+            };
+          })
+          .filter((m): m is NonNullable<typeof m> => m !== null);
+
+        await tx.message.createMany({ data: messagesData });
+
+        // 5. Create all notifications in batch
+        const notificationsData = recipientUserIds
+          .map((userId) => {
+            const threadId = threadsByParent.get(userId);
+            if (!threadId) return null;
+            return {
+              userId,
+              type: "message_received",
+              title: `Message from ${daycare.name}`,
+              body: validated.subject,
+              data: { threadId, daycareId: daycare.id },
+            };
+          })
+          .filter((n): n is NonNullable<typeof n> => n !== null);
+
+        await tx.notification.createMany({ data: notificationsData });
+
+        // 6. Update thread lastMessageAt in batch
+        await tx.messageThread.updateMany({
+          where: { id: { in: Array.from(threadsByParent.values()) } },
+          data: { lastMessageAt: new Date() },
+        });
+
+        sent = messagesData.length;
+      });
+    } catch (txError) {
+      console.error("[BulkMessage] Transaction failed:", txError);
+      failed = recipientUserIds.length;
+    }
 
     revalidatePath("/portal/messages");
 

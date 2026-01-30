@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { rateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
 const reviewSchema = z.object({
@@ -24,6 +25,12 @@ export async function createReview(data: ReviewInput) {
     const session = await auth();
     if (!session?.user) {
       return { success: false, error: "You must be logged in to leave a review" };
+    }
+
+    // Rate limit: 5 reviews per hour
+    const rateLimitResult = await rateLimit(session.user.id, "review");
+    if (!rateLimitResult.success) {
+      return { success: false, error: "Too many reviews. Please try again later." };
     }
 
     const validated = reviewSchema.parse(data);

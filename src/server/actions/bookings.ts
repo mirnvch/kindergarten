@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { rateLimit } from "@/lib/rate-limit";
 import { BookingStatus, BookingType, DaycareStatus } from "@prisma/client";
 import { z } from "zod";
 import {
@@ -240,6 +241,12 @@ export async function createTourBooking(input: TourBookingInput) {
     throw new Error("Unauthorized");
   }
 
+  // Rate limit: 10 bookings per minute
+  const rateLimitResult = await rateLimit(session.user.id, "booking");
+  if (!rateLimitResult.success) {
+    throw new Error("Too many booking requests. Please try again later.");
+  }
+
   const validated = tourBookingSchema.parse(input);
 
   // Verify child belongs to parent
@@ -330,6 +337,12 @@ export async function createEnrollmentRequest(input: EnrollmentInput) {
   const session = await auth();
   if (!session?.user || session.user.role !== "PARENT") {
     throw new Error("Unauthorized");
+  }
+
+  // Rate limit: 10 bookings per minute
+  const rateLimitResult = await rateLimit(session.user.id, "booking");
+  if (!rateLimitResult.success) {
+    throw new Error("Too many booking requests. Please try again later.");
   }
 
   const validated = enrollmentSchema.parse(input);

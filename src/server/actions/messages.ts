@@ -59,13 +59,20 @@ export async function getMessageThreads() {
   }));
 }
 
-export async function getThreadMessages(threadId: string) {
+export async function getThreadMessages(
+  threadId: string,
+  options?: { cursor?: string; limit?: number }
+) {
   const session = await auth();
 
   if (!session?.user?.id) {
     return null;
   }
 
+  const limit = options?.limit || 50;
+  const cursor = options?.cursor;
+
+  // First, get thread info
   const thread = await db.messageThread.findFirst({
     where: {
       id: threadId,
@@ -84,25 +91,41 @@ export async function getThreadMessages(threadId: string) {
           },
         },
       },
-      messages: {
-        orderBy: { createdAt: "asc" },
-        include: {
-          sender: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              avatarUrl: true,
-            },
-          },
-        },
-      },
     },
   });
 
   if (!thread) {
     return null;
   }
+
+  // Fetch messages with pagination (cursor-based for infinite scroll)
+  const messages = await db.message.findMany({
+    where: { threadId },
+    orderBy: { createdAt: "desc" }, // Newest first for cursor pagination
+    take: limit + 1, // Fetch one extra to check if there are more
+    ...(cursor && {
+      cursor: { id: cursor },
+      skip: 1, // Skip the cursor itself
+    }),
+    include: {
+      sender: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          avatarUrl: true,
+        },
+      },
+    },
+  });
+
+  // Check if there are more messages
+  const hasMore = messages.length > limit;
+  const messageSlice = hasMore ? messages.slice(0, limit) : messages;
+  const nextCursor = hasMore ? messageSlice[messageSlice.length - 1]?.id : null;
+
+  // Reverse to show oldest first in UI (but we fetched newest first for cursor)
+  const orderedMessages = messageSlice.reverse();
 
   // Mark unread messages as read
   await db.message.updateMany({
@@ -126,7 +149,7 @@ export async function getThreadMessages(threadId: string) {
       slug: thread.daycare.slug,
       photo: thread.daycare.photos[0]?.url || null,
     },
-    messages: thread.messages.map((msg) => ({
+    messages: orderedMessages.map((msg) => ({
       id: msg.id,
       content: msg.content,
       senderId: msg.senderId,
@@ -138,6 +161,10 @@ export async function getThreadMessages(threadId: string) {
         avatar: msg.sender.avatarUrl,
       },
     })),
+    pagination: {
+      hasMore,
+      nextCursor,
+    },
   };
 }
 

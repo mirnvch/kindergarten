@@ -104,8 +104,9 @@ export async function searchDaycares(filters: SearchFilters) {
           where: { isPrimary: true },
           take: 1,
         },
-        reviews: {
-          select: { rating: true },
+        // Use _count instead of fetching all reviews
+        _count: {
+          select: { reviews: true },
         },
         subscription: {
           select: { plan: true, status: true },
@@ -114,6 +115,19 @@ export async function searchDaycares(filters: SearchFilters) {
     }),
     db.daycare.count({ where }),
   ]);
+
+  // Get avg ratings using SQL aggregation (much more efficient)
+  const daycareIds = daycares.map((d) => d.id);
+  const avgRatings =
+    daycareIds.length > 0
+      ? await db.review.groupBy({
+          by: ["daycareId"],
+          where: { daycareId: { in: daycareIds } },
+          _avg: { rating: true },
+        })
+      : [];
+
+  const ratingMap = new Map(avgRatings.map((r) => [r.daycareId, r._avg.rating || 0]));
 
   // Sort by subscription plan priority (ENTERPRISE > PROFESSIONAL > STARTER > FREE)
   const planPriority = { ENTERPRISE: 4, PROFESSIONAL: 3, STARTER: 2, FREE: 1 };
@@ -127,11 +141,8 @@ export async function searchDaycares(filters: SearchFilters) {
   });
 
   const results: DaycareSearchResult[] = daycares.map((daycare) => {
-    const avgRating =
-      daycare.reviews.length > 0
-        ? daycare.reviews.reduce((sum, r) => sum + r.rating, 0) /
-          daycare.reviews.length
-        : 0;
+    // Get pre-computed avg rating from SQL aggregation
+    const avgRating = ratingMap.get(daycare.id) || 0;
 
     const subscriptionPlan =
       daycare.subscription?.status === "ACTIVE"
@@ -151,7 +162,7 @@ export async function searchDaycares(filters: SearchFilters) {
       maxAge: daycare.maxAge,
       capacity: daycare.capacity,
       rating: Math.round(avgRating * 10) / 10,
-      reviewCount: daycare.reviews.length,
+      reviewCount: daycare._count.reviews,
       primaryPhoto: daycare.photos[0]?.url || null,
       isFeatured: daycare.isFeatured,
       isVerified: daycare.isVerified,

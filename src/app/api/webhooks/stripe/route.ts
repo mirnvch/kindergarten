@@ -38,6 +38,17 @@ export async function POST(req: Request) {
   }
 
   try {
+    // Idempotency check: skip if already processed
+    const existingEvent = await db.webhookEvent.findUnique({
+      where: { id: event.id },
+    });
+
+    if (existingEvent) {
+      console.log(`[Stripe Webhook] Event ${event.id} already processed, skipping`);
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+
+    // Process the event
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
@@ -80,9 +91,15 @@ export async function POST(req: Request) {
         console.log(`Unhandled event type: ${event.type}`);
     }
 
+    // Mark event as processed
+    await db.webhookEvent.create({
+      data: { id: event.id, type: event.type },
+    });
+
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("Webhook handler error:", error);
+    // Return 500 so Stripe will retry
     return NextResponse.json(
       { error: "Webhook handler failed" },
       { status: 500 }
@@ -120,17 +137,17 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 }
 
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
-  const daycareId = subscription.metadata?.daycareId;
+  // Verify subscription exists in our database
+  const existingSubscription = await db.subscription.findFirst({
+    where: { stripeSubscriptionId: subscription.id },
+  });
 
-  if (!daycareId) {
-    // Try to find by Stripe subscription ID
-    const existingSubscription = await db.subscription.findFirst({
-      where: { stripeSubscriptionId: subscription.id },
-    });
-
-    if (!existingSubscription) {
-      console.error("Could not find subscription for:", subscription.id);
-      return;
+  if (!existingSubscription) {
+    // Check if this is a new subscription with metadata
+    const daycareId = subscription.metadata?.daycareId;
+    if (!daycareId) {
+      // Throw error so Stripe retries - subscription might not be created yet
+      throw new Error(`Subscription not found: ${subscription.id}`);
     }
   }
 
