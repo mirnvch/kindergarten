@@ -2,19 +2,25 @@ import { generateSecret as otpGenerateSecret, generateURI, verify } from "otplib
 import QRCode from "qrcode";
 import crypto from "crypto";
 
-const ENCRYPTION_KEY = process.env.TOTP_ENCRYPTION_KEY || process.env.AUTH_SECRET;
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
+
+/**
+ * Get encryption key at runtime (not module load time)
+ */
+function getEncryptionKey(): string {
+  const key = process.env.TOTP_ENCRYPTION_KEY || process.env.AUTH_SECRET;
+  if (!key) {
+    throw new Error("TOTP_ENCRYPTION_KEY or AUTH_SECRET must be set");
+  }
+  return key;
+}
 
 /**
  * Encrypt TOTP secret for database storage
  */
 export function encryptSecret(secret: string): string {
-  if (!ENCRYPTION_KEY) {
-    throw new Error("TOTP_ENCRYPTION_KEY or AUTH_SECRET must be set");
-  }
-
-  const key = crypto.scryptSync(ENCRYPTION_KEY, "salt", 32);
+  const key = crypto.scryptSync(getEncryptionKey(), "salt", 32);
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
 
@@ -31,13 +37,9 @@ export function encryptSecret(secret: string): string {
  * Decrypt TOTP secret from database
  */
 export function decryptSecret(encryptedData: string): string {
-  if (!ENCRYPTION_KEY) {
-    throw new Error("TOTP_ENCRYPTION_KEY or AUTH_SECRET must be set");
-  }
-
   const [ivHex, authTagHex, encrypted] = encryptedData.split(":");
 
-  const key = crypto.scryptSync(ENCRYPTION_KEY, "salt", 32);
+  const key = crypto.scryptSync(getEncryptionKey(), "salt", 32);
   const iv = Buffer.from(ivHex, "hex");
   const authTag = Buffer.from(authTagHex, "hex");
   const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
