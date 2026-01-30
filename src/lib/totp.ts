@@ -9,9 +9,9 @@ const IV_LENGTH = 12;
  * Get encryption key at runtime (not module load time)
  */
 function getEncryptionKey(): string {
-  const key = process.env.TOTP_ENCRYPTION_KEY || process.env.AUTH_SECRET;
+  const key = process.env.TOTP_ENCRYPTION_KEY || process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
   if (!key) {
-    throw new Error("TOTP_ENCRYPTION_KEY or AUTH_SECRET must be set");
+    throw new Error("TOTP_ENCRYPTION_KEY, AUTH_SECRET or NEXTAUTH_SECRET must be set");
   }
   return key;
 }
