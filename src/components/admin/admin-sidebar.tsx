@@ -9,7 +9,6 @@ import {
   MessageSquare,
   Star,
   Settings,
-  LogOut,
   ExternalLink,
   Shield,
   BarChart3,
@@ -18,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
+import { LogoutButton } from "@/components/auth/logout-button";
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -97,16 +97,10 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
             View Public Site
           </Link>
         </Button>
-        <form action="/api/auth/signout" method="POST">
-          <Button
-            type="submit"
-            variant="ghost"
-            className="w-full justify-start text-muted-foreground"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign out
-          </Button>
-        </form>
+        <LogoutButton
+          variant="ghost"
+          className="w-full justify-start text-muted-foreground"
+        />
       </div>
     </div>
   );

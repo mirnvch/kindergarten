@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn, getInitials } from "@/lib/utils";
 import { Menu, Search, User, LogOut, Settings, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
+import { logout } from "@/server/actions/auth";
 
 type HeaderProps = {
   user?: {
@@ -125,7 +126,7 @@ export function Header({ user }: HeaderProps) {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <form action="/api/auth/signout" method="POST">
+                  <form action={logout}>
                     <button type="submit" className="flex w-full items-center">
                       <LogOut className="mr-2 h-4 w-4" />
                       Sign out

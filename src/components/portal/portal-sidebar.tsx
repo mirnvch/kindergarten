@@ -10,7 +10,6 @@ import {
   Users,
   CreditCard,
   Settings,
-  LogOut,
   ExternalLink,
   BarChart3,
   Star,
@@ -23,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { LogoutButton } from "@/components/auth/logout-button";
 
 const navigation = [
   { name: "Dashboard", href: "/portal", icon: LayoutDashboard },
@@ -109,16 +109,10 @@ export function PortalSidebar({ user, notificationCount = 0 }: PortalSidebarProp
             View Public Site
           </Link>
         </Button>
-        <form action="/api/auth/signout" method="POST">
-          <Button
-            type="submit"
-            variant="ghost"
-            className="w-full justify-start text-muted-foreground"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign out
-          </Button>
-        </form>
+        <LogoutButton
+          variant="ghost"
+          className="w-full justify-start text-muted-foreground"
+        />
       </div>
     </div>
   );

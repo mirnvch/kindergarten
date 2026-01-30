@@ -9,7 +9,6 @@ import {
   Heart,
   MessageSquare,
   Settings,
-  LogOut,
   Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { LogoutButton } from "@/components/auth/logout-button";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -100,16 +100,10 @@ export function ParentSidebar({ user, notificationCount = 0 }: ParentSidebarProp
             Find Daycares
           </Link>
         </Button>
-        <form action="/api/auth/signout" method="POST">
-          <Button
-            type="submit"
-            variant="ghost"
-            className="w-full justify-start text-muted-foreground"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign out
-          </Button>
-        </form>
+        <LogoutButton
+          variant="ghost"
+          className="w-full justify-start text-muted-foreground"
+        />
       </div>
     </div>
   );
