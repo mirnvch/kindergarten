@@ -135,6 +135,24 @@ src/components/
   - `MAX_ATTACHMENTS = 5`
   - `ALLOWED_ATTACHMENT_TYPES` — whitelist
   - `ALLOWED_URL_PREFIXES` — trusted storage only
+- **Deferred Tasks — COMPLETED:**
+  - **8.5: Saved Searches**
+    - Модель `SavedSearch` в Prisma schema
+    - Server actions: `saveSearch`, `getSavedSearches`, `deleteSavedSearch`
+    - Компонент `SaveSearchButton` на странице поиска
+    - Страница `/dashboard/saved-searches` в parent dashboard
+    - Лимит: 10 сохранённых поисков на пользователя
+  - **9.2: Recurring Bookings**
+    - Enum `RecurrencePattern` (NONE, WEEKLY, BIWEEKLY, MONTHLY)
+    - Поля в Booking: `recurrence`, `recurrenceEndDate`, `seriesId`
+    - Функция `generateRecurringDates` в booking-utils.ts
+    - Компонент `RecurrenceSelector` с preview дат
+    - Bulk создание recurring bookings в транзакции
+    - `cancelBookingSeries` для отмены всей серии
+    - Лимит: max 12 повторений
+- **Новые UI компоненты:**
+  - `radio-group` (shadcn/ui)
+  - `calendar` (shadcn/ui)
 - **Следующее:** Task #11-14 (PWA, Verification, Security, Analytics)
 
 ### 2026-01-30 (Session 6)

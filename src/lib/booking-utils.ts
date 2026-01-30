@@ -219,3 +219,82 @@ export function formatTimeForDisplay(time: string): string {
 export function getAvailableSlotsCount(day: DayAvailability): number {
   return day.slots.filter((s) => s.available).length;
 }
+
+// ==================== RECURRENCE HELPERS ====================
+
+export type RecurrencePattern = "NONE" | "WEEKLY" | "BIWEEKLY" | "MONTHLY";
+
+export interface RecurrenceConfig {
+  pattern: RecurrencePattern;
+  startDate: Date;
+  endDate: Date;
+}
+
+/**
+ * Generate recurring dates based on pattern
+ * Returns an array of dates for the recurring bookings
+ * Limited to max 12 occurrences for safety
+ */
+export function generateRecurringDates(config: RecurrenceConfig): Date[] {
+  const { pattern, startDate, endDate } = config;
+  const dates: Date[] = [];
+  const MAX_OCCURRENCES = 12;
+
+  if (pattern === "NONE") {
+    return [new Date(startDate)];
+  }
+
+  let currentDate = new Date(startDate);
+
+  while (currentDate <= endDate && dates.length < MAX_OCCURRENCES) {
+    dates.push(new Date(currentDate));
+
+    switch (pattern) {
+      case "WEEKLY":
+        currentDate.setDate(currentDate.getDate() + 7);
+        break;
+      case "BIWEEKLY":
+        currentDate.setDate(currentDate.getDate() + 14);
+        break;
+      case "MONTHLY":
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        break;
+    }
+  }
+
+  return dates;
+}
+
+/**
+ * Get human-readable recurrence description
+ */
+export function getRecurrenceLabel(pattern: RecurrencePattern): string {
+  switch (pattern) {
+    case "NONE":
+      return "One-time";
+    case "WEEKLY":
+      return "Weekly";
+    case "BIWEEKLY":
+      return "Every 2 weeks";
+    case "MONTHLY":
+      return "Monthly";
+    default:
+      return "One-time";
+  }
+}
+
+/**
+ * Calculate the default end date for recurrence (3 months from start)
+ */
+export function getDefaultRecurrenceEndDate(startDate: Date): Date {
+  const endDate = new Date(startDate);
+  endDate.setMonth(endDate.getMonth() + 3);
+  return endDate;
+}
+
+/**
+ * Generate a unique series ID for linked recurring bookings
+ */
+export function generateSeriesId(): string {
+  return `series_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}

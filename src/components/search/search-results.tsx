@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { SearchFilters } from "./search-filters";
 import { SearchMap } from "./search-map";
+import { SaveSearchButton } from "./save-search-button";
 import { DaycareCard } from "@/components/daycare/daycare-card";
 import { Button } from "@/components/ui/button";
 import type { DaycareSearchResult } from "@/server/actions/daycare";
@@ -50,6 +51,7 @@ export function SearchResultsClient({
             <p className="text-muted-foreground">
               {pagination.total} daycare{pagination.total !== 1 ? "s" : ""} found
             </p>
+            <SaveSearchButton />
           </div>
 
           {view === "list" ? (

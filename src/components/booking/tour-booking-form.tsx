@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Loader2, Calendar, Clock, Baby, FileText } from "lucide-react";
+import { Loader2, Calendar, Clock, Baby, FileText, Repeat } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,13 +9,17 @@ import { Label } from "@/components/ui/label";
 import { DatePicker } from "./date-picker";
 import { TimeSlotGrid } from "./time-slot-grid";
 import { ChildSelector } from "./child-selector";
+import { RecurrenceSelector } from "./recurrence-selector";
 import {
   createTourBooking,
   type TourBookingInput,
 } from "@/server/actions/bookings";
 import {
   getSlotsForDate,
+  getRecurrenceLabel,
+  generateRecurringDates,
   type DayAvailability,
+  type RecurrencePattern,
 } from "@/lib/booking-utils";
 
 interface Child {
@@ -43,6 +47,8 @@ export function TourBookingForm({
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
+  const [recurrence, setRecurrence] = useState<RecurrencePattern>("NONE");
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState<Date | null>(null);
 
   const selectedSlots = selectedDate ? getSlotsForDate(availability, selectedDate) : [];
 
@@ -69,6 +75,8 @@ export function TourBookingForm({
       childId: selectedChildId,
       scheduledAt: scheduledAt.toISOString(),
       notes: notes.trim() || undefined,
+      recurrence,
+      recurrenceEndDate: recurrenceEndDate?.toISOString(),
     };
 
     startTransition(async () => {
@@ -127,11 +135,38 @@ export function TourBookingForm({
         )}
       </div>
 
-      {/* Step 3: Select Child */}
+      {/* Step 3: Recurrence (Optional) */}
+      {selectedDate && selectedTime && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-muted-foreground/30 text-muted-foreground text-sm font-semibold">
+              3
+            </div>
+            <div className="flex items-center gap-2">
+              <Repeat className="h-5 w-5 text-muted-foreground" />
+              <h3 className="text-lg font-semibold">
+                Repeat Visit{" "}
+                <span className="font-normal text-muted-foreground">
+                  (Optional)
+                </span>
+              </h3>
+            </div>
+          </div>
+          <RecurrenceSelector
+            startDate={new Date(`${selectedDate}T${selectedTime}:00`)}
+            recurrence={recurrence}
+            recurrenceEndDate={recurrenceEndDate}
+            onRecurrenceChange={setRecurrence}
+            onEndDateChange={setRecurrenceEndDate}
+          />
+        </div>
+      )}
+
+      {/* Step 4: Select Child */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold">
-            3
+            {selectedDate && selectedTime ? "4" : "3"}
           </div>
           <div className="flex items-center gap-2">
             <Baby className="h-5 w-5 text-muted-foreground" />
@@ -145,11 +180,11 @@ export function TourBookingForm({
         />
       </div>
 
-      {/* Step 4: Additional Notes (Optional) */}
+      {/* Step 5: Additional Notes (Optional) */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-muted-foreground/30 text-muted-foreground text-sm font-semibold">
-            4
+            {selectedDate && selectedTime ? "5" : "4"}
           </div>
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-muted-foreground" />
@@ -213,6 +248,22 @@ export function TourBookingForm({
           <p>
             <span className="text-muted-foreground">Duration:</span> 30 minutes
           </p>
+          {recurrence !== "NONE" && selectedDate && selectedTime && (
+            <>
+              <p>
+                <span className="text-muted-foreground">Recurrence:</span>{" "}
+                {getRecurrenceLabel(recurrence)}
+              </p>
+              <p>
+                <span className="text-muted-foreground">Total visits:</span>{" "}
+                {generateRecurringDates({
+                  pattern: recurrence,
+                  startDate: new Date(`${selectedDate}T${selectedTime}:00`),
+                  endDate: recurrenceEndDate || new Date(new Date(`${selectedDate}T${selectedTime}:00`).getTime() + 90 * 24 * 60 * 60 * 1000),
+                }).length}
+              </p>
+            </>
+          )}
         </div>
       </div>
 

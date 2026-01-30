@@ -30,6 +30,13 @@ enum BookingType {
   ENROLLMENT
 }
 
+enum RecurrencePattern {
+  NONE
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
 enum BookingStatus {
   PENDING
   CONFIRMED
@@ -89,11 +96,12 @@ model User {
   sessions Session[]
 
   // Parent relations
-  children     Child[]
-  bookings     Booking[]
-  reviews      Review[]
-  sentMessages Message[]  @relation("SentMessages")
-  favorites    Favorite[]
+  children      Child[]
+  bookings      Booking[]
+  reviews       Review[]
+  sentMessages  Message[]      @relation("SentMessages")
+  favorites     Favorite[]
+  savedSearches SavedSearch[]
 
   // Daycare staff relations
   daycareStaff DaycareStaff[]
@@ -341,6 +349,11 @@ model Booking {
   duration    Int? // minutes
   notes       String?   @db.Text
 
+  // Recurrence
+  recurrence        RecurrencePattern @default(NONE)
+  recurrenceEndDate DateTime?
+  seriesId          String? // Links bookings in a series (same seriesId = same recurring set)
+
   // Confirmation
   confirmedAt  DateTime?
   cancelledAt  DateTime?
@@ -357,6 +370,7 @@ model Booking {
   @@index([daycareId])
   @@index([status])
   @@index([scheduledAt])
+  @@index([seriesId])
   @@index([daycareId, status, scheduledAt]) // Compound for availability queries
   @@index([createdAt]) // Sorting by creation time
 }
@@ -669,4 +683,20 @@ model Favorite {
   @@unique([userId, daycareId])
   @@index([userId])
   @@index([daycareId])
+}
+
+// ==================== SAVED SEARCHES ====================
+
+model SavedSearch {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String   // User-defined name for the search
+  filters   Json     // Stored search filters (query, city, minPrice, etc.)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, createdAt])
 }

@@ -7,6 +7,7 @@ import {
   Baby,
   Calendar,
   Heart,
+  Bookmark,
   MessageSquare,
   Settings,
   Search,
@@ -23,6 +24,7 @@ const navigation = [
   { name: "My Children", href: "/dashboard/children", icon: Baby },
   { name: "Bookings", href: "/dashboard/bookings", icon: Calendar },
   { name: "Favorites", href: "/dashboard/favorites", icon: Heart },
+  { name: "Saved Searches", href: "/dashboard/saved-searches", icon: Bookmark },
   { name: "Messages", href: "/dashboard/messages", icon: MessageSquare },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];

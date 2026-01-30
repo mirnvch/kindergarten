@@ -284,7 +284,7 @@
         { "id": "8.2", "title": "Add map view toggle on search", "done": true },
         { "id": "8.3", "title": "Implement geolocation search", "done": true },
         { "id": "8.4", "title": "Add advanced filters (rating, availability, certifications)", "done": true },
-        { "id": "8.5", "title": "Build saved searches feature", "done": false }
+        { "id": "8.5", "title": "Build saved searches feature", "done": true }
       ],
       "acceptanceCriteria": [
         "Users can view daycares on map",
@@ -315,7 +315,7 @@
       "blocks": [],
       "subtasks": [
         { "id": "9.1", "title": "Build calendar view for available slots", "done": true },
-        { "id": "9.2", "title": "Add recurring booking option", "done": false },
+        { "id": "9.2", "title": "Add recurring booking option", "done": true },
         { "id": "9.3", "title": "Display cancellation policy", "done": true },
         { "id": "9.4", "title": "Implement rescheduling functionality", "done": true }
       ],

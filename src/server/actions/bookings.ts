@@ -9,7 +9,11 @@ import { BookingStatus, BookingType, DaycareStatus } from "@prisma/client";
 import { z } from "zod";
 import {
   generateAvailableSlots,
+  generateRecurringDates,
+  generateSeriesId,
+  getDefaultRecurrenceEndDate,
   type DayAvailability,
+  type RecurrencePattern,
 } from "@/lib/booking-utils";
 import type { BookingWithRelations, BookingFull } from "@/types";
 
@@ -111,6 +115,105 @@ export async function cancelBooking(id: string, reason?: string) {
 
   revalidatePath("/dashboard/bookings");
   revalidatePath("/dashboard");
+}
+
+// ==================== CANCEL BOOKING SERIES ====================
+
+export async function cancelBookingSeries(seriesId: string, reason?: string) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "PARENT") {
+    throw new Error("Unauthorized");
+  }
+
+  // Verify ownership and get all bookings in series
+  const bookings = await db.booking.findMany({
+    where: {
+      seriesId,
+      parentId: session.user.id,
+      status: { in: ["PENDING", "CONFIRMED"] },
+    },
+  });
+
+  if (bookings.length === 0) {
+    throw new Error("No bookings found in this series");
+  }
+
+  // Check cancellation policy for all future bookings
+  const now = Date.now();
+  const futureBookings = bookings.filter(
+    (b) => b.scheduledAt && b.scheduledAt.getTime() > now
+  );
+
+  for (const booking of futureBookings) {
+    if (booking.scheduledAt) {
+      const hoursUntilBooking = (booking.scheduledAt.getTime() - now) / (1000 * 60 * 60);
+      if (hoursUntilBooking < 24) {
+        throw new Error(
+          `Cannot cancel booking on ${booking.scheduledAt.toLocaleDateString()} - less than 24 hours away`
+        );
+      }
+    }
+  }
+
+  // Cancel all future bookings in the series
+  await db.booking.updateMany({
+    where: {
+      seriesId,
+      parentId: session.user.id,
+      status: { in: ["PENDING", "CONFIRMED"] },
+      scheduledAt: { gt: new Date() },
+    },
+    data: {
+      status: BookingStatus.CANCELLED,
+      cancelledAt: new Date(),
+      cancelReason: reason || "Series cancelled by parent",
+    },
+  });
+
+  revalidatePath("/dashboard/bookings");
+  revalidatePath("/dashboard");
+
+  return { cancelledCount: futureBookings.length };
+}
+
+// ==================== GET SERIES BOOKINGS ====================
+
+export async function getSeriesBookings(seriesId: string) {
+  const session = await auth();
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+
+  const bookings = await db.booking.findMany({
+    where: {
+      seriesId,
+      OR: [
+        { parentId: session.user.id },
+        {
+          daycare: {
+            staff: { some: { userId: session.user.id } },
+          },
+        },
+      ],
+    },
+    include: {
+      daycare: {
+        select: {
+          name: true,
+          slug: true,
+        },
+      },
+      child: {
+        select: {
+          firstName: true,
+          lastName: true,
+        },
+      },
+    },
+    orderBy: { scheduledAt: "asc" },
+  });
+
+  return bookings;
 }
 
 // ==================== RESCHEDULE BOOKING ====================
@@ -320,6 +423,9 @@ const tourBookingSchema = z.object({
   childId: z.string().min(1, "Please select a child"),
   scheduledAt: z.string().datetime("Invalid date/time"),
   notes: z.string().optional(),
+  // Recurrence options
+  recurrence: z.enum(["NONE", "WEEKLY", "BIWEEKLY", "MONTHLY"]).optional().default("NONE"),
+  recurrenceEndDate: z.string().datetime().optional(),
 });
 
 export type TourBookingInput = z.infer<typeof tourBookingSchema>;
@@ -371,42 +477,78 @@ export async function createTourBooking(input: TourBookingInput) {
     throw new Error("Please select a time at least 24 hours in advance");
   }
 
-  // Check for conflicts
-  const conflictingBooking = await db.booking.findFirst({
-    where: {
-      daycareId: validated.daycareId,
-      type: BookingType.TOUR,
-      status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
-      scheduledAt: {
-        gte: new Date(scheduledAt.getTime() - 30 * 60 * 1000),
-        lt: new Date(scheduledAt.getTime() + 30 * 60 * 1000),
-      },
-    },
-  });
+  // Handle recurring bookings
+  const recurrencePattern = (validated.recurrence || "NONE") as RecurrencePattern;
+  const isRecurring = recurrencePattern !== "NONE";
 
-  if (conflictingBooking) {
-    throw new Error("This time slot is no longer available");
+  let bookingDates: Date[] = [scheduledAt];
+  let seriesId: string | null = null;
+
+  if (isRecurring) {
+    const endDate = validated.recurrenceEndDate
+      ? new Date(validated.recurrenceEndDate)
+      : getDefaultRecurrenceEndDate(scheduledAt);
+
+    bookingDates = generateRecurringDates({
+      pattern: recurrencePattern,
+      startDate: scheduledAt,
+      endDate,
+    });
+
+    seriesId = generateSeriesId();
   }
 
-  // Create booking
-  const booking = await db.booking.create({
-    data: {
-      parentId: session.user.id,
-      daycareId: validated.daycareId,
-      childId: validated.childId,
-      type: BookingType.TOUR,
-      status: BookingStatus.PENDING,
-      scheduledAt,
-      duration: 30,
-      notes: validated.notes || null,
-    },
-  });
+  // Check for conflicts with ALL recurring dates
+  for (const date of bookingDates) {
+    const conflictingBooking = await db.booking.findFirst({
+      where: {
+        daycareId: validated.daycareId,
+        type: BookingType.TOUR,
+        status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+        scheduledAt: {
+          gte: new Date(date.getTime() - 30 * 60 * 1000),
+          lt: new Date(date.getTime() + 30 * 60 * 1000),
+        },
+      },
+    });
+
+    if (conflictingBooking) {
+      throw new Error(
+        isRecurring
+          ? `Time slot on ${date.toLocaleDateString()} is not available. Please choose a different time.`
+          : "This time slot is no longer available"
+      );
+    }
+  }
+
+  // Create all bookings (single or recurring series)
+  const bookings = await db.$transaction(
+    bookingDates.map((date, index) =>
+      db.booking.create({
+        data: {
+          parentId: session.user.id,
+          daycareId: validated.daycareId,
+          childId: validated.childId,
+          type: BookingType.TOUR,
+          status: BookingStatus.PENDING,
+          scheduledAt: date,
+          duration: 30,
+          notes: validated.notes || null,
+          recurrence: recurrencePattern,
+          recurrenceEndDate: isRecurring ? bookingDates[bookingDates.length - 1] : null,
+          seriesId,
+        },
+      })
+    )
+  );
+
+  const firstBooking = bookings[0];
 
   revalidatePath("/dashboard/bookings");
   revalidatePath("/dashboard");
   revalidatePath(`/daycare/${daycare.slug}`);
 
-  redirect(`/booking/${booking.id}/confirmation`);
+  redirect(`/booking/${firstBooking.id}/confirmation${isRecurring ? `?series=${bookings.length}` : ""}`);
 }
 
 // ==================== ENROLLMENT REQUEST ====================
