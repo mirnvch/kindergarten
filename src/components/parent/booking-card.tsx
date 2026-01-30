@@ -1,24 +1,13 @@
 "use client";
 
-import { useTransition, useState } from "react";
 import Link from "next/link";
-import { Calendar, MapPin, Clock, X } from "lucide-react";
+import { Calendar, MapPin, Clock, X, CalendarClock } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { cancelBooking } from "@/server/actions/bookings";
+import { CancelDialog } from "@/components/booking/cancel-dialog";
+import { RescheduleDialog } from "@/components/booking/reschedule-dialog";
 import { formatDate, formatTime } from "@/lib/utils";
-import { toast } from "sonner";
 import { BookingStatus, BookingType } from "@prisma/client";
 
 interface BookingCardProps {
@@ -63,28 +52,13 @@ const statusLabels: Record<BookingStatus, string> = {
 };
 
 export function BookingCard({ booking, showCancelButton = true }: BookingCardProps) {
-  const [isPending, startTransition] = useTransition();
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [cancelReason, setCancelReason] = useState("");
-
   const canCancel =
     showCancelButton &&
     (booking.status === "PENDING" || booking.status === "CONFIRMED");
 
-  function handleCancel() {
-    startTransition(async () => {
-      try {
-        await cancelBooking(booking.id, cancelReason);
-        toast.success("Booking cancelled");
-        setShowCancelDialog(false);
-        setCancelReason("");
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to cancel booking"
-        );
-      }
-    });
-  }
+  const canReschedule =
+    booking.type === "TOUR" &&
+    (booking.status === "PENDING" || booking.status === "CONFIRMED");
 
   return (
     <Card>
@@ -142,56 +116,32 @@ export function BookingCard({ booking, showCancelButton = true }: BookingCardPro
         </div>
       </CardContent>
 
-      {canCancel && (
-        <CardFooter className="border-t pt-4">
-          <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCancelDialog(true)}
+      {(canCancel || canReschedule) && (
+        <CardFooter className="border-t pt-4 gap-2">
+          {canReschedule && booking.scheduledAt && (
+            <RescheduleDialog
+              bookingId={booking.id}
+              daycareId={booking.daycare.id}
+              daycareName={booking.daycare.name}
+              currentDate={new Date(booking.scheduledAt)}
             >
-              <X className="mr-2 h-4 w-4" />
-              Cancel Booking
-            </Button>
-
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Cancel Booking</DialogTitle>
-                <DialogDescription>
-                  Are you sure you want to cancel your{" "}
-                  {booking.type === "TOUR" ? "tour" : "enrollment"} at{" "}
-                  {booking.daycare.name}?
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="py-4">
-                <Label htmlFor="reason">Reason for cancellation (optional)</Label>
-                <Textarea
-                  id="reason"
-                  placeholder="Let the daycare know why you're cancelling..."
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  className="mt-2"
-                />
-              </div>
-
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowCancelDialog(false)}
-                >
-                  Keep Booking
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleCancel}
-                  disabled={isPending}
-                >
-                  {isPending ? "Cancelling..." : "Cancel Booking"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              <Button variant="outline" size="sm">
+                <CalendarClock className="mr-2 h-4 w-4" />
+                Reschedule
+              </Button>
+            </RescheduleDialog>
+          )}
+          {canCancel && (
+            <CancelDialog
+              bookingId={booking.id}
+              scheduledAt={booking.scheduledAt ? new Date(booking.scheduledAt) : null}
+            >
+              <Button variant="outline" size="sm">
+                <X className="mr-2 h-4 w-4" />
+                Cancel
+              </Button>
+            </CancelDialog>
+          )}
         </CardFooter>
       )}
     </Card>

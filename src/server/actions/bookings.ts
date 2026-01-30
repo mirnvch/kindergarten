@@ -83,10 +83,21 @@ export async function cancelBooking(id: string, reason?: string) {
       parentId: session.user.id,
       status: { in: ["PENDING", "CONFIRMED"] },
     },
+    include: {
+      daycare: { select: { slug: true } },
+    },
   });
 
   if (!booking) {
     throw new Error("Booking not found or cannot be cancelled");
+  }
+
+  // Check cancellation policy (must be at least 24 hours before)
+  if (booking.scheduledAt) {
+    const hoursUntilBooking = (booking.scheduledAt.getTime() - Date.now()) / (1000 * 60 * 60);
+    if (hoursUntilBooking < 24) {
+      throw new Error("Cancellations must be made at least 24 hours in advance");
+    }
   }
 
   await db.booking.update({
@@ -100,6 +111,84 @@ export async function cancelBooking(id: string, reason?: string) {
 
   revalidatePath("/dashboard/bookings");
   revalidatePath("/dashboard");
+}
+
+// ==================== RESCHEDULE BOOKING ====================
+
+const rescheduleSchema = z.object({
+  bookingId: z.string().min(1),
+  newScheduledAt: z.string().datetime("Invalid date/time"),
+});
+
+export type RescheduleInput = z.infer<typeof rescheduleSchema>;
+
+export async function rescheduleBooking(input: RescheduleInput) {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "PARENT") {
+    throw new Error("Unauthorized");
+  }
+
+  const validated = rescheduleSchema.parse(input);
+
+  // Verify ownership and status
+  const booking = await db.booking.findFirst({
+    where: {
+      id: validated.bookingId,
+      parentId: session.user.id,
+      status: { in: ["PENDING", "CONFIRMED"] },
+    },
+    include: {
+      daycare: { select: { id: true, slug: true } },
+    },
+  });
+
+  if (!booking) {
+    throw new Error("Booking not found or cannot be rescheduled");
+  }
+
+  const newScheduledAt = new Date(validated.newScheduledAt);
+
+  // Verify new slot is at least 24 hours ahead
+  const minTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  if (newScheduledAt < minTime) {
+    throw new Error("Please select a time at least 24 hours in advance");
+  }
+
+  // Check for conflicts at new time
+  const conflictingBooking = await db.booking.findFirst({
+    where: {
+      daycareId: booking.daycareId,
+      type: BookingType.TOUR,
+      status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+      id: { not: booking.id }, // Exclude current booking
+      scheduledAt: {
+        gte: new Date(newScheduledAt.getTime() - 30 * 60 * 1000),
+        lt: new Date(newScheduledAt.getTime() + 30 * 60 * 1000),
+      },
+    },
+  });
+
+  if (conflictingBooking) {
+    throw new Error("This time slot is no longer available");
+  }
+
+  // Update booking with new time
+  await db.booking.update({
+    where: { id: booking.id },
+    data: {
+      scheduledAt: newScheduledAt,
+      status: BookingStatus.PENDING, // Reset to pending for reconfirmation
+      notes: booking.notes
+        ? `${booking.notes}\n\nRescheduled from ${booking.scheduledAt?.toISOString()}`
+        : `Rescheduled from ${booking.scheduledAt?.toISOString()}`,
+    },
+  });
+
+  revalidatePath("/dashboard/bookings");
+  revalidatePath("/dashboard");
+  revalidatePath(`/daycare/${booking.daycare.slug}`);
+
+  return { success: true };
 }
 
 // ==================== SLOT AVAILABILITY ====================
