@@ -17,6 +17,7 @@ import {
 import { Shield, KeyRound, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { verify2FAToken, useBackupCode as verifyBackupCode } from "@/server/actions/security/two-factor";
+import { complete2FALogin } from "@/server/actions/auth";
 
 interface TwoFactorVerifyFormProps {
   userId: string;
@@ -69,7 +70,15 @@ export function TwoFactorVerifyForm({
         return;
       }
 
-      // Verification successful
+      // 2FA code verified - now complete the login
+      const loginResult = await complete2FALogin();
+
+      if (!loginResult.success) {
+        setError(loginResult.error || "Failed to complete login");
+        return;
+      }
+
+      // Login successful
       toast.success("Verification successful!");
       router.push(callbackUrl);
       router.refresh();

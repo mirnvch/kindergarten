@@ -9,6 +9,8 @@ import { AuthError } from "next-auth";
 import { headers } from "next/headers";
 import { recordLoginAttempt } from "@/server/actions/security/login-tracking";
 import { check2FAEnabled } from "@/server/actions/security/two-factor";
+import crypto from "crypto";
+import { cookies } from "next/headers";
 
 // ==================== VALIDATION CONSTANTS ====================
 
@@ -309,6 +311,34 @@ export async function loginWithCredentials(
         userAgent,
       });
 
+      // Store credentials in encrypted cookie for completing login after 2FA
+      const pendingLoginData = JSON.stringify({
+        email: validatedData.email,
+        password: validatedData.password,
+        timestamp: Date.now(),
+      });
+
+      const encryptionKey = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+      if (encryptionKey) {
+        const key = crypto.scryptSync(encryptionKey, "pending-2fa", 32);
+        const iv = crypto.randomBytes(16);
+        const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+        let encrypted = cipher.update(pendingLoginData, "utf8", "hex");
+        encrypted += cipher.final("hex");
+        const authTag = cipher.getAuthTag();
+
+        const cookieValue = `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted}`;
+
+        const cookieStore = await cookies();
+        cookieStore.set("pending_2fa_login", cookieValue, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 300, // 5 minutes
+          path: "/",
+        });
+      }
+
       return {
         success: false,
         requires2FA: true,
@@ -369,6 +399,70 @@ export async function loginWithCredentials(
       }
     }
     throw error;
+  }
+}
+
+/**
+ * Complete login after successful 2FA verification
+ */
+export async function complete2FALogin(): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const cookieStore = await cookies();
+    const pendingCookie = cookieStore.get("pending_2fa_login");
+
+    if (!pendingCookie?.value) {
+      return { success: false, error: "Login session expired. Please try again." };
+    }
+
+    // Decrypt the pending login data
+    const encryptionKey = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+    if (!encryptionKey) {
+      return { success: false, error: "Server configuration error" };
+    }
+
+    const [ivHex, authTagHex, encrypted] = pendingCookie.value.split(":");
+    const key = crypto.scryptSync(encryptionKey, "pending-2fa", 32);
+    const iv = Buffer.from(ivHex, "hex");
+    const authTag = Buffer.from(authTagHex, "hex");
+    const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+    decipher.setAuthTag(authTag);
+
+    let decrypted = decipher.update(encrypted, "hex", "utf8");
+    decrypted += decipher.final("utf8");
+
+    const { email, password, timestamp } = JSON.parse(decrypted);
+
+    // Check if the pending login hasn't expired (5 minutes)
+    if (Date.now() - timestamp > 5 * 60 * 1000) {
+      cookieStore.delete("pending_2fa_login");
+      return { success: false, error: "Login session expired. Please try again." };
+    }
+
+    // Complete the login with NextAuth
+    await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    // Delete the pending login cookie
+    cookieStore.delete("pending_2fa_login");
+
+    // Record successful login
+    await recordLoginAttempt({
+      email,
+      success: true,
+      ipAddress: "unknown", // We don't have headers here
+      userAgent: undefined,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("[Auth] Complete 2FA login failed:", error);
+    return { success: false, error: "Failed to complete login" };
   }
 }
 
