@@ -10,6 +10,7 @@ import { signIn } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   Form,
   FormControl,
@@ -147,8 +148,7 @@ export function LoginForm({ error: serverError, callbackUrl }: LoginFormProps) {
                   </Link>
                 </div>
                 <FormControl>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     placeholder="Enter your password"
                     disabled={isLoading}
                     {...field}

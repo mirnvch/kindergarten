@@ -9,6 +9,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   Form,
   FormControl,
@@ -32,9 +33,12 @@ const registerSchema = z
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/\d/, "Password must contain at least one number")
       .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+        /[!@#$%^&*(),.?":{}|<>]/,
+        'Password must contain at least one special character (!@#$%^&*(),.?":{}|<>)'
       ),
     confirmPassword: z.string(),
     firstName: z.string().min(1, "First name is required"),
@@ -228,10 +232,10 @@ export function RegisterForm() {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     placeholder="Create a password"
                     disabled={isLoading}
+                    showStrengthIndicator
                     {...field}
                   />
                 </FormControl>
@@ -247,8 +251,7 @@ export function RegisterForm() {
               <FormItem>
                 <FormLabel>Confirm password</FormLabel>
                 <FormControl>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     placeholder="Confirm your password"
                     disabled={isLoading}
                     {...field}
