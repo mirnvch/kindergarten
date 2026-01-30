@@ -10,6 +10,21 @@ export default {
     Google({
       clientId: process.env.AUTH_GOOGLE_ID!,
       clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+      profile(profile) {
+        // Map Google profile to our User model
+        const nameParts = (profile.name || "").split(" ");
+        const firstName = nameParts[0] || profile.given_name || "User";
+        const lastName = nameParts.slice(1).join(" ") || profile.family_name || "";
+
+        return {
+          id: profile.sub,
+          email: profile.email,
+          firstName,
+          lastName,
+          image: profile.picture,
+          emailVerified: profile.email_verified ? new Date() : null,
+        };
+      },
     }),
     // Credentials provider needs authorize function in full auth.ts
     Credentials({

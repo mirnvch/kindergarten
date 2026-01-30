@@ -4,12 +4,44 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { UserRole } from "@prisma/client";
-import type { Adapter } from "next-auth/adapters";
+import type { Adapter, AdapterUser } from "next-auth/adapters";
 import authConfig from "./auth.config";
+
+// Custom adapter that handles firstName/lastName from OAuth
+function CustomPrismaAdapter(): Adapter {
+  const baseAdapter = PrismaAdapter(db) as Adapter;
+
+  return {
+    ...baseAdapter,
+    async createUser(user: AdapterUser & { firstName?: string; lastName?: string }) {
+      // Extract firstName and lastName from the user object (set by profile callback)
+      const firstName = user.firstName || user.name?.split(" ")[0] || "User";
+      const lastName = user.lastName || user.name?.split(" ").slice(1).join(" ") || "";
+
+      const created = await db.user.create({
+        data: {
+          email: user.email,
+          emailVerified: user.emailVerified,
+          firstName,
+          lastName,
+          avatarUrl: user.image,
+        },
+      });
+
+      return {
+        id: created.id,
+        email: created.email,
+        emailVerified: created.emailVerified,
+        name: `${created.firstName} ${created.lastName}`.trim(),
+        image: created.avatarUrl,
+      };
+    },
+  };
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(db) as Adapter,
+  adapter: CustomPrismaAdapter(),
   providers: [
     // Keep Google from config
     ...authConfig.providers.filter((p) => p.id !== "credentials"),
