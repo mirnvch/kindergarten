@@ -83,7 +83,8 @@ src/components/
 ## Environment Variables
 
 ### Required
-- `DATABASE_URL` — PostgreSQL connection
+- `DATABASE_URL` — Supabase Transaction Pooler (port 6543)
+- `DIRECT_URL` — Supabase Session Pooler (port 5432, для миграций)
 - `AUTH_SECRET` — NextAuth secret
 - `AUTH_GOOGLE_ID` — Google OAuth
 - `AUTH_GOOGLE_SECRET` — Google OAuth
@@ -104,6 +105,12 @@ src/components/
 
 ### 2026-01-30 (Session 5)
 - **Scalability Sprint — 10 TASKS COMPLETED**
+- **PostgreSQL мигрирован на Supabase**
+  - Transaction Pooler (port 6543) для runtime
+  - Session Pooler (port 5432) для миграций
+  - 26 таблиц создано успешно
+  - `prisma.config.ts` настроен с `url` и `directUrl`
+  - Для миграций: `npx prisma db push --url="$DIRECT_URL"`
 - Выявлены и исправлены критические проблемы производительности:
   - #15: Database indexes (8 compound indexes)
   - #16: Connection pool (max: 20, min: 5, timeouts)
