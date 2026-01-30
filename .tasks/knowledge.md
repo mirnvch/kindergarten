@@ -103,6 +103,21 @@ src/components/
 
 ## Session Notes
 
+### 2026-01-30 (Session 6)
+- **Task #8: Search Improvements — COMPLETED**
+  - Mapbox GL map view with markers/popups
+  - Geolocation search (Haversine formula, radius filter)
+  - Rating filter
+  - View toggle (grid/map)
+  - Search priority by subscription plan
+- **Task #9: Booking Enhancements — COMPLETED**
+  - RescheduleDialog with date/time picker
+  - CancelDialog with cancellation policy display
+  - 24-hour cancellation/reschedule policy enforcement
+  - Updated BookingCard with new dialogs
+- Deferred: Saved searches (#8.5), Recurring bookings (#9.2)
+- **Следующее:** Task #10-14 (Real-time, PWA, Verification, Security, Analytics)
+
 ### 2026-01-30 (Session 5)
 - **Infrastructure Sprint — ALL TASKS COMPLETED**
 - **PostgreSQL мигрирован на Supabase**

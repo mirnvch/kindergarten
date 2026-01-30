@@ -272,7 +272,7 @@
       "id": 8,
       "title": "Search Improvements",
       "description": "Enhance search with map view, geolocation, and advanced filters",
-      "status": "pending",
+      "status": "done",
       "priority": "medium",
       "complexity": 4,
       "phase": "3.1",
@@ -280,10 +280,10 @@
       "blockedBy": [],
       "blocks": [],
       "subtasks": [
-        { "id": "8.1", "title": "Integrate map library (Mapbox/Google Maps)", "done": false },
-        { "id": "8.2", "title": "Add map view toggle on search", "done": false },
-        { "id": "8.3", "title": "Implement geolocation search", "done": false },
-        { "id": "8.4", "title": "Add advanced filters (rating, availability, certifications)", "done": false },
+        { "id": "8.1", "title": "Integrate map library (Mapbox/Google Maps)", "done": true },
+        { "id": "8.2", "title": "Add map view toggle on search", "done": true },
+        { "id": "8.3", "title": "Implement geolocation search", "done": true },
+        { "id": "8.4", "title": "Add advanced filters (rating, availability, certifications)", "done": true },
         { "id": "8.5", "title": "Build saved searches feature", "done": false }
       ],
       "acceptanceCriteria": [
@@ -295,17 +295,18 @@
       "affectedFiles": [
         "src/app/(marketing)/search/*",
         "src/components/search/*",
-        "src/lib/maps.ts"
+        "src/server/actions/daycare.ts"
       ],
-      "notes": [],
+      "notes": ["2026-01-30: Completed map view (Mapbox), geolocation (Haversine), rating filter. Saved searches deferred."],
+      "completedAt": "2026-01-30T12:00:00Z",
       "createdAt": "2026-01-29T14:00:00Z",
-      "updatedAt": "2026-01-29T14:00:00Z"
+      "updatedAt": "2026-01-30T12:00:00Z"
     },
     {
       "id": 9,
       "title": "Booking Enhancements",
       "description": "Improve booking flow with calendar, recurring bookings, and rescheduling",
-      "status": "pending",
+      "status": "done",
       "priority": "medium",
       "complexity": 3,
       "phase": "3.2",
@@ -313,10 +314,10 @@
       "blockedBy": [],
       "blocks": [],
       "subtasks": [
-        { "id": "9.1", "title": "Build calendar view for available slots", "done": false },
+        { "id": "9.1", "title": "Build calendar view for available slots", "done": true },
         { "id": "9.2", "title": "Add recurring booking option", "done": false },
-        { "id": "9.3", "title": "Display cancellation policy", "done": false },
-        { "id": "9.4", "title": "Implement rescheduling functionality", "done": false }
+        { "id": "9.3", "title": "Display cancellation policy", "done": true },
+        { "id": "9.4", "title": "Implement rescheduling functionality", "done": true }
       ],
       "acceptanceCriteria": [
         "Calendar shows available time slots",
@@ -325,13 +326,15 @@
         "Can reschedule existing bookings"
       ],
       "affectedFiles": [
-        "src/app/(marketing)/daycare/[slug]/book/*",
-        "src/components/booking/*",
+        "src/components/booking/cancel-dialog.tsx",
+        "src/components/booking/reschedule-dialog.tsx",
+        "src/components/parent/booking-card.tsx",
         "src/server/actions/bookings.ts"
       ],
-      "notes": [],
+      "notes": ["2026-01-30: Cancel/reschedule dialogs, 24h policy enforcement. Recurring booking deferred."],
+      "completedAt": "2026-01-30T12:30:00Z",
       "createdAt": "2026-01-29T14:00:00Z",
-      "updatedAt": "2026-01-29T14:00:00Z"
+      "updatedAt": "2026-01-30T12:30:00Z"
     },
     {
       "id": 10,

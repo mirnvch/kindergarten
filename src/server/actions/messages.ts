@@ -3,6 +3,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { triggerNewMessage, triggerMessageRead, triggerThreadUpdate } from "@/lib/pusher";
 
 export async function getMessageThreads() {
   const session = await auth();
@@ -116,6 +117,14 @@ export async function getThreadMessages(
           avatarUrl: true,
         },
       },
+      attachments: {
+        select: {
+          id: true,
+          url: true,
+          type: true,
+          name: true,
+        },
+      },
     },
   });
 
@@ -160,6 +169,12 @@ export async function getThreadMessages(
         name: `${msg.sender.firstName} ${msg.sender.lastName}`,
         avatar: msg.sender.avatarUrl,
       },
+      attachments: msg.attachments?.map((a) => ({
+        id: a.id,
+        url: a.url,
+        type: a.type,
+        name: a.name,
+      })),
     })),
     pagination: {
       hasMore,
@@ -168,23 +183,48 @@ export async function getThreadMessages(
   };
 }
 
-export async function sendMessage(threadId: string, content: string) {
+export async function sendMessage(
+  threadId: string,
+  content: string,
+  attachments?: { url: string; type: string; name: string }[]
+) {
   const session = await auth();
 
   if (!session?.user?.id) {
     return { success: false, error: "Not authenticated" };
   }
 
-  if (!content.trim()) {
+  if (!content.trim() && (!attachments || attachments.length === 0)) {
     return { success: false, error: "Message cannot be empty" };
   }
 
   try {
-    // Verify thread belongs to user
+    // Verify thread belongs to user (parent or daycare staff)
     const thread = await db.messageThread.findFirst({
       where: {
         id: threadId,
-        parentId: session.user.id,
+        OR: [
+          { parentId: session.user.id },
+          {
+            daycare: {
+              staff: {
+                some: { userId: session.user.id },
+              },
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        parentId: true,
+        daycareId: true,
+        daycare: {
+          select: {
+            staff: {
+              select: { userId: true },
+            },
+          },
+        },
       },
     });
 
@@ -192,13 +232,25 @@ export async function sendMessage(threadId: string, content: string) {
       return { success: false, error: "Thread not found" };
     }
 
-    // Create message
+    // Create message with attachments
     const message = await db.message.create({
       data: {
         threadId,
         senderId: session.user.id,
         content: content.trim(),
         status: "SENT",
+        ...(attachments && attachments.length > 0 && {
+          attachments: {
+            create: attachments.map((att) => ({
+              url: att.url,
+              type: att.type,
+              name: att.name,
+            })),
+          },
+        }),
+      },
+      include: {
+        attachments: true,
       },
     });
 
@@ -208,7 +260,37 @@ export async function sendMessage(threadId: string, content: string) {
       data: { lastMessageAt: new Date() },
     });
 
+    // Trigger real-time event
+    const senderName = `${session.user.firstName} ${session.user.lastName}`;
+    await triggerNewMessage(threadId, {
+      id: message.id,
+      content: message.content,
+      senderId: session.user.id,
+      senderName,
+      senderAvatar: null,
+      createdAt: message.createdAt,
+      attachments: message.attachments?.map((a) => ({
+        id: a.id,
+        url: a.url,
+        type: a.type,
+        name: a.name,
+      })),
+    });
+
+    // Notify other party about new message in thread list
+    const recipientIds = [
+      thread.parentId,
+      ...thread.daycare.staff.map((s) => s.userId),
+    ].filter((id) => id !== session.user.id);
+
+    for (const recipientId of recipientIds) {
+      await triggerThreadUpdate(recipientId, threadId, {
+        lastMessage: content.trim().slice(0, 100),
+      });
+    }
+
     revalidatePath("/dashboard/messages");
+    revalidatePath("/portal/messages");
 
     return { success: true, data: message };
   } catch (error) {

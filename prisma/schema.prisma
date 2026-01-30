@@ -227,12 +227,13 @@ model Daycare {
   schedule     DaycareSchedule[]
   bookings     Booking[]
   reviews      Review[]
-  messages     MessageThread[]
-  subscription Subscription?
-  payments     Payment[]
-  enrollments  Enrollment[]
-  waitlist     WaitlistEntry[]
-  favorites    Favorite[]
+  messages         MessageThread[]
+  messageTemplates MessageTemplate[]
+  subscription     Subscription?
+  payments         Payment[]
+  enrollments      Enrollment[]
+  waitlist         WaitlistEntry[]
+  favorites        Favorite[]
 
   @@index([slug])
   @@index([city, state])
@@ -476,13 +477,44 @@ model Message {
   readAt    DateTime?
   createdAt DateTime  @default(now())
 
-  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  sender User          @relation("SentMessages", fields: [senderId], references: [id])
+  thread      MessageThread       @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender      User                @relation("SentMessages", fields: [senderId], references: [id])
+  attachments MessageAttachment[]
 
   @@index([threadId])
   @@index([senderId])
   @@index([threadId, createdAt]) // Pagination in chat
   @@index([readAt]) // Unread messages queries
+}
+
+model MessageAttachment {
+  id        String   @id @default(cuid())
+  messageId String
+  url       String
+  type      String   // image, document, etc.
+  name      String
+  size      Int?
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+model MessageTemplate {
+  id        String   @id @default(cuid())
+  daycareId String
+  name      String   // Template name for quick selection
+  content   String   @db.Text
+  category  String?  // welcome, faq, booking, etc.
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+
+  @@index([daycareId])
+  @@index([daycareId, category])
 }
 
 // ==================== PAYMENTS & SUBSCRIPTIONS ====================
