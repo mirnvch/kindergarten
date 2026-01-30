@@ -7,23 +7,82 @@ import { z } from "zod";
 import { UserRole } from "@prisma/client";
 import { AuthError } from "next-auth";
 
-// Validation schemas
+// ==================== VALIDATION CONSTANTS ====================
+
+const PASSWORD_MIN_LENGTH = 8;
+const PASSWORD_MAX_LENGTH = 128;
+const NAME_MIN_LENGTH = 1;
+const NAME_MAX_LENGTH = 50;
+const EMAIL_MAX_LENGTH = 255;
+
+// Common disposable email domains to block
+const DISPOSABLE_EMAIL_DOMAINS = [
+  "tempmail.com", "throwaway.com", "mailinator.com", "guerrillamail.com",
+  "10minutemail.com", "temp-mail.org", "fakeinbox.com", "trashmail.com"
+];
+
+// ==================== HELPER FUNCTIONS ====================
+
+/**
+ * Normalize email: lowercase and trim
+ */
+function normalizeEmail(email: string): string {
+  return email.toLowerCase().trim();
+}
+
+/**
+ * Check if email domain is disposable
+ */
+function isDisposableEmail(email: string): boolean {
+  const domain = email.split("@")[1]?.toLowerCase();
+  return DISPOSABLE_EMAIL_DOMAINS.includes(domain);
+}
+
+/**
+ * Sanitize name: trim and remove extra spaces
+ */
+function sanitizeName(name: string): string {
+  return name.trim().replace(/\s+/g, " ");
+}
+
+// ==================== VALIDATION SCHEMAS ====================
+
+const emailSchema = z
+  .string()
+  .min(1, "Email is required")
+  .max(EMAIL_MAX_LENGTH, `Email must be less than ${EMAIL_MAX_LENGTH} characters`)
+  .email("Please enter a valid email address")
+  .transform(normalizeEmail)
+  .refine((email) => !isDisposableEmail(email), {
+    message: "Disposable email addresses are not allowed",
+  });
+
+const passwordSchema = z
+  .string()
+  .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`)
+  .max(PASSWORD_MAX_LENGTH, `Password must be less than ${PASSWORD_MAX_LENGTH} characters`)
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/\d/, "Password must contain at least one number")
+  .regex(/[!@#$%^&*(),.?":{}|<>]/, "Password must contain at least one special character (!@#$%^&*(),.?\":{}|<>)");
+
+const nameSchema = z
+  .string()
+  .min(NAME_MIN_LENGTH, "Name is required")
+  .max(NAME_MAX_LENGTH, `Name must be less than ${NAME_MAX_LENGTH} characters`)
+  .regex(/^[a-zA-Zа-яА-ЯёЁіІїЇєЄ\s'-]+$/, "Name can only contain letters, spaces, hyphens, and apostrophes")
+  .transform(sanitizeName);
+
 const registerSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-    ),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+  email: emailSchema,
+  password: passwordSchema,
+  firstName: nameSchema,
+  lastName: nameSchema,
   role: z.enum(["PARENT", "DAYCARE_OWNER"]).default("PARENT"),
 });
 
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: emailSchema,
   password: z.string().min(1, "Password is required"),
 });
 
@@ -46,16 +105,41 @@ export async function registerUser(
     // Check if user already exists
     const existingUser = await db.user.findUnique({
       where: { email: validatedData.email },
+      include: {
+        accounts: {
+          select: { provider: true },
+        },
+      },
     });
 
     if (existingUser) {
+      // Check if user signed up via OAuth (Google)
+      const hasOAuthAccount = existingUser.accounts.some(
+        (acc) => acc.provider === "google"
+      );
+
+      if (hasOAuthAccount && !existingUser.passwordHash) {
+        // User signed up with Google, offer to link accounts
+        return {
+          success: false,
+          error: "This email is already registered via Google. Please sign in with Google, or use a different email.",
+        };
+      }
+
+      if (existingUser.passwordHash) {
+        return {
+          success: false,
+          error: "An account with this email already exists. Please sign in instead.",
+        };
+      }
+
       return {
         success: false,
-        error: "An account with this email already exists",
+        error: "An account with this email already exists.",
       };
     }
 
-    // Hash password
+    // Hash password with bcrypt (cost factor 12)
     const passwordHash = await bcrypt.hash(validatedData.password, 12);
 
     // Create user
@@ -75,15 +159,17 @@ export async function registerUser(
     };
   } catch (error) {
     if (error instanceof z.ZodError) {
+      // Return all validation errors for better UX
+      const errors = error.issues.map((issue) => issue.message);
       return {
         success: false,
-        error: error.issues[0].message,
+        error: errors[0], // Return first error for simplicity
       };
     }
     console.error("Registration error:", error);
     return {
       success: false,
-      error: "Something went wrong. Please try again.",
+      error: "Registration failed. Please try again later.",
     };
   }
 }
@@ -93,6 +179,47 @@ export async function loginWithCredentials(
 ): Promise<ActionResult> {
   try {
     const validatedData = loginSchema.parse(input);
+
+    // Check if user exists and has a password
+    const user = await db.user.findUnique({
+      where: { email: validatedData.email },
+      include: {
+        accounts: {
+          select: { provider: true },
+        },
+      },
+    });
+
+    if (!user) {
+      // Generic error to prevent email enumeration
+      return {
+        success: false,
+        error: "Invalid email or password",
+      };
+    }
+
+    // Check if user only has OAuth and no password
+    if (!user.passwordHash) {
+      const hasGoogleAccount = user.accounts.some((acc) => acc.provider === "google");
+      if (hasGoogleAccount) {
+        return {
+          success: false,
+          error: "This account uses Google sign-in. Please use the 'Continue with Google' button.",
+        };
+      }
+      return {
+        success: false,
+        error: "Invalid email or password",
+      };
+    }
+
+    // Check if user is active
+    if (!user.isActive) {
+      return {
+        success: false,
+        error: "This account has been deactivated. Please contact support.",
+      };
+    }
 
     await signIn("credentials", {
       email: validatedData.email,
@@ -115,10 +242,15 @@ export async function loginWithCredentials(
             success: false,
             error: "Invalid email or password",
           };
+        case "AccessDenied":
+          return {
+            success: false,
+            error: "Access denied. Your account may be deactivated.",
+          };
         default:
           return {
             success: false,
-            error: "Something went wrong. Please try again.",
+            error: "Sign in failed. Please try again.",
           };
       }
     }

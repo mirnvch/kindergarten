@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,10 +26,22 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-export function LoginForm() {
+interface LoginFormProps {
+  error?: string;
+  callbackUrl?: string;
+}
+
+export function LoginForm({ error: serverError, callbackUrl }: LoginFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Show server-side error on mount
+  useEffect(() => {
+    if (serverError) {
+      setError(serverError);
+    }
+  }, [serverError]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -38,6 +50,11 @@ export function LoginForm() {
       password: "",
     },
   });
+
+  // Clear error when user starts typing
+  function handleInputChange() {
+    if (error) setError(null);
+  }
 
   async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
@@ -55,7 +72,7 @@ export function LoginForm() {
         return;
       }
 
-      router.push("/dashboard");
+      router.push(callbackUrl || "/dashboard");
       router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");
@@ -66,8 +83,9 @@ export function LoginForm() {
 
   async function handleGoogleLogin() {
     setIsLoading(true);
+    setError(null);
     try {
-      await signIn("google", { callbackUrl: "/dashboard" });
+      await signIn("google", { callbackUrl: callbackUrl || "/dashboard" });
     } catch {
       setError("Failed to sign in with Google");
       setIsLoading(false);
@@ -103,6 +121,10 @@ export function LoginForm() {
                     placeholder="you@example.com"
                     disabled={isLoading}
                     {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      handleInputChange();
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -130,6 +152,10 @@ export function LoginForm() {
                     placeholder="Enter your password"
                     disabled={isLoading}
                     {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      handleInputChange();
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
