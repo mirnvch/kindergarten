@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +28,6 @@ export function TwoFactorVerifyForm({
   callbackUrl,
 }: TwoFactorVerifyFormProps) {
   const router = useRouter();
-  const { update: updateSession } = useSession();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [useBackup, setUseBackup] = useState(false);
@@ -71,9 +69,7 @@ export function TwoFactorVerifyForm({
         return;
       }
 
-      // Verification successful - update session to mark 2FA as verified
-      await updateSession({ twoFactorVerified: true });
-
+      // Verification successful
       toast.success("Verification successful!");
       router.push(callbackUrl);
       router.refresh();

@@ -200,11 +200,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Fetch full user data from database
         const dbUser = await db.user.findUnique({
           where: { id: user.id },
-          include: {
-            twoFactorAuth: {
-              select: { isEnabled: true },
-            },
-          },
         });
 
         if (dbUser) {
@@ -212,9 +207,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.role = dbUser.role;
           token.firstName = dbUser.firstName;
           token.lastName = dbUser.lastName;
-          // Check if 2FA is enabled
-          token.requires2FA = dbUser.twoFactorAuth?.isEnabled ?? false;
-          token.twoFactorVerified = false; // Start as not verified
         }
       }
 
@@ -222,10 +214,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (trigger === "update" && session) {
         token.firstName = session.firstName;
         token.lastName = session.lastName;
-        // Allow marking 2FA as verified
-        if (session.twoFactorVerified !== undefined) {
-          token.twoFactorVerified = session.twoFactorVerified;
-        }
       }
 
       return token;
@@ -252,8 +240,6 @@ declare module "next-auth" {
       lastName: string;
       role: UserRole;
       image?: string | null;
-      requires2FA?: boolean;
-      twoFactorVerified?: boolean;
     };
   }
 
@@ -270,7 +256,5 @@ declare module "@auth/core/jwt" {
     role: UserRole;
     firstName: string;
     lastName: string;
-    requires2FA?: boolean;
-    twoFactorVerified?: boolean;
   }
 }
