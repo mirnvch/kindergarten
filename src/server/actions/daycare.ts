@@ -11,7 +11,12 @@ export type SearchFilters = {
   maxPrice?: number;
   minAge?: number; // in months
   maxAge?: number; // in months
+  minRating?: number;
   amenities?: string[];
+  // Geolocation search
+  lat?: number;
+  lng?: number;
+  radius?: number; // in miles
   page?: number;
   limit?: number;
 };
@@ -24,6 +29,8 @@ export type DaycareSearchResult = {
   city: string;
   state: string;
   address: string;
+  latitude: number;
+  longitude: number;
   pricePerMonth: number;
   minAge: number;
   maxAge: number;
@@ -34,24 +41,46 @@ export type DaycareSearchResult = {
   isFeatured: boolean;
   isVerified: boolean;
   subscriptionPlan: "FREE" | "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
+  distance?: number; // in miles, only when geolocation search is used
 };
+
+// Calculate distance between two points using Haversine formula
+function calculateDistance(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): number {
+  const R = 3959; // Earth's radius in miles
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 export async function searchDaycares(filters: SearchFilters) {
   const page = filters.page || 1;
   const limit = filters.limit || 12;
-  const skip = (page - 1) * limit;
 
   const where: Prisma.DaycareWhereInput = {
     status: DaycareStatus.APPROVED,
     deletedAt: null,
   };
 
-  // Location filter
-  if (filters.city) {
-    where.city = { contains: filters.city, mode: "insensitive" };
-  }
-  if (filters.state) {
-    where.state = { equals: filters.state, mode: "insensitive" };
+  // Location filter (skip if using geolocation)
+  if (!filters.lat && !filters.lng) {
+    if (filters.city) {
+      where.city = { contains: filters.city, mode: "insensitive" };
+    }
+    if (filters.state) {
+      where.state = { equals: filters.state, mode: "insensitive" };
+    }
   }
 
   // Price filter
@@ -93,18 +122,20 @@ export async function searchDaycares(filters: SearchFilters) {
     };
   }
 
-  const [daycares, total] = await Promise.all([
+  // For rating and geolocation filters, we need to fetch more and filter in-memory
+  const needsPostFiltering = filters.minRating !== undefined || filters.lat !== undefined;
+  const fetchLimit = needsPostFiltering ? 500 : limit; // Fetch more for post-filtering
+
+  const [allDaycares, totalBeforeFilter] = await Promise.all([
     db.daycare.findMany({
       where,
-      skip,
-      take: limit,
+      take: fetchLimit,
       orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
       include: {
         photos: {
           where: { isPrimary: true },
           take: 1,
         },
-        // Use _count instead of fetching all reviews
         _count: {
           select: { reviews: true },
         },
@@ -116,8 +147,8 @@ export async function searchDaycares(filters: SearchFilters) {
     db.daycare.count({ where }),
   ]);
 
-  // Get avg ratings using SQL aggregation (much more efficient)
-  const daycareIds = daycares.map((d) => d.id);
+  // Get avg ratings using SQL aggregation
+  const daycareIds = allDaycares.map((d) => d.id);
   const avgRatings =
     daycareIds.length > 0
       ? await db.review.groupBy({
@@ -129,25 +160,26 @@ export async function searchDaycares(filters: SearchFilters) {
 
   const ratingMap = new Map(avgRatings.map((r) => [r.daycareId, r._avg.rating || 0]));
 
-  // Sort by subscription plan priority (ENTERPRISE > PROFESSIONAL > STARTER > FREE)
-  const planPriority = { ENTERPRISE: 4, PROFESSIONAL: 3, STARTER: 2, FREE: 1 };
-  daycares.sort((a, b) => {
-    // Featured first
-    if (a.isFeatured !== b.isFeatured) return a.isFeatured ? -1 : 1;
-    // Then by subscription plan
-    const aPlan = a.subscription?.status === "ACTIVE" ? a.subscription.plan : "FREE";
-    const bPlan = b.subscription?.status === "ACTIVE" ? b.subscription.plan : "FREE";
-    return (planPriority[bPlan] || 1) - (planPriority[aPlan] || 1);
-  });
-
-  const results: DaycareSearchResult[] = daycares.map((daycare) => {
-    // Get pre-computed avg rating from SQL aggregation
+  // Build results with distance calculation
+  let results: (DaycareSearchResult & { _sortPriority: number })[] = allDaycares.map((daycare) => {
     const avgRating = ratingMap.get(daycare.id) || 0;
-
     const subscriptionPlan =
       daycare.subscription?.status === "ACTIVE"
         ? daycare.subscription.plan
         : "FREE";
+
+    // Calculate distance if geolocation search
+    let distance: number | undefined;
+    if (filters.lat !== undefined && filters.lng !== undefined) {
+      distance = calculateDistance(
+        filters.lat,
+        filters.lng,
+        daycare.latitude,
+        daycare.longitude
+      );
+    }
+
+    const planPriority: Record<string, number> = { ENTERPRISE: 4, PROFESSIONAL: 3, STARTER: 2, FREE: 1 };
 
     return {
       id: daycare.id,
@@ -157,6 +189,8 @@ export async function searchDaycares(filters: SearchFilters) {
       city: daycare.city,
       state: daycare.state,
       address: daycare.address,
+      latitude: daycare.latitude,
+      longitude: daycare.longitude,
       pricePerMonth: Number(daycare.pricePerMonth),
       minAge: daycare.minAge,
       maxAge: daycare.maxAge,
@@ -167,11 +201,50 @@ export async function searchDaycares(filters: SearchFilters) {
       isFeatured: daycare.isFeatured,
       isVerified: daycare.isVerified,
       subscriptionPlan,
+      distance,
+      _sortPriority: planPriority[subscriptionPlan] || 1,
     };
   });
 
+  // Apply post-filters
+  // Filter by minimum rating
+  if (filters.minRating !== undefined) {
+    results = results.filter((d) => d.rating >= filters.minRating!);
+  }
+
+  // Filter by radius (geolocation)
+  if (filters.lat !== undefined && filters.lng !== undefined) {
+    const radius = filters.radius || 25; // Default 25 miles
+    results = results.filter((d) => d.distance !== undefined && d.distance <= radius);
+  }
+
+  // Sort results
+  results.sort((a, b) => {
+    // If geolocation search, sort by distance first
+    if (filters.lat !== undefined && a.distance !== undefined && b.distance !== undefined) {
+      // Featured still gets priority but within reasonable distance
+      if (a.isFeatured !== b.isFeatured && Math.abs(a.distance - b.distance) < 5) {
+        return a.isFeatured ? -1 : 1;
+      }
+      return a.distance - b.distance;
+    }
+    // Normal sorting: featured first, then by subscription plan
+    if (a.isFeatured !== b.isFeatured) return a.isFeatured ? -1 : 1;
+    return b._sortPriority - a._sortPriority;
+  });
+
+  // Calculate total after filtering
+  const total = needsPostFiltering ? results.length : totalBeforeFilter;
+
+  // Paginate
+  const skip = (page - 1) * limit;
+  const paginatedResults = results.slice(skip, skip + limit);
+
+  // Remove internal sorting field
+  const finalResults: DaycareSearchResult[] = paginatedResults.map(({ _sortPriority, ...rest }) => rest);
+
   return {
-    daycares: results,
+    daycares: finalResults,
     pagination: {
       page,
       limit,

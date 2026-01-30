@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { useCallback, useState } from "react";
+import { Search, SlidersHorizontal, MapPin, List, Map, Star, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const US_STATES = [
   { value: "AL", label: "Alabama" },
@@ -92,9 +98,21 @@ const AGE_RANGES = [
   { value: "60-", label: "5+ years" },
 ];
 
-export function SearchFilters() {
+const RATING_OPTIONS = [
+  { value: "4", label: "4+ stars" },
+  { value: "3", label: "3+ stars" },
+  { value: "2", label: "2+ stars" },
+];
+
+interface SearchFiltersProps {
+  onViewChange?: (view: "list" | "map") => void;
+  currentView?: "list" | "map";
+}
+
+export function SearchFilters({ onViewChange, currentView = "list" }: SearchFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isLocating, setIsLocating] = useState(false);
 
   const createQueryString = useCallback(
     (params: Record<string, string | null>) => {
@@ -153,6 +171,33 @@ export function SearchFilters() {
     });
   };
 
+  const handleRatingChange = (value: string) => {
+    updateFilters({ minRating: value === "all" ? null : value });
+  };
+
+  const handleGeolocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        updateFilters({
+          lat: position.coords.latitude.toString(),
+          lng: position.coords.longitude.toString(),
+          radius: "10", // 10 miles
+        });
+        setIsLocating(false);
+      },
+      () => {
+        alert("Unable to retrieve your location");
+        setIsLocating(false);
+      }
+    );
+  };
+
   const currentQuery = searchParams.get("query") || "";
   const currentState = searchParams.get("state") || "";
   const currentCity = searchParams.get("city") || "";
@@ -160,6 +205,9 @@ export function SearchFilters() {
   const currentMaxPrice = searchParams.get("maxPrice") || "";
   const currentMinAge = searchParams.get("minAge") || "";
   const currentMaxAge = searchParams.get("maxAge") || "";
+  const currentMinRating = searchParams.get("minRating") || "";
+  const currentLat = searchParams.get("lat");
+  const currentLng = searchParams.get("lng");
 
   const priceValue =
     currentMinPrice || currentMaxPrice
@@ -171,6 +219,17 @@ export function SearchFilters() {
       ? `${currentMinAge}-${currentMaxAge}`
       : "all";
 
+  const hasActiveFilters =
+    currentQuery ||
+    currentState ||
+    currentCity ||
+    currentMinPrice ||
+    currentMaxPrice ||
+    currentMinAge ||
+    currentMaxAge ||
+    currentMinRating ||
+    currentLat;
+
   const FilterControls = () => (
     <div className="space-y-4">
       <div>
@@ -181,6 +240,8 @@ export function SearchFilters() {
             updateFilters({
               state: value === "all" ? null : value,
               city: null,
+              lat: null,
+              lng: null,
             })
           }
         >
@@ -204,7 +265,7 @@ export function SearchFilters() {
           placeholder="Enter city"
           value={currentCity}
           onChange={(e) =>
-            updateFilters({ city: e.target.value || null })
+            updateFilters({ city: e.target.value || null, lat: null, lng: null })
           }
         />
       </div>
@@ -243,12 +304,27 @@ export function SearchFilters() {
         </Select>
       </div>
 
+      <div>
+        <Label>Minimum Rating</Label>
+        <Select value={currentMinRating || "all"} onValueChange={handleRatingChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Any rating" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Any rating</SelectItem>
+            {RATING_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <Button
         variant="outline"
         className="w-full"
-        onClick={() =>
-          router.push("/search")
-        }
+        onClick={() => router.push("/search")}
       >
         Clear Filters
       </Button>
@@ -270,6 +346,54 @@ export function SearchFilters() {
         </div>
         <Button type="submit">Search</Button>
 
+        {/* Geolocation button */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant={currentLat ? "default" : "outline"}
+                size="icon"
+                onClick={handleGeolocation}
+                disabled={isLocating}
+              >
+                {isLocating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <MapPin className="h-4 w-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Search near me</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        {/* View toggle */}
+        {onViewChange && (
+          <div className="hidden sm:flex border rounded-md">
+            <Button
+              type="button"
+              variant={currentView === "list" ? "default" : "ghost"}
+              size="icon"
+              className="rounded-r-none"
+              onClick={() => onViewChange("list")}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant={currentView === "map" ? "default" : "ghost"}
+              size="icon"
+              className="rounded-l-none"
+              onClick={() => onViewChange("map")}
+            >
+              <Map className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
         {/* Mobile filters */}
         <Sheet>
           <SheetTrigger asChild>
@@ -289,13 +413,15 @@ export function SearchFilters() {
       </form>
 
       {/* Desktop filters */}
-      <div className="hidden lg:flex gap-4">
+      <div className="hidden lg:flex gap-4 flex-wrap">
         <Select
           value={currentState || "all"}
           onValueChange={(value) =>
             updateFilters({
               state: value === "all" ? null : value,
               city: null,
+              lat: null,
+              lng: null,
             })
           }
         >
@@ -316,7 +442,7 @@ export function SearchFilters() {
           placeholder="City"
           value={currentCity}
           onChange={(e) =>
-            updateFilters({ city: e.target.value || null })
+            updateFilters({ city: e.target.value || null, lat: null, lng: null })
           }
           className="w-[150px]"
         />
@@ -349,17 +475,25 @@ export function SearchFilters() {
           </SelectContent>
         </Select>
 
-        {(currentQuery ||
-          currentState ||
-          currentCity ||
-          currentMinPrice ||
-          currentMaxPrice ||
-          currentMinAge ||
-          currentMaxAge) && (
-          <Button
-            variant="ghost"
-            onClick={() => router.push("/search")}
-          >
+        <Select value={currentMinRating || "all"} onValueChange={handleRatingChange}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Rating" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Any rating</SelectItem>
+            {RATING_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                <span className="flex items-center gap-1">
+                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                  {option.label}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {hasActiveFilters && (
+          <Button variant="ghost" onClick={() => router.push("/search")}>
             Clear
           </Button>
         )}
