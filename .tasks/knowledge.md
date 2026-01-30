@@ -104,13 +104,31 @@ src/components/
 ## Session Notes
 
 ### 2026-01-30 (Session 5)
-- **Scalability Sprint — 10 TASKS COMPLETED**
+- **Infrastructure Sprint — ALL TASKS COMPLETED**
 - **PostgreSQL мигрирован на Supabase**
   - Transaction Pooler (port 6543) для runtime
   - Session Pooler (port 5432) для миграций
   - 26 таблиц создано успешно
-  - `prisma.config.ts` настроен с `url` и `directUrl`
   - Для миграций: `npx prisma db push --url="$DIRECT_URL"`
+- **Sentry Error Tracking** (#35)
+  - Client/server/edge configs
+  - Error boundaries (global-error.tsx, error.tsx)
+  - Monitoring tunnel at /monitoring
+- **Security Headers** (#36)
+  - HSTS, X-Frame-Options, X-Content-Type-Options
+  - Referrer-Policy, Permissions-Policy
+- **CI/CD Pipeline** (#38)
+  - GitHub Actions: lint, typecheck, build, test
+  - Dependabot for automated updates
+- **Testing Setup**
+  - Vitest for unit tests (#39) - 21 tests
+  - Playwright for E2E tests (#37)
+- **Upstash Configured** (#40)
+  - Redis: humorous-possum-13342.upstash.io
+  - QStash: eu-central-1
+- **Staging Environment** (#41)
+  - .env.staging.example created
+  - Instructions in Quick Reference
 - Выявлены и исправлены критические проблемы производительности:
   - #15: Database indexes (8 compound indexes)
   - #16: Connection pool (max: 20, min: 5, timeouts)
@@ -249,5 +267,27 @@ npm run build  # TypeScript check
 
 ### Deploy
 ```bash
-vercel --prod
+vercel --prod          # Production
+vercel                 # Preview (auto for PRs)
+```
+
+### Staging Environment
+```bash
+# 1. Create staging branch
+git checkout -b staging
+git push -u origin staging
+
+# 2. In Vercel Dashboard:
+#    - Settings → Git → Production Branch: main
+#    - Add staging branch with custom domain: staging.kindergarten-lime.vercel.app
+
+# 3. Set staging environment variables in Vercel:
+#    - Use .env.staging.example as reference
+#    - Use Stripe TEST keys
+#    - Consider separate Supabase project
+
+# 4. Deploy to staging
+git checkout staging
+git merge main
+git push
 ```
