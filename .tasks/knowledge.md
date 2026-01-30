@@ -103,6 +103,25 @@ src/components/
 
 ## Session Notes
 
+### 2026-01-30 (Session 9)
+- **Authentication Validation — COMPLETED**
+  - Google OAuth fully working with custom PrismaAdapter
+  - Fixed firstName/lastName mapping from OAuth profile
+  - Added email normalization (lowercase, trim) across all auth flows
+  - Password requirements: min 8 chars, uppercase, lowercase, digit, special char
+  - Disposable email blocking (8 common domains)
+  - Name validation (letters, spaces, hyphens, apostrophes)
+  - OAuth account linking with specific error messages
+  - Error message display in LoginForm from OAuth redirects
+  - Error clears when user starts typing
+  - callbackUrl support for redirect after login
+- **Key files updated:**
+  - `src/lib/auth.ts` — CustomPrismaAdapter, signIn callback improvements
+  - `src/server/actions/auth.ts` — validation schemas, helpers, error handling
+  - `src/app/(auth)/login/page.tsx` — ERROR_MESSAGES map
+  - `src/components/forms/login-form.tsx` — error/callbackUrl props
+- **Следующее:** Task #11 (PWA), #13 (Security), #14 (Analytics)
+
 ### 2026-01-30 (Session 8)
 - **Task #12: Verification System — COMPLETED**
   - Prisma models: `VerificationRequest`, `VerificationDocument`
