@@ -155,7 +155,14 @@ src/components/
 - **Dependencies Added:**
   - `otplib` — TOTP library
   - `qrcode` — QR code generation
-- **Следующее:** Task #11 (PWA), #14 (Analytics), or deploy
+- **Bugs Fixed During Testing:**
+  - otplib v13 API: `verifySync` → `verify` (async)
+  - Env vars: read at runtime, not module load (serverless)
+  - Added `NEXTAUTH_SECRET` fallback for encryption
+  - 2FA login completion: credentials stored in encrypted httpOnly cookie
+  - Redirect loop: removed 2FA check from middleware (OAuth needs page-level approach)
+- **Task #25 Created:** 2FA for OAuth logins (deferred, needs page-level implementation)
+- **Следующее:** Task #11 (PWA), #12 (Verification), #14 (Analytics), #25 (OAuth 2FA)
 
 ### 2026-01-30 (Session 9)
 - **Authentication Validation — COMPLETED**
