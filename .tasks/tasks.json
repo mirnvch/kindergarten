@@ -340,7 +340,7 @@
       "id": 10,
       "title": "Real-time Communication",
       "description": "Upgrade messaging to real-time with WebSocket support",
-      "status": "pending",
+      "status": "done",
       "priority": "medium",
       "complexity": 4,
       "phase": "3.3",
@@ -348,11 +348,11 @@
       "blockedBy": [],
       "blocks": [],
       "subtasks": [
-        { "id": "10.1", "title": "Set up WebSocket server (Socket.io/Pusher)", "done": false },
-        { "id": "10.2", "title": "Implement real-time message delivery", "done": false },
-        { "id": "10.3", "title": "Add file/image sharing", "done": false },
-        { "id": "10.4", "title": "Implement read receipts", "done": false },
-        { "id": "10.5", "title": "Create message templates for daycares", "done": false }
+        { "id": "10.1", "title": "Set up WebSocket server (Socket.io/Pusher)", "done": true },
+        { "id": "10.2", "title": "Implement real-time message delivery", "done": true },
+        { "id": "10.3", "title": "Add file/image sharing", "done": true },
+        { "id": "10.4", "title": "Implement read receipts", "done": true },
+        { "id": "10.5", "title": "Create message templates for daycares", "done": true }
       ],
       "acceptanceCriteria": [
         "Messages appear instantly without refresh",
@@ -361,13 +361,16 @@
         "Daycares can use templates"
       ],
       "affectedFiles": [
-        "src/app/(parent)/dashboard/messages/*",
-        "src/lib/socket.ts",
-        "src/server/actions/messages.ts"
+        "src/lib/pusher.ts",
+        "src/lib/pusher-client.ts",
+        "src/server/actions/messages.ts",
+        "src/server/actions/message-templates.ts",
+        "src/components/messages/message-chat.tsx"
       ],
-      "notes": [],
+      "notes": ["2026-01-30: Pusher for WebSocket, typing indicators, file uploads (Supabase Storage), message templates with categories"],
+      "completedAt": "2026-01-30T13:00:00Z",
       "createdAt": "2026-01-29T14:00:00Z",
-      "updatedAt": "2026-01-29T14:00:00Z"
+      "updatedAt": "2026-01-30T13:00:00Z"
     },
     {
       "id": 11,

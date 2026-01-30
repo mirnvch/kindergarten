@@ -115,8 +115,21 @@ src/components/
   - CancelDialog with cancellation policy display
   - 24-hour cancellation/reschedule policy enforcement
   - Updated BookingCard with new dialogs
+- **Task #10: Real-time Communication — COMPLETED**
+  - Pusher for WebSocket (server + client libs)
+  - Real-time message delivery with hooks
+  - Typing indicators (auto-timeout 3s)
+  - File attachments (images, documents, 10MB max)
+  - Message templates for daycares (5 default templates)
+  - Supabase Storage for file uploads
+  - New models: MessageAttachment, MessageTemplate
 - Deferred: Saved searches (#8.5), Recurring bookings (#9.2)
-- **Следующее:** Task #10-14 (Real-time, PWA, Verification, Security, Analytics)
+- **Требуется в Vercel (Pusher):**
+  - PUSHER_APP_ID, PUSHER_KEY, PUSHER_SECRET, PUSHER_CLUSTER
+  - NEXT_PUBLIC_PUSHER_KEY, NEXT_PUBLIC_PUSHER_CLUSTER
+- **Требуется в Vercel (Supabase Storage):**
+  - NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+- **Следующее:** Task #11-14 (PWA, Verification, Security, Analytics)
 
 ### 2026-01-30 (Session 5)
 - **Infrastructure Sprint — ALL TASKS COMPLETED**
