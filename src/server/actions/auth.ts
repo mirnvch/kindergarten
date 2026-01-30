@@ -6,6 +6,9 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { UserRole } from "@prisma/client";
 import { AuthError } from "next-auth";
+import { headers } from "next/headers";
+import { recordLoginAttempt } from "@/server/actions/security/login-tracking";
+import { check2FAEnabled } from "@/server/actions/security/two-factor";
 
 // ==================== VALIDATION CONSTANTS ====================
 
@@ -94,7 +97,29 @@ type ActionResult<T = void> = {
   success: boolean;
   error?: string;
   data?: T;
+  requires2FA?: boolean;
+  userId?: string;
 };
+
+/**
+ * Get IP address from request headers
+ */
+async function getClientIP(): Promise<string> {
+  const headersList = await headers();
+  return (
+    headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    headersList.get("x-real-ip") ||
+    "unknown"
+  );
+}
+
+/**
+ * Get user agent from request headers
+ */
+async function getUserAgent(): Promise<string | undefined> {
+  const headersList = await headers();
+  return headersList.get("user-agent") || undefined;
+}
 
 export async function registerUser(
   input: RegisterInput
@@ -177,6 +202,9 @@ export async function registerUser(
 export async function loginWithCredentials(
   input: LoginInput
 ): Promise<ActionResult> {
+  const ipAddress = await getClientIP();
+  const userAgent = await getUserAgent();
+
   try {
     const validatedData = loginSchema.parse(input);
 
@@ -191,6 +219,15 @@ export async function loginWithCredentials(
     });
 
     if (!user) {
+      // Record failed attempt
+      await recordLoginAttempt({
+        email: validatedData.email,
+        success: false,
+        reason: "user_not_found",
+        ipAddress,
+        userAgent,
+      });
+
       // Generic error to prevent email enumeration
       return {
         success: false,
@@ -201,6 +238,15 @@ export async function loginWithCredentials(
     // Check if user only has OAuth and no password
     if (!user.passwordHash) {
       const hasGoogleAccount = user.accounts.some((acc) => acc.provider === "google");
+
+      await recordLoginAttempt({
+        email: validatedData.email,
+        success: false,
+        reason: "oauth_only",
+        ipAddress,
+        userAgent,
+      });
+
       if (hasGoogleAccount) {
         return {
           success: false,
@@ -215,16 +261,75 @@ export async function loginWithCredentials(
 
     // Check if user is active
     if (!user.isActive) {
+      await recordLoginAttempt({
+        email: validatedData.email,
+        success: false,
+        reason: "account_inactive",
+        ipAddress,
+        userAgent,
+      });
+
       return {
         success: false,
         error: "This account has been deactivated. Please contact support.",
       };
     }
 
+    // Verify password before checking 2FA
+    const isPasswordValid = await bcrypt.compare(
+      validatedData.password,
+      user.passwordHash
+    );
+
+    if (!isPasswordValid) {
+      await recordLoginAttempt({
+        email: validatedData.email,
+        success: false,
+        reason: "invalid_password",
+        ipAddress,
+        userAgent,
+      });
+
+      return {
+        success: false,
+        error: "Invalid email or password",
+      };
+    }
+
+    // Check if 2FA is enabled
+    const has2FA = await check2FAEnabled(user.id);
+
+    if (has2FA) {
+      // Record partial success - 2FA required
+      await recordLoginAttempt({
+        email: validatedData.email,
+        success: false,
+        reason: "2fa_required",
+        ipAddress,
+        userAgent,
+      });
+
+      return {
+        success: false,
+        requires2FA: true,
+        userId: user.id,
+        error: "Two-factor authentication required",
+      };
+    }
+
+    // Complete login
     await signIn("credentials", {
       email: validatedData.email,
       password: validatedData.password,
       redirect: false,
+    });
+
+    // Record successful login
+    await recordLoginAttempt({
+      email: validatedData.email,
+      success: true,
+      ipAddress,
+      userAgent,
     });
 
     return { success: true };
@@ -236,6 +341,15 @@ export async function loginWithCredentials(
       };
     }
     if (error instanceof AuthError) {
+      // Record failed attempt
+      await recordLoginAttempt({
+        email: input.email,
+        success: false,
+        reason: error.type,
+        ipAddress,
+        userAgent,
+      });
+
       switch (error.type) {
         case "CredentialsSignin":
           return {

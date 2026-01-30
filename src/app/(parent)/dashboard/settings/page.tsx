@@ -1,10 +1,20 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { SettingsForm } from "@/components/settings/settings-form";
 import { NotificationPreferences } from "@/components/notifications/notification-preferences";
 import { getNotificationPreferences } from "@/server/actions/notifications";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Shield, ChevronRight } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Settings | KinderCare",
@@ -58,6 +68,27 @@ export default async function SettingsPage() {
           pushEnabled: false,
         }}
       />
+
+      {/* Security settings link */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-muted-foreground" />
+            <CardTitle>Security</CardTitle>
+          </div>
+          <CardDescription>
+            Two-factor authentication, active sessions, and account management
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" asChild>
+            <Link href="/dashboard/settings/security">
+              Manage Security Settings
+              <ChevronRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

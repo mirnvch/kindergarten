@@ -441,7 +441,7 @@
       "id": 13,
       "title": "Security Enhancements",
       "description": "Add 2FA, session management, and GDPR compliance",
-      "status": "pending",
+      "status": "done",
       "priority": "medium",
       "complexity": 3,
       "phase": "4.2",
@@ -449,11 +449,11 @@
       "blockedBy": [],
       "blocks": [],
       "subtasks": [
-        { "id": "13.1", "title": "Implement two-factor authentication", "done": false },
-        { "id": "13.2", "title": "Add login attempt tracking", "done": false },
-        { "id": "13.3", "title": "Build session management UI", "done": false },
-        { "id": "13.4", "title": "Create data export feature (GDPR)", "done": false },
-        { "id": "13.5", "title": "Add account deletion option", "done": false }
+        { "id": "13.1", "title": "Implement two-factor authentication", "done": true },
+        { "id": "13.2", "title": "Add login attempt tracking", "done": true },
+        { "id": "13.3", "title": "Build session management UI", "done": true },
+        { "id": "13.4", "title": "Create data export feature (GDPR)", "done": true },
+        { "id": "13.5", "title": "Add account deletion option", "done": true }
       ],
       "acceptanceCriteria": [
         "Users can enable 2FA",
@@ -464,12 +464,18 @@
       ],
       "affectedFiles": [
         "src/app/(parent)/dashboard/settings/security/*",
-        "src/server/actions/security.ts",
-        "src/lib/auth.ts"
+        "src/server/actions/security/*",
+        "src/lib/auth.ts",
+        "src/lib/totp.ts",
+        "src/lib/user-agent.ts",
+        "prisma/schema.prisma"
       ],
-      "notes": [],
+      "notes": [
+        "2026-01-30: Implemented TOTP 2FA with otplib, backup codes, login tracking, session management, GDPR export, account deletion with 14-day grace period"
+      ],
+      "completedAt": "2026-01-30T18:00:00Z",
       "createdAt": "2026-01-29T14:00:00Z",
-      "updatedAt": "2026-01-29T14:00:00Z"
+      "updatedAt": "2026-01-30T18:00:00Z"
     },
     {
       "id": 14,

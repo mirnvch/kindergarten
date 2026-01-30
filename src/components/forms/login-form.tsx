@@ -19,6 +19,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { loginWithCredentials } from "@/server/actions/auth";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -62,6 +63,30 @@ export function LoginForm({ error: serverError, callbackUrl }: LoginFormProps) {
     setError(null);
 
     try {
+      // First, check credentials and 2FA status via server action
+      const preCheckResult = await loginWithCredentials({
+        email: data.email,
+        password: data.password,
+      });
+
+      // If 2FA is required, redirect to verification page
+      if (preCheckResult.requires2FA && preCheckResult.userId) {
+        const params = new URLSearchParams();
+        params.set("userId", preCheckResult.userId);
+        if (callbackUrl) {
+          params.set("callbackUrl", callbackUrl);
+        }
+        router.push(`/login/verify-2fa?${params.toString()}`);
+        return;
+      }
+
+      // If pre-check failed for other reasons
+      if (!preCheckResult.success && !preCheckResult.requires2FA) {
+        setError(preCheckResult.error || "Invalid email or password");
+        return;
+      }
+
+      // Complete the login with NextAuth
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,

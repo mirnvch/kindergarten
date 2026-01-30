@@ -103,6 +103,60 @@ src/components/
 
 ## Session Notes
 
+### 2026-01-30 (Session 10)
+- **Task #13: Security Enhancements — COMPLETED**
+- Implemented 5 security features:
+  - **Two-Factor Authentication (2FA)**
+    - TOTP-based using otplib v13 (functional API)
+    - QR code generation for authenticator apps
+    - 10 backup codes with hashed storage
+    - Rate limiting (5 verify/min, 3 setup/hour)
+    - Encrypted secret storage (AES-256-GCM)
+  - **Login Tracking**
+    - Records all login attempts (success/failure)
+    - Captures IP address, user agent, device info
+    - Suspicious activity detection
+    - User agent parsing (browser, OS, device type)
+  - **Session Management**
+    - JWT-based session tracking
+    - View active sessions with device info
+    - Revoke individual sessions or all others
+    - Session activity timestamps
+  - **GDPR Data Export**
+    - One-click data export request
+    - Exports: profile, children, bookings, messages, reviews, etc.
+    - Rate limited (1/day)
+    - 7-day download expiry
+  - **Account Deletion**
+    - 14-day grace period before permanent deletion
+    - Email confirmation for scheduling/cancellation
+    - Password verification required
+    - GDPR-compliant anonymization (not hard delete)
+- **New Prisma Models:**
+  - `TwoFactorAuth`, `TwoFactorBackupCode`
+  - `LoginAttempt`, `UserSession`, `DataExportRequest`
+  - Extended `User` with deletion fields
+- **New Files:**
+  - `src/lib/totp.ts` — TOTP utilities
+  - `src/lib/user-agent.ts` — UA parsing
+  - `src/server/actions/security/` — all security actions
+  - `src/components/settings/security/` — all UI components
+  - `src/app/(parent)/dashboard/settings/security/page.tsx`
+  - `src/app/(auth)/login/verify-2fa/` — 2FA verification page
+- **Rate Limit Types Added:**
+  - `2fa-verify`: 5/min
+  - `2fa-setup`: 3/hour
+  - `data-export`: 1/day
+  - `account-delete`: 3/hour
+- **Auth Flow Updated:**
+  - Login now checks for 2FA before completing
+  - Redirects to `/login/verify-2fa` if 2FA enabled
+  - Records login attempts with reasons
+- **Dependencies Added:**
+  - `otplib` — TOTP library
+  - `qrcode` — QR code generation
+- **Следующее:** Task #11 (PWA), #14 (Analytics), or deploy
+
 ### 2026-01-30 (Session 9)
 - **Authentication Validation — COMPLETED**
   - Google OAuth fully working with custom PrismaAdapter
