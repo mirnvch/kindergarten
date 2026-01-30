@@ -9,7 +9,34 @@
  * Run with: npx tsx scripts/load-test-messages.ts
  */
 
+import { config } from "dotenv";
+config(); // Load .env file
+
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
+
+function createTestClient(): PrismaClient {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL not set. Make sure .env file exists.");
+  }
+  console.log(`📡 Connecting to: ${process.env.DATABASE_URL.split("@")[1]?.split("/")[0] || "database"}`);
+
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 20,
+    min: 5,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
+  });
+
+  const adapter = new PrismaPg(pool);
+
+  return new PrismaClient({
+    adapter,
+    log: ["warn", "error"],
+  });
+}
 
 const CONCURRENT_USERS = 10;
 const MESSAGES_PER_USER = 50;
@@ -76,9 +103,7 @@ async function runLoadTest(): Promise<TestResult> {
   console.log(`  - Messages per user: ${MESSAGES_PER_USER}`);
   console.log(`  - Expected rate limit: ${RATE_LIMIT}/min\n`);
 
-  const db = new PrismaClient({
-    log: ["warn", "error"],
-  });
+  const db = createTestClient();
 
   try {
     await db.$connect();
@@ -108,8 +133,18 @@ async function runLoadTest(): Promise<TestResult> {
         throw new Error("No daycare found. Run seed script first.");
       }
 
-      testThread = await db.messageThread.create({
-        data: {
+      // Use upsert to handle race conditions
+      testThread = await db.messageThread.upsert({
+        where: {
+          daycareId_parentId: {
+            daycareId: testDaycare.id,
+            parentId: testUsers[0].id,
+          },
+        },
+        update: {
+          subject: "LOAD_TEST_THREAD",
+        },
+        create: {
           daycareId: testDaycare.id,
           parentId: testUsers[0].id,
           subject: "LOAD_TEST_THREAD",
@@ -207,9 +242,7 @@ async function testConnectionPool(): Promise<void> {
 
   const PARALLEL_QUERIES = 50;
 
-  const db = new PrismaClient({
-    log: ["warn", "error"],
-  });
+  const db = createTestClient();
 
   try {
     await db.$connect();
