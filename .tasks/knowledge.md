@@ -103,6 +103,33 @@ src/components/
 
 ## Session Notes
 
+### 2026-01-30 (Session 8)
+- **Task #12: Verification System — COMPLETED**
+  - Prisma models: `VerificationRequest`, `VerificationDocument`
+  - Enum: `VerificationStatus` (PENDING, IN_REVIEW, APPROVED, REJECTED)
+  - Server actions: `src/server/actions/verification.ts`
+    - `submitVerificationRequest` — owner submits request with documents
+    - `getVerificationStatus` — check status for a daycare
+    - `getVerificationRequests` — admin list
+    - `startVerificationReview` — admin starts review
+    - `reviewVerificationRequest` — admin approve/reject
+    - `revokeVerification` — admin revoke verified status
+  - Portal page: `/portal/verification`
+    - Status card showing current verification state
+    - Verification form with license info and document uploads
+    - Benefits section and requirements info
+  - Admin pages:
+    - `/admin/verifications` — list with filters and stats
+    - `/admin/verifications/[id]` — detail view with review form
+  - Components:
+    - `src/components/portal/verification-status.tsx`
+    - `src/components/portal/verification-form.tsx`
+    - `src/components/admin/verification-actions.tsx`
+    - `src/components/admin/verification-review-form.tsx`
+  - Upload API updated to support `type` parameter (messages, verification, profile)
+  - Verified badge already exists on daycare cards and detail pages
+- **Следующее:** Task #11 (PWA), #13 (Security), #14 (Analytics)
+
 ### 2026-01-30 (Session 7)
 - **Real-time Messaging TESTED & WORKING**
 - Исправлены проблемы:

@@ -16,6 +16,7 @@ import {
   Receipt,
   Wallet,
   ClipboardList,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ import { LogoutButton } from "@/components/auth/logout-button";
 const navigation = [
   { name: "Dashboard", href: "/portal", icon: LayoutDashboard },
   { name: "My Daycare", href: "/portal/daycare", icon: Building2 },
+  { name: "Verification", href: "/portal/verification", icon: ShieldCheck },
   { name: "Bookings", href: "/portal/bookings", icon: Calendar },
   { name: "Messages", href: "/portal/messages", icon: MessageSquare },
   { name: "Enrollments", href: "/portal/enrollments", icon: Users },

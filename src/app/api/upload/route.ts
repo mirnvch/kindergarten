@@ -61,10 +61,15 @@ export async function POST(request: NextRequest) {
     // Create Supabase client with service role key for storage access
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Get upload type (messages, verification, etc.)
+    const uploadType = (formData.get("type") as string) || "messages";
+    const allowedTypes = ["messages", "verification", "profile"];
+    const folder = allowedTypes.includes(uploadType) ? uploadType : "messages";
+
     // Generate unique filename
     const timestamp = Date.now();
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const filePath = `messages/${session.user.id}/${timestamp}-${sanitizedName}`;
+    const filePath = `${folder}/${session.user.id}/${timestamp}-${sanitizedName}`;
 
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer();

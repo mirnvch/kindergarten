@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Shield,
   BarChart3,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Daycares", href: "/admin/daycares", icon: Building2 },
+  { name: "Verifications", href: "/admin/verifications", icon: ShieldCheck },
   { name: "Reviews", href: "/admin/reviews", icon: Star },
   { name: "Messages", href: "/admin/messages", icon: MessageSquare },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },

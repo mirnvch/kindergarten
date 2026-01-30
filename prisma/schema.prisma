@@ -67,6 +67,13 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum VerificationStatus {
+  PENDING
+  IN_REVIEW
+  APPROVED
+  REJECTED
+}
+
 enum MessageStatus {
   SENT
   DELIVERED
@@ -242,6 +249,7 @@ model Daycare {
   enrollments      Enrollment[]
   waitlist         WaitlistEntry[]
   favorites        Favorite[]
+  verificationRequests VerificationRequest[]
 
   @@index([slug])
   @@index([city, state])
@@ -699,4 +707,50 @@ model SavedSearch {
 
   @@index([userId])
   @@index([userId, createdAt])
+}
+
+// ==================== VERIFICATION ====================
+
+model VerificationRequest {
+  id        String             @id @default(cuid())
+  daycareId String
+  status    VerificationStatus @default(PENDING)
+
+  // License information
+  licenseNumber String?
+  licenseState  String?
+  licenseExpiry DateTime?
+
+  // Admin review
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  reviewNotes  String?   @db.Text
+  rejectionReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  daycare   Daycare                      @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+  documents VerificationDocument[]
+
+  @@index([daycareId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model VerificationDocument {
+  id                    String @id @default(cuid())
+  verificationRequestId String
+
+  type     String  // "license", "insurance", "background_check", "other"
+  name     String
+  url      String
+  size     Int?
+  mimeType String?
+
+  createdAt DateTime @default(now())
+
+  verificationRequest VerificationRequest @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade)
+
+  @@index([verificationRequestId])
 }
