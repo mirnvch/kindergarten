@@ -45,7 +45,6 @@ export async function initiate2FASetup(): Promise<
 
   try {
     // Check if 2FA is already enabled
-    console.log("[2FA] Step 1: Checking existing 2FA...");
     const existing = await db.twoFactorAuth.findUnique({
       where: { userId: session.user.id },
     });
@@ -55,18 +54,13 @@ export async function initiate2FASetup(): Promise<
     }
 
     // Generate new secret
-    console.log("[2FA] Step 2: Generating secret...");
     const secret = generateSecret();
-    console.log("[2FA] Step 3: Generating URI...");
     const otpUri = generateTotpUri(secret, session.user.email!);
-    console.log("[2FA] Step 4: Generating QR code...");
     const qrCode = await generateQRCode(otpUri);
 
     // Store encrypted secret (not enabled yet)
-    console.log("[2FA] Step 5: Encrypting secret...");
     const encryptedSecret = encryptSecret(secret);
 
-    console.log("[2FA] Step 6: Saving to database...");
     await db.twoFactorAuth.upsert({
       where: { userId: session.user.id },
       create: {
@@ -81,13 +75,12 @@ export async function initiate2FASetup(): Promise<
       },
     });
 
-    console.log("[2FA] Setup completed successfully");
     return {
       success: true,
       data: { qrCode, secret },
     };
   } catch (error) {
-    console.error("[2FA] Setup initiation failed at step:", error instanceof Error ? error.stack : error);
+    console.error("[2FA] Setup initiation failed:", error);
     return { success: false, error: "Failed to initiate 2FA setup" };
   }
 }

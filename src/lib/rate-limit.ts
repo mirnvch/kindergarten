@@ -51,7 +51,7 @@ const RATE_LIMITS: Record<RateLimitType, { requests: number; window: Duration }>
   "message":        { requests: 30,  window: "1 m" },
   "thread":         { requests: 10,  window: "1 m" },
   "2fa-verify":     { requests: 5,   window: "1 m" },
-  "2fa-setup":      { requests: 10,  window: "1 m" },  // Temporarily short window for testing
+  "2fa-setup":      { requests: 5,   window: "1 h" },
   "data-export":    { requests: 1,   window: "1 d" },
   "account-delete": { requests: 3,   window: "1 h" },
 };

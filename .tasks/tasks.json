@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "KinderCare",
-  "lastTaskId": 24,
+  "lastTaskId": 25,
   "currentTaskId": null,
   "tasks": [
     {
@@ -471,11 +471,12 @@
         "prisma/schema.prisma"
       ],
       "notes": [
-        "2026-01-30: Implemented TOTP 2FA with otplib, backup codes, login tracking, session management, GDPR export, account deletion with 14-day grace period"
+        "2026-01-30: Implemented TOTP 2FA with otplib, backup codes, login tracking, session management, GDPR export, account deletion with 14-day grace period",
+        "2026-01-30: 2FA for OAuth deferred to Task #25 (middleware approach caused redirect loops)"
       ],
       "completedAt": "2026-01-30T18:00:00Z",
       "createdAt": "2026-01-29T14:00:00Z",
-      "updatedAt": "2026-01-30T18:00:00Z"
+      "updatedAt": "2026-01-30T19:00:00Z"
     },
     {
       "id": 14,
@@ -699,6 +700,41 @@
       "notes": [],
       "createdAt": "2026-01-30T10:00:00Z",
       "updatedAt": "2026-01-30T10:00:00Z"
+    },
+    {
+      "id": 25,
+      "title": "2FA for OAuth logins",
+      "description": "Implement 2FA verification for Google OAuth logins. Current 2FA only works for email/password login. Need page-level check instead of middleware to avoid redirect loops.",
+      "status": "pending",
+      "priority": "medium",
+      "complexity": 3,
+      "phase": "4.2",
+      "tags": ["security", "2fa", "oauth"],
+      "blockedBy": [],
+      "blocks": [],
+      "subtasks": [
+        { "id": "25.1", "title": "Add 2FA status check in protected page layouts", "done": false },
+        { "id": "25.2", "title": "Redirect to verify-2fa from layout if needed", "done": false },
+        { "id": "25.3", "title": "Store 2FA verified status in session", "done": false },
+        { "id": "25.4", "title": "Test OAuth + 2FA flow end-to-end", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "OAuth users with 2FA enabled are redirected to verify-2fa after login",
+        "After verification, user can access protected pages",
+        "No redirect loops",
+        "Works with both Google OAuth and credentials login"
+      ],
+      "affectedFiles": [
+        "src/app/(parent)/layout.tsx",
+        "src/app/(portal)/layout.tsx",
+        "src/lib/auth.ts",
+        "src/app/(auth)/login/verify-2fa/*"
+      ],
+      "notes": [
+        "2026-01-30: Middleware-based approach caused redirect loops. Need page-level implementation."
+      ],
+      "createdAt": "2026-01-30T19:00:00Z",
+      "updatedAt": "2026-01-30T19:00:00Z"
     }
   ]
 }
