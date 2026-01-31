@@ -103,6 +103,36 @@ src/components/
 
 ## Session Notes
 
+### 2026-01-30 (Session 11)
+- **Sitemap & Navigation Documentation — COMPLETED**
+- Создана полная дорожная карта проекта по best practices:
+  - **Источники:** NN/g, Slickplan, IxDF, LogRocket, Aten Design
+  - **Файлы созданы:**
+    - `.tasks/sitemap-v2.md` — полная карта (800+ строк)
+    - `.tasks/sitemap-workflow.md` — руководство по работе
+  - **Содержимое sitemap-v2.md:**
+    - Section 1: Information Architecture (роли, иерархия, навигационные системы)
+    - Section 2: Visual Sitemap (43 страницы в ASCII-диаграммах)
+    - Section 3: User Flows (7 flows по ролям с decision points)
+    - Section 4: Детальная таблица всех страниц (45 строк)
+    - Section 5: Entry Points (SEO, Direct, Referral, Email, Deep Links)
+    - Section 6: Error States & Edge Cases (404, 403, business logic)
+    - Section 7: Mobile Navigation
+    - Section 8: URL Parameters Reference (TypeScript interfaces)
+    - Section 9: Server Actions Reference (~60 actions по категориям)
+  - **Содержимое sitemap-workflow.md:**
+    - Роли и ответственности (RACI матрица)
+    - Жизненный цикл Sitemap (Plan → Create → Validate → Build → Maintain)
+    - Workflow по типам задач (новая страница, изменение flow, новая роль, bug)
+    - Тестирование (Card Sorting, Tree Testing, First-Click)
+    - Чеклисты для разработки и code review
+    - Интеграция с разработкой (PR template, commit convention)
+- **CLAUDE.md обновлен:**
+  - Добавлена секция "Дорожная карта (Sitemap)"
+  - Обновлена файловая структура .tasks/
+  - Добавлен workflow при изменении навигации
+- **Следующее:** Использовать sitemap при добавлении новых страниц
+
 ### 2026-01-30 (Session 10)
 - **Task #13: Security Enhancements — COMPLETED**
 - Implemented 5 security features:
