@@ -133,7 +133,7 @@ export function ReviewActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem asChild>
-            <a href={`/daycare/${daycareSlug}`} target="_blank" rel="noopener">
+            <a href={`/daycare/${daycareSlug}`} target="_blank" rel="noopener noreferrer">
               <Eye className="mr-2 h-4 w-4" />
               View Daycare
             </a>

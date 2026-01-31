@@ -379,6 +379,7 @@ export function SearchFilters({ onViewChange, currentView = "list" }: SearchFilt
               size="icon"
               className="rounded-r-none"
               onClick={() => onViewChange("list")}
+              aria-label="List view"
             >
               <List className="h-4 w-4" />
             </Button>
@@ -388,6 +389,7 @@ export function SearchFilters({ onViewChange, currentView = "list" }: SearchFilt
               size="icon"
               className="rounded-l-none"
               onClick={() => onViewChange("map")}
+              aria-label="Map view"
             >
               <Map className="h-4 w-4" />
             </Button>
@@ -397,7 +399,7 @@ export function SearchFilters({ onViewChange, currentView = "list" }: SearchFilt
         {/* Mobile filters */}
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="lg:hidden">
+            <Button variant="outline" size="icon" className="lg:hidden" aria-label="Open filters">
               <SlidersHorizontal className="h-4 w-4" />
             </Button>
           </SheetTrigger>

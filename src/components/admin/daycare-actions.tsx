@@ -181,7 +181,7 @@ export function DaycareActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem asChild>
-            <a href={`/daycare/${daycareSlug}`} target="_blank" rel="noopener">
+            <a href={`/daycare/${daycareSlug}`} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="mr-2 h-4 w-4" />
               View Public Page
             </a>

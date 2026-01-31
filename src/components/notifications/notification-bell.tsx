@@ -171,6 +171,7 @@ export function NotificationBell({ initialCount = 0 }: { initialCount?: number }
                         className="h-6 w-6"
                         onClick={() => handleMarkAsRead(notification.id)}
                         disabled={isPending}
+                        aria-label="Mark as read"
                       >
                         <Check className="h-3 w-3" />
                       </Button>
@@ -181,6 +182,7 @@ export function NotificationBell({ initialCount = 0 }: { initialCount?: number }
                       className="h-6 w-6 text-destructive"
                       onClick={() => handleDelete(notification.id)}
                       disabled={isPending}
+                      aria-label="Delete notification"
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>

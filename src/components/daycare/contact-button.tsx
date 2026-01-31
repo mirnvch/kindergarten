@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -69,14 +70,11 @@ export function ContactDaycareButton({
 
   if (!isAuthenticated) {
     return (
-      <Button
-        variant="outline"
-        className="w-full"
-        size="lg"
-        onClick={() => router.push("/login?redirect=/daycare")}
-      >
-        <MessageCircle className="mr-2 h-4 w-4" />
-        Sign in to Contact
+      <Button variant="outline" className="w-full" size="lg" asChild>
+        <Link href="/login?callbackUrl=/daycare">
+          <MessageCircle className="mr-2 h-4 w-4" />
+          Sign in to Contact
+        </Link>
       </Button>
     );
   }

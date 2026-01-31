@@ -224,12 +224,13 @@ export function ProgramsManager({ programs }: ProgramsManagerProps) {
                       variant="ghost"
                       size="icon"
                       onClick={() => openEditDialog(program)}
+                      aria-label="Edit program"
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" aria-label="Delete program">
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </AlertDialogTrigger>
