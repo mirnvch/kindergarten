@@ -195,29 +195,29 @@ export const getPlatformAnalytics = cache(async (days: number = 30) => {
     }>
   >`
     SELECT
-      DATE(u.day) as date,
-      COALESCE(u.count, 0) as users,
-      COALESCE(b.count, 0) as bookings,
-      COALESCE(p.total, 0) as revenue
-    FROM generate_series(${startDate}::date, ${now}::date, '1 day') as u(day)
+      gs.day::date as date,
+      COALESCE(ud.count, 0) as users,
+      COALESCE(bd.count, 0) as bookings,
+      COALESCE(pd.total, 0) as revenue
+    FROM generate_series(${startDate}::date, ${now}::date, '1 day'::interval) gs(day)
     LEFT JOIN (
       SELECT DATE("createdAt") as day, COUNT(*) as count
       FROM "User"
       WHERE "createdAt" >= ${startDate}
       GROUP BY DATE("createdAt")
-    ) u ON DATE(u.day) = u.day
+    ) ud ON gs.day::date = ud.day
     LEFT JOIN (
       SELECT DATE("createdAt") as day, COUNT(*) as count
       FROM "Booking"
       WHERE "createdAt" >= ${startDate}
       GROUP BY DATE("createdAt")
-    ) b ON DATE(u.day) = b.day
+    ) bd ON gs.day::date = bd.day
     LEFT JOIN (
       SELECT DATE("createdAt") as day, SUM(amount) as total
       FROM "Payment"
       WHERE "createdAt" >= ${startDate} AND status = 'SUCCEEDED'
       GROUP BY DATE("createdAt")
-    ) p ON DATE(u.day) = p.day
+    ) pd ON gs.day::date = pd.day
     ORDER BY date
   `;
 
