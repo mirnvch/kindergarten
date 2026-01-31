@@ -413,6 +413,7 @@ export async function complete2FALogin(userId: string): Promise<{
   try {
     const cookieStore = await cookies();
     const pendingCookie = cookieStore.get("pending_2fa_login");
+    const oauthPendingCookie = cookieStore.get("oauth_2fa_pending");
 
     if (pendingCookie?.value) {
       // Credential login flow - complete the sign in
@@ -457,7 +458,11 @@ export async function complete2FALogin(userId: string): Promise<{
         userAgent: undefined,
       });
     }
-    // For OAuth login: session already exists, no pending cookie needed
+
+    // Clear OAuth 2FA pending cookie if it exists
+    if (oauthPendingCookie?.value) {
+      cookieStore.delete("oauth_2fa_pending");
+    }
 
     // Set 2FA session verified cookie for both flows
     await set2FASessionVerified(userId);

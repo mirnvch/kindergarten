@@ -44,12 +44,14 @@ export default {
   session: { strategy: "jwt" },
   trustHost: true,
   callbacks: {
-    authorized({ auth, request: { nextUrl } }) {
+    authorized({ auth, request: { nextUrl, cookies } }) {
       const isLoggedIn = !!auth?.user;
       const userRole = auth?.user?.role as UserRole | undefined;
 
       const protectedRoutes = ["/dashboard", "/portal", "/admin"];
       const authRoutes = ["/login", "/register"];
+      // Pages that should be accessible even when logged in (2FA verification, etc.)
+      const allowedAuthPages = ["/login/verify-2fa"];
 
       const pathname = nextUrl.pathname;
 
@@ -58,6 +60,21 @@ export default {
         "/portal": ["DAYCARE_OWNER", "DAYCARE_STAFF"],
         "/admin": ["ADMIN"],
       };
+
+      // Allow access to specific auth pages even when logged in (e.g., 2FA verification)
+      if (allowedAuthPages.some((page) => pathname.startsWith(page))) {
+        return true;
+      }
+
+      // Check if OAuth user needs 2FA verification
+      // TODO: Re-enable after fixing TwoFactorAuth table migration
+      // const oauth2FAPending = cookies.get("oauth_2fa_pending")?.value;
+      // if (isLoggedIn && oauth2FAPending && !pathname.startsWith("/login/verify-2fa")) {
+      //   // Redirect to 2FA verification page
+      //   const url = new URL("/login/verify-2fa", nextUrl);
+      //   url.searchParams.set("oauth", "true");
+      //   return Response.redirect(url);
+      // }
 
       // Redirect logged-in users away from auth pages
       if (isLoggedIn && authRoutes.some((route) => pathname.startsWith(route))) {

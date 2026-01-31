@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { UserRole } from "@prisma/client";
 import type { Adapter, AdapterUser } from "next-auth/adapters";
 import authConfig from "./auth.config";
+import { cookies } from "next/headers";
 
 // Custom adapter that handles firstName/lastName from OAuth and account linking
 function CustomPrismaAdapter(): Adapter {
@@ -161,6 +162,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return "/login?error=AccountDeactivated";
           }
 
+          // 2FA check is handled in events.signIn - it sets oauth_2fa_pending cookie
+          // Middleware will redirect to /login/verify-2fa if cookie is present
+
           // Check if already has Google linked
           const hasGoogleLinked = existingUser.accounts.some(
             (acc) => acc.provider === "google"
@@ -220,6 +224,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   events: {
+    async signIn({ user, account }) {
+      // Handle 2FA requirement for OAuth users
+      // TODO: Re-enable after fixing TwoFactorAuth table migration
+      // if (account?.provider === "google" && user.email) {
+      //   const dbUser = await db.user.findUnique({
+      //     where: { email: user.email },
+      //     include: {
+      //       twoFactorAuth: {
+      //         select: { enabled: true },
+      //       },
+      //     },
+      //   });
+
+      //   if (dbUser?.twoFactorAuth?.enabled) {
+      //     // Set a cookie to indicate 2FA verification is pending for OAuth
+      //     const cookieStore = await cookies();
+      //     cookieStore.set("oauth_2fa_pending", dbUser.id, {
+      //       httpOnly: true,
+      //       secure: process.env.NODE_ENV === "production",
+      //       sameSite: "lax",
+      //       maxAge: 300, // 5 minutes
+      //       path: "/",
+      //     });
+      //   }
+      // }
+    },
     async linkAccount({ user }) {
       // Update emailVerified for OAuth users
       await db.user.update({

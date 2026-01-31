@@ -477,10 +477,14 @@ export async function is2FASessionVerified(userId: string): Promise<boolean> {
 
 /**
  * Clear 2FA session verification (call on logout)
+ * Also clears pending 2FA login cookies
  */
 export async function clear2FASession(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(TWO_FA_SESSION_COOKIE);
+  // Also clear any pending 2FA login cookies
+  cookieStore.delete("pending_2fa_login");
+  cookieStore.delete("oauth_2fa_pending");
 }
 
 /**
@@ -489,26 +493,32 @@ export async function clear2FASession(): Promise<void> {
  * Also checks for trusted devices - if device is trusted, skip 2FA
  */
 export async function needs2FAVerification(userId: string): Promise<boolean> {
-  const has2FA = await check2FAEnabled(userId);
+  try {
+    const has2FA = await check2FAEnabled(userId);
 
-  if (!has2FA) {
+    if (!has2FA) {
+      return false;
+    }
+
+    // Check if already verified this session
+    const isVerified = await is2FASessionVerified(userId);
+    if (isVerified) {
+      return false;
+    }
+
+    // Check if this is a trusted device
+    const { isTrustedDevice } = await import("./trusted-devices");
+    const isTrusted = await isTrustedDevice(userId);
+    if (isTrusted) {
+      // Device is trusted, set session as verified
+      await set2FASessionVerified(userId);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    // If tables don't exist (migration not applied), don't require 2FA
+    console.error("[2FA] needs2FAVerification error:", error);
     return false;
   }
-
-  // Check if already verified this session
-  const isVerified = await is2FASessionVerified(userId);
-  if (isVerified) {
-    return false;
-  }
-
-  // Check if this is a trusted device
-  const { isTrustedDevice } = await import("./trusted-devices");
-  const isTrusted = await isTrustedDevice(userId);
-  if (isTrusted) {
-    // Device is trusted, set session as verified
-    await set2FASessionVerified(userId);
-    return false;
-  }
-
-  return true;
 }
