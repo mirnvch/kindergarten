@@ -1,97 +1,244 @@
-# Deployment Guide for Multi-App Setup
+# Deployment Guide - Turborepo на Vercel
 
-## Overview
+## Ключевые принципы (Best Practices)
 
-The KinderCare project is structured as a Turborepo monorepo with 3 deployable apps:
-- **web** - Public website (kindergarten.com)
-- **portal** - Daycare owner/staff portal (portal.kindergarten.com)
-- **admin** - Admin panel (admin.kindergarten.com)
+1. **Zero-config интеграция** - Vercel автоматически распознаёт Turborepo
+2. **Один проект = одно приложение** - каждое app = отдельный Vercel project
+3. **Root Directory** - указываем путь к app (например `apps/admin`)
+4. **Remote Cache** - автоматически включается на Vercel
+5. **НЕ нужен vercel.json** - всё настраивается через UI
 
-## Current Status
+---
 
-The monolith app continues to work at the current deployment URL.
-The separate apps are ready for deployment but currently serve as shells.
+## Пошаговая инструкция
 
-## Deployment Options
+### Шаг 1: Подготовка (уже сделано)
 
-### Option A: Separate Vercel Projects (Recommended)
+Структура проекта готова:
+```
+kindergarten/
+├── apps/
+│   ├── admin/      ← Vercel Project 1
+│   ├── portal/     ← Vercel Project 2
+│   └── web/        ← Vercel Project 3
+├── packages/
+│   ├── ui/
+│   ├── database/
+│   ├── auth/
+│   └── utils/
+├── turbo.json
+└── package.json
+```
 
-1. **Create projects on Vercel:**
-   ```bash
-   # From monorepo root
-   cd apps/admin && vercel link
-   cd apps/portal && vercel link
-   cd apps/web && vercel link
+### Шаг 2: Создание проектов на Vercel
+
+**Для каждого приложения (admin, portal, web):**
+
+1. Иди на https://vercel.com/new
+2. Выбери **Import Git Repository** → твой репозиторий `kindergarten`
+3. Vercel автоматически определит Turborepo
+
+4. **Настрой проект:**
+
+   | Поле | Значение для Admin | Portal | Web |
+   |------|-------------------|--------|-----|
+   | Project Name | `kindergarten-admin` | `kindergarten-portal` | `kindergarten-web` |
+   | Framework | Next.js (auto) | Next.js (auto) | Next.js (auto) |
+   | **Root Directory** | `apps/admin` | `apps/portal` | `apps/web` |
+   | Build Command | (оставь пустым - auto) | (auto) | (auto) |
+   | Output Directory | (оставь пустым - auto) | (auto) | (auto) |
+
+5. **Включи опцию** (важно для монорепо):
+   - Build & Development Settings → **Include source files outside of the Root Directory** ✅
+
+### Шаг 3: Environment Variables
+
+В каждом из 3 проектов добавь переменные:
+
+**Settings → Environment Variables:**
+
+```env
+# Database
+DATABASE_URL=postgresql://postgres.[ref]:[password]@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+
+# Auth
+AUTH_SECRET=твой-секретный-ключ
+AUTH_TRUST_HOST=true
+AUTH_GOOGLE_ID=xxx.apps.googleusercontent.com
+AUTH_GOOGLE_SECRET=GOCSPX-xxx
+
+# Cross-domain cookies (ВАЖНО!)
+AUTH_COOKIE_DOMAIN=.kindergarten.com
+
+# Stripe (если используется)
+STRIPE_SECRET_KEY=sk_live_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_xxx
+
+# Pusher (real-time)
+PUSHER_APP_ID=xxx
+PUSHER_SECRET=xxx
+NEXT_PUBLIC_PUSHER_KEY=xxx
+NEXT_PUBLIC_PUSHER_CLUSTER=eu
+
+# Email
+RESEND_API_KEY=re_xxx
+
+# Redis
+UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
+UPSTASH_REDIS_REST_TOKEN=xxx
+
+# Sentry
+SENTRY_DSN=https://xxx@xxx.ingest.sentry.io/xxx
+NEXT_PUBLIC_SENTRY_DSN=https://xxx@xxx.ingest.sentry.io/xxx
+```
+
+### Шаг 4: Домены
+
+**Вариант A: Без кастомного домена (для теста)**
+
+После деплоя каждый проект получит URL:
+- `kindergarten-admin.vercel.app`
+- `kindergarten-portal.vercel.app`
+- `kindergarten-web.vercel.app`
+
+⚠️ **Проблема**: Cookies не будут работать между доменами!
+
+**Вариант B: С кастомным доменом (production)**
+
+1. Купи домен (например `kindergarten.com`)
+
+2. В каждом проекте на Vercel:
+   - Settings → Domains
+
+   | Проект | Домен |
+   |--------|-------|
+   | kindergarten-web | `kindergarten.com`, `www.kindergarten.com` |
+   | kindergarten-portal | `portal.kindergarten.com` |
+   | kindergarten-admin | `admin.kindergarten.com` |
+
+3. Настрой DNS у регистратора:
+
+   | Type | Name | Value |
+   |------|------|-------|
+   | A | @ | `76.76.21.21` |
+   | CNAME | www | `cname.vercel-dns.com` |
+   | CNAME | portal | `cname.vercel-dns.com` |
+   | CNAME | admin | `cname.vercel-dns.com` |
+
+### Шаг 5: Google OAuth
+
+В [Google Cloud Console](https://console.cloud.google.com/apis/credentials):
+
+1. Выбери OAuth 2.0 Client
+2. Добавь в **Authorized redirect URIs**:
+   ```
+   https://kindergarten.com/api/auth/callback/google
+   https://portal.kindergarten.com/api/auth/callback/google
+   https://admin.kindergarten.com/api/auth/callback/google
    ```
 
-2. **Configure environment variables** for each project in Vercel dashboard:
-   - `DATABASE_URL` - Supabase connection string
-   - `AUTH_SECRET` - NextAuth secret
-   - `AUTH_GOOGLE_ID` - Google OAuth client ID
-   - `AUTH_GOOGLE_SECRET` - Google OAuth client secret
-   - `AUTH_COOKIE_DOMAIN` - Set to `.kindergarten.com` for cross-subdomain auth
+### Шаг 6: Проверка
 
-3. **Configure custom domains** in Vercel:
-   - web → kindergarten.com
-   - portal → portal.kindergarten.com
-   - admin → admin.kindergarten.com
+1. Деплой произойдёт автоматически после создания проектов
+2. Проверь каждый URL
+3. Попробуй залогиниться - сессия должна шариться между поддоменами
 
-4. **Update Google OAuth** redirect URLs in Google Console:
-   - Add: https://kindergarten.com/api/auth/callback/google
-   - Add: https://portal.kindergarten.com/api/auth/callback/google
-   - Add: https://admin.kindergarten.com/api/auth/callback/google
+---
 
-### Option B: Deploy from Monorepo Root
+## Альтернатива: Через CLI
 
-Use the turbo-based deployment:
 ```bash
-# Deploy admin
-npx turbo deploy --filter=@kindergarten/admin
+# Войди в Vercel
+vercel login
 
-# Deploy portal
-npx turbo deploy --filter=@kindergarten/portal
+# Линкуй каждое приложение
+cd apps/admin && vercel link
+cd ../portal && vercel link
+cd ../web && vercel link
 
-# Deploy web
-npx turbo deploy --filter=@kindergarten/web
+# После линковки и настройки env vars деплой:
+vercel --prod
 ```
 
-## Cross-Subdomain Authentication
+---
 
-For auth to work across subdomains, the cookie domain must be set to the parent domain:
+## Важные настройки turbo.json
 
-```typescript
-// packages/auth/src/index.ts
-export const cookieConfig = {
-  domain: process.env.AUTH_COOKIE_DOMAIN || undefined, // ".kindergarten.com"
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-};
+Наш текущий `turbo.json` уже настроен правильно:
+
+```json
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env.*local", ".env"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": [
+        "DATABASE_URL",
+        "AUTH_SECRET",
+        "AUTH_GOOGLE_ID",
+        // ... остальные переменные
+      ]
+    }
+  }
+}
 ```
 
-## Required DNS Records
+---
 
-| Type  | Name    | Value                    |
-|-------|---------|--------------------------|
-| A     | @       | 76.76.21.21              |
-| CNAME | portal  | cname.vercel-dns.com     |
-| CNAME | admin   | cname.vercel-dns.com     |
+## Remote Cache (автоматически)
 
-## Ports (Local Development)
+Vercel автоматически включает Remote Cache для Turborepo:
+- Кэш билдов шарится между деплоями
+- Ускоряет CI/CD в 10x
+- Не требует настройки
 
-- web: 3000
-- portal: 3001
-- admin: 3002
+Для локальной разработки можно подключить:
+```bash
+npx turbo link
+```
 
-## Current Monolith
+---
 
-The monolith at `src/app/` continues to work and can be deployed as before.
-Routes will be gradually migrated to individual apps.
+## Skip Unchanged Projects
 
-## Migration Plan
+В настройках каждого Vercel проекта включи:
 
-1. ✅ Apps created and building
-2. ⬜ Deploy apps to Vercel
-3. ⬜ Configure custom domains
-4. ⬜ Update OAuth settings
-5. ⬜ Migrate routes from monolith to apps
-6. ⬜ Retire monolith deployment
+**Settings → Git → Ignored Build Step**
+
+Используй команду:
+```bash
+npx turbo-ignore
+```
+
+Это пропустит деплой если файлы приложения не изменились.
+
+---
+
+## Порты для локальной разработки
+
+```bash
+# Запуск всех приложений
+npx turbo dev
+
+# Порты:
+# - web:    http://localhost:3000
+# - portal: http://localhost:3001
+# - admin:  http://localhost:3002
+```
+
+---
+
+## Чеклист
+
+- [ ] Создан Vercel проект для `apps/admin`
+- [ ] Создан Vercel проект для `apps/portal`
+- [ ] Создан Vercel проект для `apps/web`
+- [ ] Настроены Environment Variables в каждом проекте
+- [ ] Куплен кастомный домен
+- [ ] Настроены DNS записи
+- [ ] Привязаны домены к проектам
+- [ ] Обновлены OAuth redirect URLs
+- [ ] Проверена авторизация между поддоменами

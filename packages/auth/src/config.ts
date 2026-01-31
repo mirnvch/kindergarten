@@ -46,6 +46,41 @@ export const authConfig: NextAuthConfig = {
   },
   session: { strategy: "jwt" },
   trustHost: true,
+  // Cross-subdomain cookie configuration
+  // Set AUTH_COOKIE_DOMAIN=.kindergarten.com in production for shared auth
+  cookies: process.env.AUTH_COOKIE_DOMAIN
+    ? {
+        sessionToken: {
+          name: `authjs.session-token`,
+          options: {
+            httpOnly: true,
+            sameSite: "lax",
+            path: "/",
+            secure: process.env.NODE_ENV === "production",
+            domain: process.env.AUTH_COOKIE_DOMAIN,
+          },
+        },
+        callbackUrl: {
+          name: `authjs.callback-url`,
+          options: {
+            sameSite: "lax",
+            path: "/",
+            secure: process.env.NODE_ENV === "production",
+            domain: process.env.AUTH_COOKIE_DOMAIN,
+          },
+        },
+        csrfToken: {
+          name: `authjs.csrf-token`,
+          options: {
+            httpOnly: true,
+            sameSite: "lax",
+            path: "/",
+            secure: process.env.NODE_ENV === "production",
+            domain: process.env.AUTH_COOKIE_DOMAIN,
+          },
+        },
+      }
+    : undefined,
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
