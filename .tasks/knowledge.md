@@ -103,6 +103,35 @@ src/components/
 
 ## Session Notes
 
+### 2026-01-31 (Session 12 continued)
+- **Task #27: Trusted Device for 2FA — COMPLETED**
+- Implemented "Trust this device" feature:
+  - Device fingerprinting: SHA256(user-agent + accept-language)
+  - IP binding: требует re-verification при смене IP
+  - 30-day TTL для trusted devices
+  - Max 5 devices per user (oldest removed when limit)
+- **Prisma model: TrustedDevice**
+  - `deviceHash` — unique identifier
+  - `ipAddress` — for IP binding
+  - `expiresAt` — 30-day expiry
+  - `@@unique([userId, deviceHash])` — composite unique
+- **Server Actions (trusted-devices.ts):**
+  - `generateDeviceHash()` — creates SHA256 hash
+  - `addTrustedDevice()` — adds device + sends email
+  - `isTrustedDevice(userId)` — validates device + IP
+  - `getTrustedDevices()` — lists user's devices
+  - `removeTrustedDevice(id)` — removes single device
+  - `removeAllTrustedDevices()` — removes all
+- **UI Updates:**
+  - Checkbox "Trust this device for 30 days" on 2FA verify page
+  - TrustedDevices component in security settings
+  - Email notification when new device is trusted
+- **Integration:**
+  - `needs2FAVerification` checks trusted device before requiring 2FA
+  - If trusted → sets 2FA session cookie and skips verification
+- **Email template:** `newTrustedDeviceEmail` — security notification
+- **Следующее:** Task #11 (PWA), #14 (Analytics)
+
 ### 2026-01-31 (Session 12)
 - **Task #25: 2FA for OAuth Logins — COMPLETED**
 - Implemented cookie-based 2FA session verification:
