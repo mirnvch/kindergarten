@@ -1,0 +1,81 @@
+"use client";
+
+import * as Sentry from "@sentry/nextjs";
+import { useEffect } from "react";
+import Link from "next/link";
+import { AlertTriangle, RefreshCw, Home, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+
+export default function PortalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    // Log to Sentry with portal context
+    Sentry.captureException(error, {
+      tags: {
+        section: "portal",
+      },
+      extra: {
+        digest: error.digest,
+      },
+    });
+  }, [error]);
+
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center pb-2">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-100">
+            <AlertTriangle className="h-8 w-8 text-orange-600" />
+          </div>
+          <h2 className="text-xl font-semibold">Portal Error</h2>
+        </CardHeader>
+        <CardContent className="text-center">
+          <p className="text-muted-foreground mb-4">
+            Something went wrong while loading this page. We&apos;ve been notified and are looking into it.
+          </p>
+          {process.env.NODE_ENV === "development" && (
+            <details className="mt-4 rounded-lg bg-muted p-3 text-left text-sm">
+              <summary className="cursor-pointer font-medium">Error Details</summary>
+              <pre className="mt-2 whitespace-pre-wrap break-words text-xs text-muted-foreground">
+                {error.message}
+              </pre>
+              {error.digest && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Error ID: {error.digest}
+                </p>
+              )}
+            </details>
+          )}
+        </CardContent>
+        <CardFooter className="flex flex-col gap-2">
+          <Button onClick={() => reset()} className="w-full">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try Again
+          </Button>
+          <div className="flex w-full gap-2">
+            <Button variant="outline" className="flex-1" asChild>
+              <Link href="/portal">
+                <Home className="mr-2 h-4 w-4" />
+                Dashboard
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => window.history.back()}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Go Back
+            </Button>
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}

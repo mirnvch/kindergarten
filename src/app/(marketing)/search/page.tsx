@@ -1,9 +1,13 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
 
-import { searchDaycares, type SearchFilters } from "@/server/actions/daycare";
+import { searchDaycares } from "@/server/actions/daycare";
 import { SearchResultsClient } from "@/components/search/search-results";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  publicSearchSchema,
+  parseSearchParams,
+} from "@/lib/validations";
 
 export const metadata: Metadata = {
   title: "Find Daycare | KinderCare",
@@ -12,20 +16,7 @@ export const metadata: Metadata = {
 };
 
 interface SearchPageProps {
-  searchParams: Promise<{
-    query?: string;
-    city?: string;
-    state?: string;
-    minPrice?: string;
-    maxPrice?: string;
-    minAge?: string;
-    maxAge?: string;
-    minRating?: string;
-    lat?: string;
-    lng?: string;
-    radius?: string;
-    page?: string;
-  }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 function SearchSkeleton() {
@@ -47,32 +38,18 @@ function SearchSkeleton() {
 }
 
 async function SearchContent({ searchParams }: SearchPageProps) {
-  const params = await searchParams;
-
-  const filters: SearchFilters = {
-    query: params.query,
-    city: params.city,
-    state: params.state,
-    minPrice: params.minPrice ? parseInt(params.minPrice) : undefined,
-    maxPrice: params.maxPrice ? parseInt(params.maxPrice) : undefined,
-    minAge: params.minAge ? parseInt(params.minAge) : undefined,
-    maxAge: params.maxAge ? parseInt(params.maxAge) : undefined,
-    minRating: params.minRating ? parseFloat(params.minRating) : undefined,
-    lat: params.lat ? parseFloat(params.lat) : undefined,
-    lng: params.lng ? parseFloat(params.lng) : undefined,
-    radius: params.radius ? parseFloat(params.radius) : undefined,
-    page: params.page ? parseInt(params.page) : 1,
-  };
+  const rawParams = await searchParams;
+  const filters = parseSearchParams(publicSearchSchema, rawParams);
 
   const { daycares, pagination } = await searchDaycares(filters);
 
   // Convert filters to serializable format for client component
   const serializableFilters: Record<string, string | number | undefined> = {};
-  Object.entries(params).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(filters)) {
     if (value !== undefined) {
       serializableFilters[key] = value;
     }
-  });
+  }
 
   return (
     <SearchResultsClient

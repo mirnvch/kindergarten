@@ -22,30 +22,29 @@ import {
 import { db } from "@/lib/db";
 import { DaycareActions } from "@/components/admin/daycare-actions";
 import { DaycareStatus } from "@prisma/client";
+import {
+  adminDaycaresSearchSchema,
+  parseSearchParams,
+  type AdminDaycaresSearch,
+} from "@/lib/validations";
+import { buildPaginationUrl } from "@/lib/url-helpers";
 
-interface SearchParams {
-  search?: string;
-  status?: string;
-  page?: string;
-}
-
-async function getDaycares(searchParams: SearchParams) {
-  const page = parseInt(searchParams.page || "1");
-  const perPage = 10;
+async function getDaycares(params: AdminDaycaresSearch) {
+  const { page, perPage, search, status } = params;
   const skip = (page - 1) * perPage;
 
   const where: Record<string, unknown> = {};
 
-  if (searchParams.search) {
+  if (search) {
     where.OR = [
-      { name: { contains: searchParams.search, mode: "insensitive" } },
-      { email: { contains: searchParams.search, mode: "insensitive" } },
-      { city: { contains: searchParams.search, mode: "insensitive" } },
+      { name: { contains: search, mode: "insensitive" } },
+      { email: { contains: search, mode: "insensitive" } },
+      { city: { contains: search, mode: "insensitive" } },
     ];
   }
 
-  if (searchParams.status) {
-    where.status = searchParams.status;
+  if (status) {
+    where.status = status;
   }
 
   const [daycares, total, statusCounts] = await Promise.all([
@@ -136,9 +135,10 @@ function getStatusColor(status: DaycareStatus) {
 export default async function DaycaresPage({
   searchParams,
 }: {
-  searchParams: Promise<SearchParams>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const params = await searchParams;
+  const rawParams = await searchParams;
+  const params = parseSearchParams(adminDaycaresSearchSchema, rawParams);
   const { daycares, total, page, totalPages, counts } = await getDaycares(params);
 
   return (
@@ -228,13 +228,13 @@ export default async function DaycaresPage({
                 <Input
                   name="search"
                   placeholder="Search daycares..."
-                  defaultValue={params.search}
+                  defaultValue={params.search ?? ""}
                   className="pl-10"
                 />
               </div>
               <select
                 name="status"
-                defaultValue={params.status}
+                defaultValue={params.status ?? ""}
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
                 <option value="">All Statuses</option>
@@ -350,9 +350,10 @@ export default async function DaycaresPage({
                   asChild
                 >
                   <Link
-                    href={`/admin/daycares?page=${page - 1}${
-                      params.search ? `&search=${params.search}` : ""
-                    }${params.status ? `&status=${params.status}` : ""}`}
+                    href={buildPaginationUrl("/admin/daycares", page - 1, {
+                      search: params.search,
+                      status: params.status,
+                    })}
                   >
                     Previous
                   </Link>
@@ -364,9 +365,10 @@ export default async function DaycaresPage({
                   asChild
                 >
                   <Link
-                    href={`/admin/daycares?page=${page + 1}${
-                      params.search ? `&search=${params.search}` : ""
-                    }${params.status ? `&status=${params.status}` : ""}`}
+                    href={buildPaginationUrl("/admin/daycares", page + 1, {
+                      search: params.search,
+                      status: params.status,
+                    })}
                   >
                     Next
                   </Link>

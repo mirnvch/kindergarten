@@ -13,7 +13,7 @@
 - `auth.ts` — полный конфиг с adapter
 - Middleware импортирует только `auth.config.ts`
 
-### Route Groups Structure
+### Route Groups Structure (Current - Monolith)
 ```
 src/app/
 ├── (auth)/       # Login, register — без layout
@@ -23,6 +23,36 @@ src/app/
 └── (admin)/      # Admin panel — с sidebar (red theme)
 ```
 
+### Target Architecture (Monorepo - Turborepo)
+**Решение принято:** 2026-01-31
+
+**Причины миграции:**
+- Безопасность: Admin panel не должен быть в том же bundle что и public site
+- Производительность: Parent app не грузит код admin/portal
+- Масштабирование: Portal может иметь больше трафика чем Admin
+- Независимые деплои: Можно деплоить admin без риска сломать parent
+
+**Целевая структура:**
+```
+kindergarten/
+├── apps/
+│   ├── web/              # kindergarten.com (marketing + parent)
+│   ├── portal/           # portal.kindergarten.com (owner portal)
+│   └── admin/            # admin.kindergarten.com (admin panel)
+├── packages/
+│   ├── ui/               # @kindergarten/ui — shared components
+│   ├── database/         # @kindergarten/database — Prisma
+│   ├── auth/             # @kindergarten/auth — NextAuth config
+│   ├── email/            # @kindergarten/email — templates + Resend
+│   └── utils/            # @kindergarten/utils — helpers
+└── turbo.json
+```
+
+**Cross-Domain Auth:**
+- Cookie domain: `.kindergarten.com` для всех субдоменов
+- 2FA session cookie также на root domain
+- OAuth redirect URLs для каждого субдомена
+
 ### Role-Based Access
 | Role | Access |
 |------|--------|
@@ -30,6 +60,43 @@ src/app/
 | DAYCARE_OWNER | /portal/* |
 | DAYCARE_STAFF | /portal/* (limited) |
 | ADMIN | /admin/* |
+
+### Portal RBAC Matrix (Owner vs Manager vs Staff)
+| Action | Owner | Manager | Staff |
+|--------|:-----:|:-------:|:-----:|
+| **Profile** | | | |
+| Edit daycare profile | ✅ | ✅ | ❌ |
+| Manage photos | ✅ | ✅ | ❌ |
+| Manage programs | ✅ | ✅ | ❌ |
+| Edit schedule | ✅ | ✅ | ❌ |
+| Edit pricing | ✅ | ✅ | ❌ |
+| Manage amenities | ✅ | ✅ | ❌ |
+| **Staff** | | | |
+| Add staff member | ✅ | ❌ | ❌ |
+| Remove staff member | ✅ | ❌ | ❌ |
+| Change staff role | ✅ | ❌ | ❌ |
+| **Bookings** | | | |
+| View bookings | ✅ | ✅ | ✅ |
+| Confirm booking | ✅ | ✅ | ❌ |
+| Decline booking | ✅ | ✅ | ❌ |
+| Mark completed | ✅ | ✅ | ✅ |
+| **Messages** | | | |
+| View messages | ✅ | ✅ | ✅ |
+| Send messages | ✅ | ✅ | ❌ |
+| Bulk messaging | ✅ | ❌ | ❌ |
+| **Reviews** | | | |
+| View reviews | ✅ | ✅ | ✅ |
+| Respond to reviews | ✅ | ✅ | ❌ |
+| **Billing** | | | |
+| View billing | ✅ | ❌ | ❌ |
+| Manage subscription | ✅ | ❌ | ❌ |
+| **Analytics** | | | |
+| View basic analytics | ✅ | ✅ | ✅ |
+| View premium analytics | ✅ | ✅ | ❌ |
+| Export data | ✅ | ❌ | ❌ |
+| **Verification** | | | |
+| Submit verification | ✅ | ❌ | ❌ |
+| View verification status | ✅ | ✅ | ✅ |
 
 ---
 
@@ -54,6 +121,62 @@ src/components/
 - Всегда использовать `select` для оптимизации
 - Prisma schema: camelCase в коде, snake_case в БД через `@@map`
 - Транзакции для связанных операций
+
+### Buttons & Links Best Practices
+
+**Навигация vs Действия:**
+- `<Link href="...">` — для навигации между страницами (SEO, accessibility, pre-fetch)
+- `<Button onClick={...}>` — для действий (submit, toggle, modal open)
+- `<Button asChild><Link>` — для стилизованной навигации (Button UI + Link семантика)
+
+**Icon-only Buttons:**
+```tsx
+// ПРАВИЛЬНО — есть aria-label для screen readers
+<Button variant="ghost" size="icon" aria-label="Edit program">
+  <Pencil className="h-4 w-4" />
+</Button>
+
+// НЕПРАВИЛЬНО — screen reader не поймёт что это
+<Button variant="ghost" size="icon">
+  <Pencil className="h-4 w-4" />
+</Button>
+```
+
+**Внешние ссылки:**
+```tsx
+// ПРАВИЛЬНО — безопасность (noopener) + приватность (noreferrer)
+<a href={url} target="_blank" rel="noopener noreferrer">
+  View
+</a>
+
+// НЕПРАВИЛЬНО — уязвимость tabnabbing
+<a href={url} target="_blank">View</a>
+```
+
+**Навигация после действия:**
+```tsx
+// ПРАВИЛЬНО — сначала действие, потом навигация
+const handleSubmit = async () => {
+  const result = await submitForm();
+  if (result.success) {
+    router.push("/success");
+  }
+};
+
+// НЕПРАВИЛЬНО — router.push для простой навигации вместо Link
+<Button onClick={() => router.push("/login")}>Login</Button>
+
+// ПРАВИЛЬНО — Link для навигации
+<Button asChild>
+  <Link href="/login">Login</Link>
+</Button>
+```
+
+**Screen Reader Support:**
+```tsx
+// Для визуально скрытого текста
+<span className="sr-only">Notifications</span>
+```
 
 ---
 
@@ -127,6 +250,41 @@ dev branch → Test on Vercel Preview → main branch → Production
 ---
 
 ## Session Notes
+
+### 2026-01-31 (Session 16)
+- **Architecture Audit & Roadmap Update — COMPLETED**
+- Проведён полный аудит Admin и Portal секций:
+  - **Что хорошо:** Route groups, Server Components, separation of concerns, auth в layout
+  - **Критические проблемы:** Нет Zod validation, нет error boundaries, нет rate limiting на admin actions, N+1 в messages
+  - **Средние проблемы:** router.refresh() вместо granular revalidation, несогласованная авторизация owner/manager
+- **Архитектурное решение: Monorepo (Turborepo)**
+  - Разделение на 3 приложения: web, portal, admin
+  - Shared packages: ui, database, auth, email, utils
+  - Cross-domain auth через cookie на .kindergarten.com
+- **Новые задачи добавлены (29-40):**
+  - Phase R (Refactoring): 29-34 — критические фиксы перед миграцией
+  - Phase M (Migration): 35-40 — миграция на monorepo
+- **RBAC Matrix** документирован в knowledge.md
+- **Следующее:** Task #29 (Zod validation) или Task #30 (Error boundaries)
+
+### 2026-01-31 (Session 15)
+- **Button/Link Accessibility Audit — COMPLETED**
+- Проверены все компоненты на соответствие best practices:
+  - **External links:** Добавлен `rel="noopener noreferrer"` в:
+    - `src/components/admin/review-actions.tsx`
+    - `src/components/admin/daycare-actions.tsx`
+  - **Link vs router.push:** Исправлен `contact-button.tsx`:
+    - Заменён `onClick={() => router.push("/login")}` на `<Link href="/login">`
+  - **Icon-only buttons aria-labels:** Добавлены в:
+    - `src/components/notifications/notification-bell.tsx` (Mark as read, Delete)
+    - `src/components/portal/programs-manager.tsx` (Edit, Delete)
+    - `src/components/portal/staff-manager.tsx` (Remove)
+    - `src/components/search/search-filters.tsx` (List view, Map view, Open filters)
+- **Best practices добавлены в Patterns Used** секцию этого файла
+- **Исправлена критическая ошибка Analytics:**
+  - SQL query в `getPlatformAnalytics` имел конфликт alias (использовал `u` дважды)
+  - Переименованы alias: `gs` (generate_series), `ud`, `bd`, `pd`
+- **Следующее:** Все основные задачи завершены
 
 ### 2026-01-31 (Session 14 continued)
 - **Task #14: Analytics Dashboard — COMPLETED**

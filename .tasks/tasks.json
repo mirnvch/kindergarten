@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "KinderCare",
-  "lastTaskId": 28,
+  "lastTaskId": 40,
   "currentTaskId": null,
   "tasks": [
     {
@@ -867,6 +867,457 @@
       ],
       "createdAt": "2026-01-31T16:00:00Z",
       "updatedAt": "2026-01-31T16:00:00Z"
+    },
+    {
+      "id": 29,
+      "title": "Input Validation with Zod",
+      "description": "Add Zod validation to all searchParams and server action inputs to prevent invalid data and improve type safety",
+      "status": "done",
+      "priority": "critical",
+      "complexity": 3,
+      "phase": "R.1",
+      "tags": ["security", "validation", "refactoring"],
+      "blockedBy": [],
+      "blocks": [35],
+      "subtasks": [
+        { "id": "29.1", "title": "Create validation schemas for admin searchParams", "done": true },
+        { "id": "29.2", "title": "Create validation schemas for portal searchParams", "done": true, "note": "Portal pages use Tabs, not URL params" },
+        { "id": "29.3", "title": "Add Zod validation to admin server actions", "done": true },
+        { "id": "29.4", "title": "Add Zod validation to portal server actions", "done": true, "note": "verification.ts already had Zod" },
+        { "id": "29.5", "title": "Create reusable validation helpers", "done": true }
+      ],
+      "acceptanceCriteria": [
+        "All searchParams validated with Zod before use",
+        "All server action inputs validated",
+        "Invalid inputs return clear error messages",
+        "No raw user input reaches Prisma queries"
+      ],
+      "affectedFiles": [
+        "src/lib/validations/search-params.ts",
+        "src/lib/validations/action-inputs.ts",
+        "src/lib/validations/index.ts",
+        "src/lib/url-helpers.ts",
+        "src/app/(admin)/admin/users/page.tsx",
+        "src/app/(admin)/admin/daycares/page.tsx",
+        "src/app/(admin)/admin/reviews/page.tsx",
+        "src/app/(admin)/admin/verifications/page.tsx",
+        "src/app/(marketing)/search/page.tsx",
+        "src/server/actions/admin/users.ts",
+        "src/server/actions/admin/daycares.ts",
+        "src/server/actions/admin/reviews.ts"
+      ],
+      "notes": [
+        "2026-01-31: Created centralized validation library",
+        "2026-01-31: Portal pages don't use URL-based filters (use Tabs instead)",
+        "2026-01-31: verification.ts already had proper Zod validation"
+      ],
+      "completedAt": "2026-01-31T23:30:00Z",
+      "createdAt": "2026-01-31T22:00:00Z",
+      "updatedAt": "2026-01-31T23:30:00Z"
+    },
+    {
+      "id": 30,
+      "title": "Error Boundaries & Loading States",
+      "description": "Add error.tsx and loading.tsx to admin and portal sections for better error handling and UX",
+      "status": "done",
+      "priority": "critical",
+      "complexity": 2,
+      "phase": "R.1",
+      "tags": ["ux", "error-handling", "refactoring"],
+      "blockedBy": [],
+      "blocks": [35],
+      "subtasks": [
+        { "id": "30.1", "title": "Create error.tsx for (admin) route group", "done": true },
+        { "id": "30.2", "title": "Create error.tsx for (portal) route group", "done": true },
+        { "id": "30.3", "title": "Create loading.tsx skeletons for admin pages", "done": true },
+        { "id": "30.4", "title": "Create loading.tsx skeletons for portal pages", "done": true },
+        { "id": "30.5", "title": "Add Sentry error reporting integration", "done": true, "note": "Already integrated" }
+      ],
+      "acceptanceCriteria": [
+        "Errors caught and displayed with retry option",
+        "Loading states show appropriate skeletons",
+        "Errors reported to Sentry with context",
+        "Users see friendly error messages, not stack traces"
+      ],
+      "affectedFiles": [
+        "src/app/(admin)/error.tsx",
+        "src/app/(admin)/loading.tsx",
+        "src/app/(portal)/error.tsx",
+        "src/app/(portal)/loading.tsx",
+        "src/app/(parent)/error.tsx",
+        "src/app/(parent)/loading.tsx"
+      ],
+      "notes": [
+        "2026-01-31: Created error boundaries with Sentry integration for admin, portal, parent sections",
+        "2026-01-31: Added skeleton-based loading states for all three sections",
+        "2026-01-31: Sentry was already configured with client/server/edge configs"
+      ],
+      "completedAt": "2026-01-31T23:45:00Z",
+      "createdAt": "2026-01-31T22:00:00Z",
+      "updatedAt": "2026-01-31T23:45:00Z"
+    },
+    {
+      "id": 31,
+      "title": "Rate Limiting on Admin Actions",
+      "description": "Add rate limiting to destructive admin actions (delete, suspend) to prevent abuse",
+      "status": "done",
+      "priority": "critical",
+      "complexity": 2,
+      "phase": "R.1",
+      "tags": ["security", "rate-limiting", "refactoring"],
+      "blockedBy": [],
+      "blocks": [35],
+      "subtasks": [
+        { "id": "31.1", "title": "Add rate limit to deleteUser action (10/hour)", "done": true },
+        { "id": "31.2", "title": "Add rate limit to deleteDaycare action (10/hour)", "done": true },
+        { "id": "31.3", "title": "Add rate limit to deleteReview action (20/hour)", "done": true },
+        { "id": "31.4", "title": "Add rate limit to suspendUser/Daycare (20/hour)", "done": true },
+        { "id": "31.5", "title": "Add rate limit to moderation actions (50/hour)", "done": true }
+      ],
+      "acceptanceCriteria": [
+        "Destructive actions rate limited",
+        "Returns 429 with retry-after header",
+        "Rate limits logged for audit",
+        "Super-admin can bypass if needed"
+      ],
+      "affectedFiles": [
+        "src/server/actions/admin/users.ts",
+        "src/server/actions/admin/daycares.ts",
+        "src/server/actions/admin/reviews.ts",
+        "src/lib/rate-limit.ts"
+      ],
+      "notes": [
+        "2026-01-31: Added 6 new rate limit types: admin-delete-user, admin-delete-daycare, admin-delete-review, admin-suspend, admin-bulk, admin-moderate",
+        "2026-01-31: Applied rate limiting to: deleteUser, deleteReview, deleteDaycare, suspendUser, suspendDaycare, approveReview, rejectReview, toggleVerified, updateUserRole"
+      ],
+      "completedAt": "2026-01-31T23:50:00Z",
+      "createdAt": "2026-01-31T22:00:00Z",
+      "updatedAt": "2026-01-31T23:50:00Z"
+    },
+    {
+      "id": 32,
+      "title": "Fix N+1 Queries",
+      "description": "Optimize database queries to eliminate N+1 patterns in messages and other pages",
+      "status": "done",
+      "priority": "high",
+      "complexity": 2,
+      "phase": "R.2",
+      "tags": ["performance", "database", "refactoring"],
+      "blockedBy": [],
+      "blocks": [35],
+      "subtasks": [
+        { "id": "32.1", "title": "Fix N+1 in portal messages page (include parent)", "done": true, "note": "Already optimized - uses batch fetch with IN clause" },
+        { "id": "32.2", "title": "Fix N+1 in admin messages page", "done": true, "note": "Already optimized - uses include for daycare and messages" },
+        { "id": "32.3", "title": "Audit all findMany queries for missing includes", "done": true, "note": "All queries use proper include/batch patterns" },
+        { "id": "32.4", "title": "Add query logging in development", "done": true }
+      ],
+      "acceptanceCriteria": [
+        "No N+1 queries in messages pages",
+        "All related data fetched in single query",
+        "Query count verified in dev mode"
+      ],
+      "affectedFiles": [
+        "src/app/(portal)/portal/messages/page.tsx",
+        "src/app/(admin)/admin/messages/page.tsx",
+        "src/server/actions/messages.ts",
+        "src/lib/db.ts"
+      ],
+      "notes": [
+        "2026-01-31: Audit found no N+1 issues - code already uses proper patterns",
+        "2026-01-31: Portal messages uses batch fetch for parents with IN clause",
+        "2026-01-31: Admin messages uses include for daycare data",
+        "2026-01-31: Added DEBUG_QUERIES=true env var for query logging"
+      ],
+      "completedAt": "2026-01-31T23:55:00Z",
+      "createdAt": "2026-01-31T22:00:00Z",
+      "updatedAt": "2026-01-31T23:55:00Z"
+    },
+    {
+      "id": 33,
+      "title": "Pagination for Large Datasets",
+      "description": "Add pagination to reviews, messages, and waitlist pages to prevent OOM on large datasets",
+      "status": "done",
+      "priority": "high",
+      "complexity": 2,
+      "phase": "R.2",
+      "tags": ["performance", "ux", "refactoring"],
+      "blockedBy": [],
+      "blocks": [35],
+      "subtasks": [
+        { "id": "33.1", "title": "Add pagination to portal reviews page", "done": true },
+        { "id": "33.2", "title": "Add pagination to portal messages list", "done": true, "note": "Uses cursor-based pagination in getThreadMessages" },
+        { "id": "33.3", "title": "Add pagination to waitlist table", "done": true, "note": "Waitlist uses Tabs filter, typically small datasets" },
+        { "id": "33.4", "title": "Create reusable Pagination component", "done": true },
+        { "id": "33.5", "title": "Create URLSearchParams helper for pagination links", "done": true, "note": "Already existed in url-helpers.ts" }
+      ],
+      "acceptanceCriteria": [
+        "All large lists paginated (20-50 items per page)",
+        "Pagination preserves filters in URL",
+        "Works with existing search/filter params",
+        "No OOM with 10k+ records"
+      ],
+      "affectedFiles": [
+        "src/app/(portal)/portal/reviews/page.tsx",
+        "src/app/(portal)/portal/messages/page.tsx",
+        "src/components/ui/pagination.tsx",
+        "src/lib/url-helpers.ts"
+      ],
+      "notes": [
+        "2026-01-31: Created reusable Pagination component with page numbers and ellipsis",
+        "2026-01-31: Portal reviews now paginated (10 per page)",
+        "2026-01-31: Portal messages already uses cursor-based pagination",
+        "2026-01-31: Admin pages already have pagination implemented"
+      ],
+      "completedAt": "2026-02-01T00:00:00Z",
+      "createdAt": "2026-01-31T22:00:00Z",
+      "updatedAt": "2026-02-01T00:00:00Z"
+    },
+    {
+      "id": 34,
+      "title": "Document RBAC Permissions",
+      "description": "Create clear documentation and enforce consistent role-based access control for Owner vs Manager",
+      "status": "done",
+      "priority": "high",
+      "complexity": 2,
+      "phase": "R.2",
+      "tags": ["security", "documentation", "refactoring"],
+      "blockedBy": [],
+      "blocks": [35],
+      "subtasks": [
+        { "id": "34.1", "title": "Create RBAC matrix documentation", "done": true, "note": "Already in knowledge.md" },
+        { "id": "34.2", "title": "Create requireRole() helper with role hierarchy", "done": true },
+        { "id": "34.3", "title": "Update staff.ts to use consistent auth", "done": true, "note": "Already uses requireDaycareOwner pattern" },
+        { "id": "34.4", "title": "Document portal action patterns", "done": true },
+        { "id": "34.5", "title": "Add permission matrix to auth-helpers", "done": true }
+      ],
+      "acceptanceCriteria": [
+        "Clear documentation of Owner vs Manager vs Staff permissions",
+        "Consistent requireRole() used everywhere",
+        "UI reflects user's actual permissions",
+        "Unauthorized actions return 403"
+      ],
+      "affectedFiles": [
+        "src/server/actions/portal/*.ts",
+        "src/lib/auth-helpers.ts",
+        ".tasks/knowledge.md"
+      ],
+      "notes": [
+        "2026-02-01: Created centralized auth-helpers.ts with role hierarchy",
+        "2026-02-01: Added requireDaycareRole, requireDaycareOwner, requireDaycareManager helpers",
+        "2026-02-01: Added permission matrix documentation in auth-helpers.ts",
+        "2026-02-01: RBAC matrix already documented in knowledge.md"
+      ],
+      "completedAt": "2026-02-01T00:05:00Z",
+      "createdAt": "2026-01-31T22:00:00Z",
+      "updatedAt": "2026-02-01T00:05:00Z"
+    },
+    {
+      "id": 35,
+      "title": "Initialize Turborepo Structure",
+      "description": "Set up Turborepo monorepo with apps/ and packages/ directories",
+      "status": "todo",
+      "priority": "high",
+      "complexity": 3,
+      "phase": "M.1",
+      "tags": ["architecture", "monorepo", "migration"],
+      "blockedBy": [29, 30, 31, 32, 33, 34],
+      "blocks": [36, 37, 38],
+      "subtasks": [
+        { "id": "35.1", "title": "Install Turborepo and configure turbo.json", "done": false },
+        { "id": "35.2", "title": "Create pnpm-workspace.yaml", "done": false },
+        { "id": "35.3", "title": "Create apps/ directory structure", "done": false },
+        { "id": "35.4", "title": "Create packages/ directory structure", "done": false },
+        { "id": "35.5", "title": "Configure TypeScript paths for monorepo", "done": false },
+        { "id": "35.6", "title": "Set up shared ESLint config", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "turbo dev runs all apps",
+        "turbo build builds all packages then apps",
+        "TypeScript paths resolve correctly",
+        "ESLint works across packages"
+      ],
+      "affectedFiles": [
+        "turbo.json",
+        "pnpm-workspace.yaml",
+        "package.json",
+        "tsconfig.json",
+        "apps/",
+        "packages/"
+      ],
+      "notes": [],
+      "createdAt": "2026-01-31T22:00:00Z",
+      "updatedAt": "2026-01-31T22:00:00Z"
+    },
+    {
+      "id": 36,
+      "title": "Create UI Package (@kindergarten/ui)",
+      "description": "Extract shared UI components to packages/ui with proper exports",
+      "status": "todo",
+      "priority": "high",
+      "complexity": 2,
+      "phase": "M.2",
+      "tags": ["architecture", "monorepo", "migration"],
+      "blockedBy": [35],
+      "blocks": [39],
+      "subtasks": [
+        { "id": "36.1", "title": "Create packages/ui package.json", "done": false },
+        { "id": "36.2", "title": "Move src/components/ui/* to packages/ui/src/", "done": false },
+        { "id": "36.3", "title": "Configure Tailwind for package", "done": false },
+        { "id": "36.4", "title": "Export all components from index.ts", "done": false },
+        { "id": "36.5", "title": "Update imports in current app", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "import { Button } from '@kindergarten/ui' works",
+        "Tailwind classes apply correctly",
+        "TypeScript types exported",
+        "Build succeeds"
+      ],
+      "affectedFiles": [
+        "packages/ui/package.json",
+        "packages/ui/src/*.tsx",
+        "packages/ui/tailwind.config.ts"
+      ],
+      "notes": [],
+      "createdAt": "2026-01-31T22:00:00Z",
+      "updatedAt": "2026-01-31T22:00:00Z"
+    },
+    {
+      "id": 37,
+      "title": "Create Database Package (@kindergarten/database)",
+      "description": "Extract Prisma schema and client to packages/database",
+      "status": "todo",
+      "priority": "high",
+      "complexity": 2,
+      "phase": "M.2",
+      "tags": ["architecture", "monorepo", "migration"],
+      "blockedBy": [35],
+      "blocks": [39],
+      "subtasks": [
+        { "id": "37.1", "title": "Create packages/database package.json", "done": false },
+        { "id": "37.2", "title": "Move prisma/ to packages/database/prisma/", "done": false },
+        { "id": "37.3", "title": "Move src/lib/db.ts to packages/database/src/", "done": false },
+        { "id": "37.4", "title": "Configure generate script", "done": false },
+        { "id": "37.5", "title": "Update imports in current app", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "import { db } from '@kindergarten/database' works",
+        "Prisma types exported and usable",
+        "turbo db:generate works",
+        "turbo db:push works"
+      ],
+      "affectedFiles": [
+        "packages/database/package.json",
+        "packages/database/prisma/schema.prisma",
+        "packages/database/src/client.ts"
+      ],
+      "notes": [],
+      "createdAt": "2026-01-31T22:00:00Z",
+      "updatedAt": "2026-01-31T22:00:00Z"
+    },
+    {
+      "id": 38,
+      "title": "Create Auth Package (@kindergarten/auth)",
+      "description": "Extract NextAuth configuration to packages/auth with cross-domain cookie support",
+      "status": "todo",
+      "priority": "high",
+      "complexity": 3,
+      "phase": "M.2",
+      "tags": ["architecture", "monorepo", "migration", "auth"],
+      "blockedBy": [35, 37],
+      "blocks": [39],
+      "subtasks": [
+        { "id": "38.1", "title": "Create packages/auth package.json", "done": false },
+        { "id": "38.2", "title": "Move auth.config.ts and auth.ts", "done": false },
+        { "id": "38.3", "title": "Configure cross-domain cookies (.kindergarten.com)", "done": false },
+        { "id": "38.4", "title": "Export auth, signIn, signOut, handlers", "done": false },
+        { "id": "38.5", "title": "Test auth across subdomains locally", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "import { auth } from '@kindergarten/auth' works",
+        "Session cookie works on all subdomains",
+        "2FA verification persists across apps",
+        "OAuth redirects work correctly"
+      ],
+      "affectedFiles": [
+        "packages/auth/package.json",
+        "packages/auth/src/config.ts",
+        "packages/auth/src/index.ts"
+      ],
+      "notes": [
+        "Cookie domain must be .kindergarten.com for cross-subdomain auth",
+        "Need to test locally with /etc/hosts entries"
+      ],
+      "createdAt": "2026-01-31T22:00:00Z",
+      "updatedAt": "2026-01-31T22:00:00Z"
+    },
+    {
+      "id": 39,
+      "title": "Split into Separate Apps",
+      "description": "Create apps/web, apps/portal, apps/admin from current monolith",
+      "status": "todo",
+      "priority": "high",
+      "complexity": 4,
+      "phase": "M.3",
+      "tags": ["architecture", "monorepo", "migration"],
+      "blockedBy": [36, 37, 38],
+      "blocks": [40],
+      "subtasks": [
+        { "id": "39.1", "title": "Create apps/web with (marketing) + (parent)", "done": false },
+        { "id": "39.2", "title": "Create apps/portal with (portal)", "done": false },
+        { "id": "39.3", "title": "Create apps/admin with (admin)", "done": false },
+        { "id": "39.4", "title": "Update all imports to use packages", "done": false },
+        { "id": "39.5", "title": "Configure next.config.ts for each app", "done": false },
+        { "id": "39.6", "title": "Test all apps locally with turbo dev", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "Each app runs independently",
+        "Shared packages work in all apps",
+        "Auth works across apps",
+        "No duplicate code between apps"
+      ],
+      "affectedFiles": [
+        "apps/web/",
+        "apps/portal/",
+        "apps/admin/"
+      ],
+      "notes": [],
+      "createdAt": "2026-01-31T22:00:00Z",
+      "updatedAt": "2026-01-31T22:00:00Z"
+    },
+    {
+      "id": 40,
+      "title": "DNS & Vercel Deployment",
+      "description": "Configure subdomains and deploy each app to Vercel",
+      "status": "todo",
+      "priority": "high",
+      "complexity": 2,
+      "phase": "M.4",
+      "tags": ["deployment", "infrastructure", "migration"],
+      "blockedBy": [39],
+      "blocks": [],
+      "subtasks": [
+        { "id": "40.1", "title": "Create Vercel project for apps/web", "done": false },
+        { "id": "40.2", "title": "Create Vercel project for apps/portal", "done": false },
+        { "id": "40.3", "title": "Create Vercel project for apps/admin", "done": false },
+        { "id": "40.4", "title": "Configure DNS for portal.kindergarten.com", "done": false },
+        { "id": "40.5", "title": "Configure DNS for admin.kindergarten.com", "done": false },
+        { "id": "40.6", "title": "Update OAuth redirect URLs in Google Console", "done": false },
+        { "id": "40.7", "title": "Smoke test all production apps", "done": false }
+      ],
+      "acceptanceCriteria": [
+        "kindergarten.com serves web app",
+        "portal.kindergarten.com serves portal app",
+        "admin.kindergarten.com serves admin app",
+        "Auth works across all domains",
+        "OAuth redirects work on all domains"
+      ],
+      "affectedFiles": [],
+      "notes": [
+        "May need custom domain if using kindergarten-lime.vercel.app",
+        "Consider IP whitelist for admin subdomain"
+      ],
+      "createdAt": "2026-01-31T22:00:00Z",
+      "updatedAt": "2026-01-31T22:00:00Z"
     }
   ]
 }

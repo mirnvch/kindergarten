@@ -3,6 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import {
+  suspendUserSchema,
+  deleteUserSchema,
+  updateUserRoleSchema,
+} from "@/lib/validations";
+import { rateLimit } from "@/lib/rate-limit";
 
 async function requireAdmin() {
   const session = await auth();
@@ -14,10 +20,23 @@ async function requireAdmin() {
 
 export async function suspendUser(userId: string) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
+
+    // Rate limit check
+    const rateLimitResult = await rateLimit(admin.id, "admin-suspend");
+    if (!rateLimitResult.success) {
+      const retryAfter = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
+      return { success: false, error: `Rate limit exceeded. Try again in ${retryAfter} seconds.` };
+    }
+
+    // Validate input
+    const result = suspendUserSchema.safeParse({ userId });
+    if (!result.success) {
+      return { success: false, error: "Invalid user ID" };
+    }
 
     const user = await db.user.findUnique({
-      where: { id: userId },
+      where: { id: result.data.userId },
     });
 
     if (!user) {
@@ -28,13 +47,12 @@ export async function suspendUser(userId: string) {
       return { success: false, error: "Cannot suspend admin users" };
     }
 
-    // For now, we'll just add a note. In production, you'd have a suspended field
-    // or use a status enum on the user model
     await db.auditLog.create({
       data: {
+        userId: admin.id,
         action: "USER_SUSPENDED",
         entityType: "User",
-        entityId: userId,
+        entityId: result.data.userId,
         newData: { suspendedAt: new Date().toISOString() },
       },
     });
@@ -49,10 +67,23 @@ export async function suspendUser(userId: string) {
 
 export async function deleteUser(userId: string) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
+
+    // Rate limit check
+    const rateLimitResult = await rateLimit(admin.id, "admin-delete-user");
+    if (!rateLimitResult.success) {
+      const retryAfter = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
+      return { success: false, error: `Rate limit exceeded. Try again in ${retryAfter} seconds.` };
+    }
+
+    // Validate input
+    const result = deleteUserSchema.safeParse({ userId });
+    if (!result.success) {
+      return { success: false, error: "Invalid user ID" };
+    }
 
     const user = await db.user.findUnique({
-      where: { id: userId },
+      where: { id: result.data.userId },
     });
 
     if (!user) {
@@ -63,17 +94,17 @@ export async function deleteUser(userId: string) {
       return { success: false, error: "Cannot delete admin users" };
     }
 
-    // Delete user and all related data
     await db.user.delete({
-      where: { id: userId },
+      where: { id: result.data.userId },
     });
 
     await db.auditLog.create({
       data: {
+        userId: admin.id,
         action: "USER_DELETED",
         entityType: "User",
-        entityId: userId,
-        newData: { deletedEmail: user.email },
+        entityId: result.data.userId,
+        oldData: { email: user.email, role: user.role },
       },
     });
 
@@ -87,24 +118,39 @@ export async function deleteUser(userId: string) {
 
 export async function updateUserRole(userId: string, newRole: string) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
 
-    const validRoles = ["PARENT", "DAYCARE_OWNER", "DAYCARE_STAFF", "ADMIN"];
-    if (!validRoles.includes(newRole)) {
-      return { success: false, error: "Invalid role" };
+    // Rate limit check
+    const rateLimitResult = await rateLimit(admin.id, "admin-moderate");
+    if (!rateLimitResult.success) {
+      const retryAfter = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
+      return { success: false, error: `Rate limit exceeded. Try again in ${retryAfter} seconds.` };
     }
 
+    // Validate input
+    const result = updateUserRoleSchema.safeParse({ userId, newRole });
+    if (!result.success) {
+      return { success: false, error: "Invalid input" };
+    }
+
+    const existingUser = await db.user.findUnique({
+      where: { id: result.data.userId },
+      select: { role: true },
+    });
+
     const user = await db.user.update({
-      where: { id: userId },
-      data: { role: newRole as "PARENT" | "DAYCARE_OWNER" | "DAYCARE_STAFF" | "ADMIN" },
+      where: { id: result.data.userId },
+      data: { role: result.data.newRole },
     });
 
     await db.auditLog.create({
       data: {
+        userId: admin.id,
         action: "USER_ROLE_UPDATED",
         entityType: "User",
-        entityId: userId,
-        newData: { newRole },
+        entityId: result.data.userId,
+        oldData: existingUser ? { role: existingUser.role } : undefined,
+        newData: { role: result.data.newRole },
       },
     });
 

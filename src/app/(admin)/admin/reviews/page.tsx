@@ -14,39 +14,37 @@ import {
 } from "@/components/ui/table";
 import { db } from "@/lib/db";
 import { ReviewActions } from "@/components/admin/review-actions";
+import {
+  adminReviewsSearchSchema,
+  parseSearchParams,
+  type AdminReviewsSearch,
+} from "@/lib/validations";
+import { buildPaginationUrl } from "@/lib/url-helpers";
 
-interface SearchParams {
-  search?: string;
-  status?: string;
-  rating?: string;
-  page?: string;
-}
-
-async function getReviews(searchParams: SearchParams) {
-  const page = parseInt(searchParams.page || "1");
-  const perPage = 10;
+async function getReviews(params: AdminReviewsSearch) {
+  const { page, perPage, search, status, rating } = params;
   const skip = (page - 1) * perPage;
 
   const where: Record<string, unknown> = {};
 
-  if (searchParams.search) {
+  if (search) {
     where.OR = [
-      { title: { contains: searchParams.search, mode: "insensitive" } },
-      { content: { contains: searchParams.search, mode: "insensitive" } },
-      { daycare: { name: { contains: searchParams.search, mode: "insensitive" } } },
+      { title: { contains: search, mode: "insensitive" } },
+      { content: { contains: search, mode: "insensitive" } },
+      { daycare: { name: { contains: search, mode: "insensitive" } } },
     ];
   }
 
-  if (searchParams.status === "approved") {
+  if (status === "approved") {
     where.isApproved = true;
-  } else if (searchParams.status === "rejected") {
+  } else if (status === "rejected") {
     where.isApproved = false;
-  } else if (searchParams.status === "verified") {
+  } else if (status === "verified") {
     where.isVerified = true;
   }
 
-  if (searchParams.rating) {
-    where.rating = parseInt(searchParams.rating);
+  if (rating) {
+    where.rating = rating;
   }
 
   const [reviews, total, stats] = await Promise.all([
@@ -98,9 +96,10 @@ function renderStars(rating: number) {
 export default async function ReviewsPage({
   searchParams,
 }: {
-  searchParams: Promise<SearchParams>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const params = await searchParams;
+  const rawParams = await searchParams;
+  const params = parseSearchParams(adminReviewsSearchSchema, rawParams);
   const { reviews, total, page, totalPages, approvedCount, rejectedCount } =
     await getReviews(params);
 
@@ -167,13 +166,13 @@ export default async function ReviewsPage({
                 <Input
                   name="search"
                   placeholder="Search reviews..."
-                  defaultValue={params.search}
+                  defaultValue={params.search ?? ""}
                   className="pl-10"
                 />
               </div>
               <select
                 name="status"
-                defaultValue={params.status}
+                defaultValue={params.status ?? ""}
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
                 <option value="">All Status</option>
@@ -183,7 +182,7 @@ export default async function ReviewsPage({
               </select>
               <select
                 name="rating"
-                defaultValue={params.rating}
+                defaultValue={params.rating?.toString() ?? ""}
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
                 <option value="">All Ratings</option>
@@ -294,22 +293,22 @@ export default async function ReviewsPage({
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" disabled={page <= 1} asChild>
                   <Link
-                    href={`/admin/reviews?page=${page - 1}${
-                      params.search ? `&search=${params.search}` : ""
-                    }${params.status ? `&status=${params.status}` : ""}${
-                      params.rating ? `&rating=${params.rating}` : ""
-                    }`}
+                    href={buildPaginationUrl("/admin/reviews", page - 1, {
+                      search: params.search,
+                      status: params.status,
+                      rating: params.rating,
+                    })}
                   >
                     Previous
                   </Link>
                 </Button>
                 <Button variant="outline" size="sm" disabled={page >= totalPages} asChild>
                   <Link
-                    href={`/admin/reviews?page=${page + 1}${
-                      params.search ? `&search=${params.search}` : ""
-                    }${params.status ? `&status=${params.status}` : ""}${
-                      params.rating ? `&rating=${params.rating}` : ""
-                    }`}
+                    href={buildPaginationUrl("/admin/reviews", page + 1, {
+                      search: params.search,
+                      status: params.status,
+                      rating: params.rating,
+                    })}
                   >
                     Next
                   </Link>

@@ -3,6 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import {
+  approveReviewSchema,
+  rejectReviewSchema,
+  deleteReviewSchema,
+  toggleVerifiedSchema,
+} from "@/lib/validations";
+import { rateLimit } from "@/lib/rate-limit";
 
 async function requireAdmin() {
   const session = await auth();
@@ -16,8 +23,21 @@ export async function approveReview(reviewId: string) {
   try {
     const admin = await requireAdmin();
 
+    // Rate limit check
+    const rateLimitResult = await rateLimit(admin.id, "admin-moderate");
+    if (!rateLimitResult.success) {
+      const retryAfter = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
+      return { success: false, error: `Rate limit exceeded. Try again in ${retryAfter} seconds.` };
+    }
+
+    // Validate input
+    const result = approveReviewSchema.safeParse({ reviewId });
+    if (!result.success) {
+      return { success: false, error: "Invalid review ID" };
+    }
+
     const review = await db.review.findUnique({
-      where: { id: reviewId },
+      where: { id: result.data.reviewId },
     });
 
     if (!review) {
@@ -25,7 +45,7 @@ export async function approveReview(reviewId: string) {
     }
 
     await db.review.update({
-      where: { id: reviewId },
+      where: { id: result.data.reviewId },
       data: { isApproved: true },
     });
 
@@ -34,7 +54,7 @@ export async function approveReview(reviewId: string) {
         userId: admin.id,
         action: "REVIEW_APPROVED",
         entityType: "Review",
-        entityId: reviewId,
+        entityId: result.data.reviewId,
         newData: { isApproved: true },
       },
     });
@@ -51,8 +71,21 @@ export async function rejectReview(reviewId: string) {
   try {
     const admin = await requireAdmin();
 
+    // Rate limit check
+    const rateLimitResult = await rateLimit(admin.id, "admin-moderate");
+    if (!rateLimitResult.success) {
+      const retryAfter = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
+      return { success: false, error: `Rate limit exceeded. Try again in ${retryAfter} seconds.` };
+    }
+
+    // Validate input
+    const result = rejectReviewSchema.safeParse({ reviewId });
+    if (!result.success) {
+      return { success: false, error: "Invalid review ID" };
+    }
+
     const review = await db.review.findUnique({
-      where: { id: reviewId },
+      where: { id: result.data.reviewId },
     });
 
     if (!review) {
@@ -60,7 +93,7 @@ export async function rejectReview(reviewId: string) {
     }
 
     await db.review.update({
-      where: { id: reviewId },
+      where: { id: result.data.reviewId },
       data: { isApproved: false },
     });
 
@@ -69,7 +102,7 @@ export async function rejectReview(reviewId: string) {
         userId: admin.id,
         action: "REVIEW_REJECTED",
         entityType: "Review",
-        entityId: reviewId,
+        entityId: result.data.reviewId,
         newData: { isApproved: false },
       },
     });
@@ -86,8 +119,21 @@ export async function deleteReview(reviewId: string) {
   try {
     const admin = await requireAdmin();
 
+    // Rate limit check
+    const rateLimitResult = await rateLimit(admin.id, "admin-delete-review");
+    if (!rateLimitResult.success) {
+      const retryAfter = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
+      return { success: false, error: `Rate limit exceeded. Try again in ${retryAfter} seconds.` };
+    }
+
+    // Validate input
+    const result = deleteReviewSchema.safeParse({ reviewId });
+    if (!result.success) {
+      return { success: false, error: "Invalid review ID" };
+    }
+
     const review = await db.review.findUnique({
-      where: { id: reviewId },
+      where: { id: result.data.reviewId },
       select: { id: true, userId: true, daycareId: true, rating: true },
     });
 
@@ -96,7 +142,7 @@ export async function deleteReview(reviewId: string) {
     }
 
     await db.review.delete({
-      where: { id: reviewId },
+      where: { id: result.data.reviewId },
     });
 
     await db.auditLog.create({
@@ -104,7 +150,7 @@ export async function deleteReview(reviewId: string) {
         userId: admin.id,
         action: "REVIEW_DELETED",
         entityType: "Review",
-        entityId: reviewId,
+        entityId: result.data.reviewId,
         oldData: {
           userId: review.userId,
           daycareId: review.daycareId,
@@ -125,8 +171,21 @@ export async function toggleVerified(reviewId: string) {
   try {
     const admin = await requireAdmin();
 
+    // Rate limit check
+    const rateLimitResult = await rateLimit(admin.id, "admin-moderate");
+    if (!rateLimitResult.success) {
+      const retryAfter = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
+      return { success: false, error: `Rate limit exceeded. Try again in ${retryAfter} seconds.` };
+    }
+
+    // Validate input
+    const result = toggleVerifiedSchema.safeParse({ reviewId });
+    if (!result.success) {
+      return { success: false, error: "Invalid review ID" };
+    }
+
     const review = await db.review.findUnique({
-      where: { id: reviewId },
+      where: { id: result.data.reviewId },
       select: { id: true, isVerified: true },
     });
 
@@ -137,7 +196,7 @@ export async function toggleVerified(reviewId: string) {
     const newVerified = !review.isVerified;
 
     await db.review.update({
-      where: { id: reviewId },
+      where: { id: result.data.reviewId },
       data: { isVerified: newVerified },
     });
 
@@ -146,7 +205,7 @@ export async function toggleVerified(reviewId: string) {
         userId: admin.id,
         action: newVerified ? "REVIEW_VERIFIED" : "REVIEW_UNVERIFIED",
         entityType: "Review",
-        entityId: reviewId,
+        entityId: result.data.reviewId,
         newData: { isVerified: newVerified },
       },
     });

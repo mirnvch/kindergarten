@@ -24,21 +24,21 @@ import {
 import { db } from "@/lib/db";
 import { VerificationStatus } from "@prisma/client";
 import { VerificationActions } from "@/components/admin/verification-actions";
+import {
+  adminVerificationsSearchSchema,
+  parseSearchParams,
+  type AdminVerificationsSearch,
+} from "@/lib/validations";
+import { buildPaginationUrl } from "@/lib/url-helpers";
 
-interface SearchParams {
-  status?: string;
-  page?: string;
-}
-
-async function getVerificationRequests(searchParams: SearchParams) {
-  const page = parseInt(searchParams.page || "1");
-  const perPage = 10;
+async function getVerificationRequests(params: AdminVerificationsSearch) {
+  const { page, perPage, status } = params;
   const skip = (page - 1) * perPage;
 
   const where: Record<string, unknown> = {};
 
-  if (searchParams.status) {
-    where.status = searchParams.status;
+  if (status) {
+    where.status = status;
   }
 
   const [requests, total, statusCounts] = await Promise.all([
@@ -144,9 +144,10 @@ function getStatusColor(status: VerificationStatus) {
 export default async function VerificationsPage({
   searchParams,
 }: {
-  searchParams: Promise<SearchParams>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const params = await searchParams;
+  const rawParams = await searchParams;
+  const params = parseSearchParams(adminVerificationsSearchSchema, rawParams);
   const { requests, total, page, totalPages, counts } =
     await getVerificationRequests(params);
 
@@ -259,7 +260,7 @@ export default async function VerificationsPage({
             <form className="flex-1 flex gap-2">
               <select
                 name="status"
-                defaultValue={params.status}
+                defaultValue={params.status ?? ""}
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
                 <option value="">All Statuses</option>
@@ -386,9 +387,9 @@ export default async function VerificationsPage({
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" disabled={page <= 1} asChild>
                   <Link
-                    href={`/admin/verifications?page=${page - 1}${
-                      params.status ? `&status=${params.status}` : ""
-                    }`}
+                    href={buildPaginationUrl("/admin/verifications", page - 1, {
+                      status: params.status,
+                    })}
                   >
                     Previous
                   </Link>
@@ -400,9 +401,9 @@ export default async function VerificationsPage({
                   asChild
                 >
                   <Link
-                    href={`/admin/verifications?page=${page + 1}${
-                      params.status ? `&status=${params.status}` : ""
-                    }`}
+                    href={buildPaginationUrl("/admin/verifications", page + 1, {
+                      status: params.status,
+                    })}
                   >
                     Next
                   </Link>

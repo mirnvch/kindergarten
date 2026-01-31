@@ -16,31 +16,29 @@ import {
 import { db } from "@/lib/db";
 import { getInitials } from "@/lib/utils";
 import { UserActions } from "@/components/admin/user-actions";
+import {
+  adminUsersSearchSchema,
+  parseSearchParams,
+  type AdminUsersSearch,
+} from "@/lib/validations";
+import { buildPaginationUrl } from "@/lib/url-helpers";
 
-interface SearchParams {
-  search?: string;
-  role?: string;
-  status?: string;
-  page?: string;
-}
-
-async function getUsers(searchParams: SearchParams) {
-  const page = parseInt(searchParams.page || "1");
-  const perPage = 10;
+async function getUsers(params: AdminUsersSearch) {
+  const { page, perPage, search, role } = params;
   const skip = (page - 1) * perPage;
 
   const where: Record<string, unknown> = {};
 
-  if (searchParams.search) {
+  if (search) {
     where.OR = [
-      { firstName: { contains: searchParams.search, mode: "insensitive" } },
-      { lastName: { contains: searchParams.search, mode: "insensitive" } },
-      { email: { contains: searchParams.search, mode: "insensitive" } },
+      { firstName: { contains: search, mode: "insensitive" } },
+      { lastName: { contains: search, mode: "insensitive" } },
+      { email: { contains: search, mode: "insensitive" } },
     ];
   }
 
-  if (searchParams.role) {
-    where.role = searchParams.role;
+  if (role) {
+    where.role = role;
   }
 
   const [users, total] = await Promise.all([
@@ -92,9 +90,10 @@ function getRoleBadgeVariant(role: string) {
 export default async function UsersPage({
   searchParams,
 }: {
-  searchParams: Promise<SearchParams>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const params = await searchParams;
+  const rawParams = await searchParams;
+  const params = parseSearchParams(adminUsersSearchSchema, rawParams);
   const { users, total, page, totalPages } = await getUsers(params);
 
   return (
@@ -117,13 +116,13 @@ export default async function UsersPage({
                 <Input
                   name="search"
                   placeholder="Search users..."
-                  defaultValue={params.search}
+                  defaultValue={params.search ?? ""}
                   className="pl-10"
                 />
               </div>
               <select
                 name="role"
-                defaultValue={params.role}
+                defaultValue={params.role ?? ""}
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
                 <option value="">All Roles</option>
@@ -223,9 +222,10 @@ export default async function UsersPage({
                   asChild
                 >
                   <Link
-                    href={`/admin/users?page=${page - 1}${
-                      params.search ? `&search=${params.search}` : ""
-                    }${params.role ? `&role=${params.role}` : ""}`}
+                    href={buildPaginationUrl("/admin/users", page - 1, {
+                      search: params.search,
+                      role: params.role,
+                    })}
                   >
                     Previous
                   </Link>
@@ -237,9 +237,10 @@ export default async function UsersPage({
                   asChild
                 >
                   <Link
-                    href={`/admin/users?page=${page + 1}${
-                      params.search ? `&search=${params.search}` : ""
-                    }${params.role ? `&role=${params.role}` : ""}`}
+                    href={buildPaginationUrl("/admin/users", page + 1, {
+                      search: params.search,
+                      role: params.role,
+                    })}
                   >
                     Next
                   </Link>

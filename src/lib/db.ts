@@ -6,12 +6,23 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+// Enable query logging with DEBUG_QUERIES=true for N+1 detection
+const enableQueryLogging = process.env.DEBUG_QUERIES === "true";
+
+type LogLevel = "query" | "info" | "warn" | "error";
+
 function createPrismaClient() {
+  const logConfig: LogLevel[] = enableQueryLogging
+    ? ["query", "info", "warn", "error"]
+    : process.env.NODE_ENV === "development"
+      ? ["error", "warn"]
+      : ["error"];
+
   // For development with Prisma's built-in Postgres
   if (process.env.DATABASE_URL?.startsWith("prisma+postgres")) {
     // Use Prisma Accelerate for local development
     return new PrismaClient({
-      log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+      log: logConfig,
       accelerateUrl: process.env.DATABASE_URL,
     });
   }
@@ -30,7 +41,7 @@ function createPrismaClient() {
 
   return new PrismaClient({
     adapter,
-    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+    log: logConfig,
   });
 }
 

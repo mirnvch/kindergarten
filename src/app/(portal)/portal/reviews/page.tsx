@@ -7,13 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { ReviewResponseForm } from "@/components/portal/review-response-form";
+import { Pagination } from "@/components/ui/pagination";
 
 export const metadata: Metadata = {
   title: "Reviews | KinderCare Portal",
   description: "Manage your daycare reviews",
 };
 
-async function getReviews(userId: string) {
+const REVIEWS_PER_PAGE = 10;
+
+async function getReviews(userId: string, page: number = 1) {
   const daycareStaff = await db.daycareStaff.findFirst({
     where: { userId, role: { in: ["owner", "manager"] } },
     include: { daycare: true },
@@ -23,52 +26,79 @@ async function getReviews(userId: string) {
     return null;
   }
 
-  const reviews = await db.review.findMany({
-    where: { daycareId: daycareStaff.daycare.id, isApproved: true },
-    include: {
-      user: {
-        select: {
-          firstName: true,
-          lastName: true,
-          avatarUrl: true,
+  const daycareId = daycareStaff.daycare.id;
+
+  // Get paginated reviews and stats in parallel
+  const [reviews, totalCount, statsData] = await Promise.all([
+    db.review.findMany({
+      where: { daycareId, isApproved: true },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
         },
       },
-    },
-    orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * REVIEWS_PER_PAGE,
+      take: REVIEWS_PER_PAGE,
+    }),
+    db.review.count({
+      where: { daycareId, isApproved: true },
+    }),
+    db.review.aggregate({
+      where: { daycareId, isApproved: true },
+      _avg: { rating: true },
+      _count: { _all: true },
+    }),
+  ]);
+
+  // Get responded count separately (aggregate doesn't support conditional counts well)
+  const respondedCount = await db.review.count({
+    where: { daycareId, isApproved: true, response: { not: null } },
   });
 
-  // Calculate stats
-  const avgRating = reviews.length > 0
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-    : 0;
-
-  const respondedCount = reviews.filter(r => r.response).length;
+  const avgRating = statsData._avg.rating || 0;
 
   return {
     daycare: daycareStaff.daycare,
     reviews,
+    pagination: {
+      page,
+      totalPages: Math.ceil(totalCount / REVIEWS_PER_PAGE),
+      total: totalCount,
+    },
     stats: {
-      total: reviews.length,
+      total: totalCount,
       avgRating: Math.round(avgRating * 10) / 10,
       responded: respondedCount,
-      pending: reviews.length - respondedCount,
+      pending: totalCount - respondedCount,
     },
   };
 }
 
-export default async function PortalReviewsPage() {
+interface PageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function PortalReviewsPage({ searchParams }: PageProps) {
   const session = await auth();
   if (!session?.user) {
     redirect("/login");
   }
 
-  const data = await getReviews(session.user.id);
+  const params = await searchParams;
+  const page = parseInt(params.page || "1", 10);
+
+  const data = await getReviews(session.user.id, page);
 
   if (!data) {
     redirect("/portal");
   }
 
-  const { daycare, reviews, stats } = data;
+  const { daycare, reviews, pagination, stats } = data;
 
   return (
     <div className="space-y-6">
@@ -132,61 +162,71 @@ export default async function PortalReviewsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {reviews.map((review) => (
-            <Card key={review.id}>
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-4">
-                  <Avatar>
-                    <AvatarFallback>
-                      {getInitials(review.user.firstName, review.user.lastName)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">
-                          {review.user.firstName} {review.user.lastName.charAt(0)}.
-                        </span>
-                        <div className="flex items-center">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-4 w-4 ${
-                                i < review.rating
-                                  ? "fill-yellow-400 text-yellow-400"
-                                  : "text-muted"
-                              }`}
-                            />
-                          ))}
+        <>
+          <div className="space-y-4">
+            {reviews.map((review) => (
+              <Card key={review.id}>
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-4">
+                    <Avatar>
+                      <AvatarFallback>
+                        {getInitials(review.user.firstName, review.user.lastName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">
+                            {review.user.firstName} {review.user.lastName.charAt(0)}.
+                          </span>
+                          <div className="flex items-center">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${
+                                  i < review.rating
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-muted"
+                                }`}
+                              />
+                            ))}
+                          </div>
                         </div>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </span>
                       </div>
-                      <span className="text-sm text-muted-foreground">
-                        {new Date(review.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
 
-                    {review.title && (
-                      <h4 className="font-medium">{review.title}</h4>
-                    )}
-                    {review.content && (
-                      <p className="text-muted-foreground mt-1">{review.content}</p>
-                    )}
+                      {review.title && (
+                        <h4 className="font-medium">{review.title}</h4>
+                      )}
+                      {review.content && (
+                        <p className="text-muted-foreground mt-1">{review.content}</p>
+                      )}
 
-                    {/* Response section */}
-                    <div className="mt-4 pt-4 border-t">
-                      <ReviewResponseForm
-                        reviewId={review.id}
-                        existingResponse={review.response}
-                        respondedAt={review.respondedAt}
-                      />
+                      {/* Response section */}
+                      <div className="mt-4 pt-4 border-t">
+                        <ReviewResponseForm
+                          reviewId={review.id}
+                          existingResponse={review.response}
+                          respondedAt={review.respondedAt}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            basePath="/portal/reviews"
+            className="mt-6"
+          />
+        </>
       )}
     </div>
   );

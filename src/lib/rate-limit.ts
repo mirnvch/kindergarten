@@ -36,7 +36,14 @@ export type RateLimitType =
   | "2fa-verify"      // 2FA verification: 5/min
   | "2fa-setup"       // 2FA setup: 3/hour
   | "data-export"     // Data export: 1/day
-  | "account-delete"; // Account deletion: 3/hour
+  | "account-delete"  // Account deletion: 3/hour
+  // Admin actions (destructive operations)
+  | "admin-delete-user"    // Delete user: 10/hour
+  | "admin-delete-daycare" // Delete daycare: 10/hour
+  | "admin-delete-review"  // Delete review: 20/hour
+  | "admin-suspend"        // Suspend user/daycare: 20/hour
+  | "admin-bulk"           // Bulk admin operations: 5/hour
+  | "admin-moderate";      // Moderation actions: 50/hour
 
 type Duration = `${number} ms` | `${number} s` | `${number} m` | `${number} h` | `${number} d`;
 
@@ -54,6 +61,13 @@ const RATE_LIMITS: Record<RateLimitType, { requests: number; window: Duration }>
   "2fa-setup":      { requests: 5,   window: "1 h" },
   "data-export":    { requests: 1,   window: "1 d" },
   "account-delete": { requests: 3,   window: "1 h" },
+  // Admin actions
+  "admin-delete-user":    { requests: 10, window: "1 h" },
+  "admin-delete-daycare": { requests: 10, window: "1 h" },
+  "admin-delete-review":  { requests: 20, window: "1 h" },
+  "admin-suspend":        { requests: 20, window: "1 h" },
+  "admin-bulk":           { requests: 5,  window: "1 h" },
+  "admin-moderate":       { requests: 50, window: "1 h" },
 };
 
 // Cache rate limiters to avoid recreating them
