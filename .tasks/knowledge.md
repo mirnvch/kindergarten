@@ -101,7 +101,44 @@ src/components/
 
 ---
 
+## Git Workflow
+
+### Development → Testing → Production
+```
+dev branch → Test on Vercel Preview → main branch → Production
+```
+
+**Правила:**
+1. Новый функционал разрабатывается в `dev` ветке
+2. Тестирование на Vercel Preview: `https://kindergarten-git-dev-*.vercel.app`
+3. После успешного тестирования — merge в `main`
+4. `main` автоматически деплоится на production: `https://kindergarten-lime.vercel.app`
+
+**OAuth ограничения:**
+- Google OAuth настроен только для production домена
+- Preview deployment требует добавления redirect URI в Google Console
+- Для тестирования OAuth на preview нужно добавить:
+  `https://kindergarten-git-dev-*.vercel.app/api/auth/callback/google`
+
+**Vercel Protection:**
+- Preview deployments защищены Vercel Authentication по умолчанию
+- Для тестирования без авторизации — отключить в Settings → Deployment Protection
+
+---
+
 ## Session Notes
+
+### 2026-01-31 (Session 13)
+- **Git Workflow Established:**
+  - dev branch для разработки
+  - Vercel preview для тестирования
+  - main branch для production
+- **OAuth Bug Fixed:**
+  - ERR_TOO_MANY_REDIRECTS после Google OAuth
+  - Причина: TrustedDevice таблица не существует в production DB
+  - Решение: try/catch в `needs2FAVerification` возвращает false при ошибке
+  - Merged dev → main для деплоя фикса
+- **Следующее:** Тестирование OAuth на production
 
 ### 2026-01-31 (Session 12 continued)
 - **Task #27: Trusted Device for 2FA — COMPLETED**

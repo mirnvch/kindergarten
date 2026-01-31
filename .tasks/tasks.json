@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "KinderCare",
-  "lastTaskId": 27,
+  "lastTaskId": 28,
   "currentTaskId": null,
   "tasks": [
     {
@@ -824,6 +824,32 @@
       "completedAt": "2026-01-31T15:00:00Z",
       "createdAt": "2026-01-31T14:00:00Z",
       "updatedAt": "2026-01-31T15:00:00Z"
+    },
+    {
+      "id": 28,
+      "title": "Git Workflow: dev → main",
+      "description": "Development workflow reminder: all new features develop in 'dev' branch, test on Vercel preview, then merge to 'main' for production. Google OAuth configured only for production domain.",
+      "status": "note",
+      "priority": "info",
+      "complexity": 0,
+      "phase": "workflow",
+      "tags": ["git", "workflow", "process"],
+      "blockedBy": [],
+      "blocks": [],
+      "subtasks": [],
+      "acceptanceCriteria": [
+        "New features start in dev branch",
+        "Test on Vercel preview (kindergarten-git-dev-*.vercel.app)",
+        "After testing, merge dev → main",
+        "Main deploys to production (kindergarten-lime.vercel.app)"
+      ],
+      "affectedFiles": [],
+      "notes": [
+        "2026-01-31: OAuth only works on production domain, preview needs manual Google Console setup",
+        "Vercel preview protection disabled for testing"
+      ],
+      "createdAt": "2026-01-31T16:00:00Z",
+      "updatedAt": "2026-01-31T16:00:00Z"
     }
   ]
 }
