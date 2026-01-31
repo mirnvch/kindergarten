@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "cd ../.. && npx turbo build --filter=@kindergarten/portal",
+  "installCommand": "cd ../.. && npm install",
+  "outputDirectory": ".next",
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "AUTH_SECRET": "@auth_secret",
+    "AUTH_GOOGLE_ID": "@auth_google_id",
+    "AUTH_GOOGLE_SECRET": "@auth_google_secret",
+    "AUTH_COOKIE_DOMAIN": ".kindergarten.com"
+  }
+}

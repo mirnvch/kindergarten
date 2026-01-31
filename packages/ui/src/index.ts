@@ -36,6 +36,16 @@ export {
   DialogTitle,
   DialogTrigger,
 } from "./dialog";
+export {
+  Sheet,
+  SheetTrigger,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+} from "./sheet";
 
 // The following components remain in src/components/ui/ for now
 // and will be migrated during the app split (Task #39):

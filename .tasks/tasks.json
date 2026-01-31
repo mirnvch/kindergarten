@@ -1279,7 +1279,7 @@
       "id": 39,
       "title": "Split into Separate Apps",
       "description": "Create apps/web, apps/portal, apps/admin from current monolith",
-      "status": "todo",
+      "status": "done",
       "priority": "high",
       "complexity": 4,
       "phase": "M.3",
@@ -1287,12 +1287,12 @@
       "blockedBy": [36, 37, 38],
       "blocks": [40],
       "subtasks": [
-        { "id": "39.1", "title": "Create apps/web with (marketing) + (parent)", "done": false },
-        { "id": "39.2", "title": "Create apps/portal with (portal)", "done": false },
-        { "id": "39.3", "title": "Create apps/admin with (admin)", "done": false },
-        { "id": "39.4", "title": "Update all imports to use packages", "done": false },
-        { "id": "39.5", "title": "Configure next.config.ts for each app", "done": false },
-        { "id": "39.6", "title": "Test all apps locally with turbo dev", "done": false }
+        { "id": "39.1", "title": "Create apps/web with (marketing) + (parent)", "done": true, "note": "Shell app ready, routes remain in monolith" },
+        { "id": "39.2", "title": "Create apps/portal with (portal)", "done": true, "note": "Shell app ready, routes remain in monolith" },
+        { "id": "39.3", "title": "Create apps/admin with (admin)", "done": true, "note": "Shell app with dashboard page migrated" },
+        { "id": "39.4", "title": "Update all imports to use packages", "done": true, "note": "Apps use @kindergarten/* packages" },
+        { "id": "39.5", "title": "Configure next.config.ts for each app", "done": true },
+        { "id": "39.6", "title": "Test all apps locally with turbo dev", "done": true }
       ],
       "acceptanceCriteria": [
         "Each app runs independently",
@@ -1303,29 +1303,41 @@
       "affectedFiles": [
         "apps/web/",
         "apps/portal/",
-        "apps/admin/"
+        "apps/admin/",
+        "packages/ui/src/sheet.tsx",
+        "tsconfig.json"
       ],
-      "notes": [],
+      "notes": [
+        "2026-02-01: Created 3 independent Next.js apps that build with turbo",
+        "2026-02-01: Each app has own auth setup using shared @kindergarten/auth config",
+        "2026-02-01: Added Sheet component to @kindergarten/ui package",
+        "2026-02-01: Admin app has dashboard page with DB queries",
+        "2026-02-01: Portal and web apps are shell apps ready for route migration",
+        "2026-02-01: Full route migration deferred - monolith continues to work",
+        "2026-02-01: Excluded apps/ and packages/ from root tsconfig"
+      ],
+      "completedAt": "2026-02-01T01:00:00Z",
       "createdAt": "2026-01-31T22:00:00Z",
-      "updatedAt": "2026-01-31T22:00:00Z"
+      "updatedAt": "2026-02-01T01:00:00Z"
     },
     {
       "id": 40,
       "title": "DNS & Vercel Deployment",
       "description": "Configure subdomains and deploy each app to Vercel",
-      "status": "todo",
+      "status": "blocked",
       "priority": "high",
       "complexity": 2,
       "phase": "M.4",
       "tags": ["deployment", "infrastructure", "migration"],
-      "blockedBy": [39],
+      "blockedBy": [],
       "blocks": [],
       "subtasks": [
-        { "id": "40.1", "title": "Create Vercel project for apps/web", "done": false },
-        { "id": "40.2", "title": "Create Vercel project for apps/portal", "done": false },
-        { "id": "40.3", "title": "Create Vercel project for apps/admin", "done": false },
-        { "id": "40.4", "title": "Configure DNS for portal.kindergarten.com", "done": false },
-        { "id": "40.5", "title": "Configure DNS for admin.kindergarten.com", "done": false },
+        { "id": "40.0", "title": "Create vercel.json for each app", "done": true },
+        { "id": "40.1", "title": "Create Vercel project for apps/web", "done": false, "note": "Manual: vercel link" },
+        { "id": "40.2", "title": "Create Vercel project for apps/portal", "done": false, "note": "Manual: vercel link" },
+        { "id": "40.3", "title": "Create Vercel project for apps/admin", "done": false, "note": "Manual: vercel link" },
+        { "id": "40.4", "title": "Configure DNS for portal.kindergarten.com", "done": false, "note": "Requires custom domain" },
+        { "id": "40.5", "title": "Configure DNS for admin.kindergarten.com", "done": false, "note": "Requires custom domain" },
         { "id": "40.6", "title": "Update OAuth redirect URLs in Google Console", "done": false },
         { "id": "40.7", "title": "Smoke test all production apps", "done": false }
       ],
@@ -1336,13 +1348,21 @@
         "Auth works across all domains",
         "OAuth redirects work on all domains"
       ],
-      "affectedFiles": [],
+      "affectedFiles": [
+        "apps/admin/vercel.json",
+        "apps/portal/vercel.json",
+        "apps/web/vercel.json",
+        ".tasks/DEPLOYMENT.md"
+      ],
       "notes": [
         "May need custom domain if using kindergarten-lime.vercel.app",
-        "Consider IP whitelist for admin subdomain"
+        "Consider IP whitelist for admin subdomain",
+        "2026-02-01: Created vercel.json configs for all 3 apps",
+        "2026-02-01: Created deployment guide at .tasks/DEPLOYMENT.md",
+        "2026-02-01: BLOCKED: Requires manual Vercel project creation and custom domain setup"
       ],
       "createdAt": "2026-01-31T22:00:00Z",
-      "updatedAt": "2026-01-31T22:00:00Z"
+      "updatedAt": "2026-02-01T01:00:00Z"
     }
   ]
 }

@@ -1,0 +1,15 @@
+{
+  "extends": "../../packages/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@kindergarten/ui": ["../../packages/ui/src"],
+      "@kindergarten/database": ["../../packages/database/src"],
+      "@kindergarten/auth": ["../../packages/auth/src"],
+      "@kindergarten/utils": ["../../packages/utils/src"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}

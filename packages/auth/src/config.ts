@@ -49,7 +49,9 @@ export const authConfig: NextAuthConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const userRole = auth?.user?.role as UserRole | undefined;
+      // Use type assertion for extended user properties
+      const extUser = auth?.user as { role?: UserRole } | undefined;
+      const userRole = extUser?.role;
 
       const protectedRoutes = ["/dashboard", "/portal", "/admin"];
       const authRoutes = ["/login", "/register"];
@@ -99,18 +101,22 @@ export const authConfig: NextAuthConfig = {
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
-        token.firstName = user.firstName;
-        token.lastName = user.lastName;
+        // Use type assertion for extended user properties
+        const extUser = user as { role?: UserRole; firstName?: string; lastName?: string };
+        token.role = extUser.role;
+        token.firstName = extUser.firstName;
+        token.lastName = extUser.lastName;
       }
       return token;
     },
     session({ session, token }) {
       if (token) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as UserRole;
-        session.user.firstName = token.firstName as string;
-        session.user.lastName = token.lastName as string;
+        // Use type assertion for extended session properties
+        const extSession = session as { user: { id?: string; role?: UserRole; firstName?: string; lastName?: string } };
+        extSession.user.id = token.id as string;
+        extSession.user.role = token.role as UserRole;
+        extSession.user.firstName = token.firstName as string;
+        extSession.user.lastName = token.lastName as string;
       }
       return session;
     },
