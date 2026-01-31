@@ -19,6 +19,19 @@ export const metadata: Metadata = {
   keywords: siteConfig.keywords,
   authors: [{ name: siteConfig.creator }],
   creator: siteConfig.creator,
+  // PWA metadata
+  applicationName: siteConfig.name,
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: siteConfig.name,
+  },
+  formatDetection: {
+    telephone: true,
+    date: true,
+    address: true,
+    email: true,
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -43,9 +56,14 @@ export const metadata: Metadata = {
     creator: "@kindercare",
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
-    apple: "/apple-touch-icon.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   manifest: "/site.webmanifest",
 };

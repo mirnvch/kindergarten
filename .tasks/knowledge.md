@@ -128,6 +128,45 @@ dev branch → Test on Vercel Preview → main branch → Production
 
 ## Session Notes
 
+### 2026-01-31 (Session 14)
+- **Task #11: Mobile PWA — COMPLETED**
+- Implemented Progressive Web App with offline support:
+  - **PWA Manifest** (`public/site.webmanifest`):
+    - App name, icons (192x192, 512x512), theme color (#16a34a)
+    - Display: standalone, orientation: portrait-primary
+    - Shortcuts: "Find Daycares" (/search), "My Dashboard" (/dashboard)
+    - Screenshots for app stores
+  - **Service Worker** (via `@ducanh2912/next-pwa`):
+    - Workbox-based caching strategies
+    - CacheFirst for fonts (1 year TTL)
+    - StaleWhileRevalidate for images, static assets
+    - NetworkFirst for API calls (1 hour, 10s timeout)
+    - Disabled in development mode
+  - **Offline Support**:
+    - `/offline` fallback page with WifiOff icon
+    - Offline caching for static assets
+    - Runtime caching for dynamic content
+  - **Mobile Optimization**:
+    - Apple Web App metadata (capable, statusBarStyle)
+    - Format detection for phone, email, address
+    - PWA icons in layout.tsx metadata
+- **Configuration** (`next.config.ts`):
+  ```typescript
+  withPWAInit({
+    dest: "public",
+    disable: process.env.NODE_ENV === "development",
+    register: true,
+    cacheOnFrontEndNav: true,
+    workboxOptions: { skipWaiting: true, clientsClaim: true }
+  })
+  ```
+- **Icon Generation** (`scripts/generate-pwa-icons.js`):
+  - Uses sharp library to generate PNG icons from SVG source
+  - Sizes: 72, 96, 128, 144, 152, 192, 384, 512
+  - Also generates favicon.ico and apple-touch-icon.png
+- **Deferred:** Push notifications (11.5) → Task #29 (requires FCM)
+- **Следующее:** Task #14 (Analytics Dashboard)
+
 ### 2026-01-31 (Session 13)
 - **Git Workflow Established:**
   - dev branch для разработки

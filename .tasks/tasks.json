@@ -376,7 +376,7 @@
       "id": 11,
       "title": "Mobile PWA",
       "description": "Convert app to Progressive Web App with offline support",
-      "status": "pending",
+      "status": "done",
       "priority": "low",
       "complexity": 3,
       "phase": "3.4",
@@ -384,11 +384,11 @@
       "blockedBy": [],
       "blocks": [],
       "subtasks": [
-        { "id": "11.1", "title": "Configure PWA manifest", "done": false },
-        { "id": "11.2", "title": "Set up service worker", "done": false },
-        { "id": "11.3", "title": "Optimize UI for mobile", "done": false },
-        { "id": "11.4", "title": "Implement offline caching", "done": false },
-        { "id": "11.5", "title": "Add push notifications", "done": false }
+        { "id": "11.1", "title": "Configure PWA manifest", "done": true },
+        { "id": "11.2", "title": "Set up service worker", "done": true },
+        { "id": "11.3", "title": "Optimize UI for mobile", "done": true },
+        { "id": "11.4", "title": "Implement offline caching", "done": true },
+        { "id": "11.5", "title": "Add push notifications", "done": false, "deferred": "Task #29" }
       ],
       "acceptanceCriteria": [
         "App installable on mobile",
@@ -397,13 +397,21 @@
         "Push notifications work"
       ],
       "affectedFiles": [
-        "public/manifest.json",
-        "src/app/sw.ts",
-        "next.config.ts"
+        "public/site.webmanifest",
+        "next.config.ts",
+        "src/app/layout.tsx",
+        "src/app/offline/page.tsx",
+        "scripts/generate-pwa-icons.js"
       ],
-      "notes": [],
+      "notes": [
+        "2026-01-31: PWA manifest with icons, shortcuts, screenshots",
+        "2026-01-31: Service worker via @ducanh2912/next-pwa with Workbox caching",
+        "2026-01-31: Offline page at /offline, PWA metadata in layout.tsx",
+        "2026-01-31: Push notifications deferred - requires FCM integration"
+      ],
+      "completedAt": "2026-01-31T18:00:00Z",
       "createdAt": "2026-01-29T14:00:00Z",
-      "updatedAt": "2026-01-29T14:00:00Z"
+      "updatedAt": "2026-01-31T18:00:00Z"
     },
     {
       "id": 12,
