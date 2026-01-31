@@ -5,7 +5,6 @@ import {
   Building2,
   FileText,
   ExternalLink,
-  Download,
   MapPin,
   Phone,
   Mail,

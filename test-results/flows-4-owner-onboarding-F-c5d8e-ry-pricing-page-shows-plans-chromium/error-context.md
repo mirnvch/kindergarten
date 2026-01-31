@@ -1,0 +1,312 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - navigation [ref=e4]:
+        - link "K KinderCare" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: K
+          - generic [ref=e8]: KinderCare
+        - generic [ref=e9]:
+          - link "Find Daycares" [ref=e10] [cursor=pointer]:
+            - /url: /search
+          - link "For Providers" [ref=e11] [cursor=pointer]:
+            - /url: /for-daycares
+          - link "Pricing" [ref=e12] [cursor=pointer]:
+            - /url: /pricing
+          - link "About" [ref=e13] [cursor=pointer]:
+            - /url: /about
+        - generic [ref=e14]:
+          - link "Search" [ref=e15] [cursor=pointer]:
+            - /url: /search
+            - img
+            - generic [ref=e16]: Search
+          - generic [ref=e17]:
+            - link "Sign in" [ref=e18] [cursor=pointer]:
+              - /url: /login
+            - link "Get Started" [ref=e19] [cursor=pointer]:
+              - /url: /register
+    - main [ref=e20]:
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - heading "Simple, Transparent Pricing" [level=1] [ref=e23]
+          - paragraph [ref=e24]: Choose the plan that works for your daycare. Start free and upgrade as you grow.
+        - generic [ref=e25]:
+          - generic [ref=e26]:
+            - generic [ref=e27]:
+              - generic [ref=e28]: Free
+              - generic [ref=e29]: Free
+              - paragraph [ref=e30]: Get started with basic features
+            - generic [ref=e31]:
+              - list [ref=e32]:
+                - listitem [ref=e33]:
+                  - img [ref=e34]
+                  - generic [ref=e36]: Basic profile listing
+                - listitem [ref=e37]:
+                  - img [ref=e38]
+                  - generic [ref=e40]: Up to 5 photos
+                - listitem [ref=e41]:
+                  - img [ref=e42]
+                  - generic [ref=e44]: Receive tour requests
+                - listitem [ref=e45]:
+                  - img [ref=e46]
+                  - generic [ref=e48]: Basic messaging
+                - listitem [ref=e49]:
+                  - img [ref=e50]
+                  - generic [ref=e52]: Email notifications
+                - listitem [ref=e53]:
+                  - img [ref=e54]
+                  - generic [ref=e56]: 5% platform fee
+              - generic [ref=e57]:
+                - generic [ref=e58]:
+                  - generic [ref=e59]: "Photos:"
+                  - generic [ref=e60]: "5"
+                - generic [ref=e61]:
+                  - generic [ref=e62]: "Programs:"
+                  - generic [ref=e63]: "2"
+                - generic [ref=e64]:
+                  - generic [ref=e65]: "Team members:"
+                  - generic [ref=e66]: "1"
+              - link "Get Started" [ref=e67] [cursor=pointer]:
+                - /url: /register/daycare
+          - generic [ref=e68]:
+            - generic [ref=e69]:
+              - generic [ref=e70]: Starter
+              - generic [ref=e71]:
+                - generic [ref=e72]: $49
+                - text: /month
+              - paragraph [ref=e73]: Everything you need to grow
+            - generic [ref=e74]:
+              - list [ref=e75]:
+                - listitem [ref=e76]:
+                  - img [ref=e77]
+                  - generic [ref=e79]: Everything in Free
+                - listitem [ref=e80]:
+                  - img [ref=e81]
+                  - generic [ref=e83]: Up to 20 photos
+                - listitem [ref=e84]:
+                  - img [ref=e85]
+                  - generic [ref=e87]: Priority in search results
+                - listitem [ref=e88]:
+                  - img [ref=e89]
+                  - generic [ref=e91]: Analytics dashboard
+                - listitem [ref=e92]:
+                  - img [ref=e93]
+                  - generic [ref=e95]: Custom branding
+                - listitem [ref=e96]:
+                  - img [ref=e97]
+                  - generic [ref=e99]: Waitlist management
+                - listitem [ref=e100]:
+                  - img [ref=e101]
+                  - generic [ref=e103]: 4% platform fee
+              - generic [ref=e104]:
+                - generic [ref=e105]:
+                  - generic [ref=e106]: "Photos:"
+                  - generic [ref=e107]: "20"
+                - generic [ref=e108]:
+                  - generic [ref=e109]: "Programs:"
+                  - generic [ref=e110]: "5"
+                - generic [ref=e111]:
+                  - generic [ref=e112]: "Team members:"
+                  - generic [ref=e113]: "3"
+              - link "Start Free Trial" [ref=e114] [cursor=pointer]:
+                - /url: /register/daycare
+          - generic [ref=e115]:
+            - generic [ref=e116]: Most Popular
+            - generic [ref=e117]:
+              - generic [ref=e118]: Professional
+              - generic [ref=e119]:
+                - generic [ref=e120]: $99
+                - text: /month
+              - paragraph [ref=e121]: Advanced features for scaling
+            - generic [ref=e122]:
+              - list [ref=e123]:
+                - listitem [ref=e124]:
+                  - img [ref=e125]
+                  - generic [ref=e127]: Everything in Starter
+                - listitem [ref=e128]:
+                  - img [ref=e129]
+                  - generic [ref=e131]: Unlimited photos
+                - listitem [ref=e132]:
+                  - img [ref=e133]
+                  - generic [ref=e135]: Featured listing badge
+                - listitem [ref=e136]:
+                  - img [ref=e137]
+                  - generic [ref=e139]: Advanced analytics
+                - listitem [ref=e140]:
+                  - img [ref=e141]
+                  - generic [ref=e143]: Payment processing
+                - listitem [ref=e144]:
+                  - img [ref=e145]
+                  - generic [ref=e147]: SMS notifications
+                - listitem [ref=e148]:
+                  - img [ref=e149]
+                  - generic [ref=e151]: API access
+                - listitem [ref=e152]:
+                  - img [ref=e153]
+                  - generic [ref=e155]: 3% platform fee
+              - generic [ref=e156]:
+                - generic [ref=e157]:
+                  - generic [ref=e158]: "Photos:"
+                  - generic [ref=e159]: Unlimited
+                - generic [ref=e160]:
+                  - generic [ref=e161]: "Programs:"
+                  - generic [ref=e162]: Unlimited
+                - generic [ref=e163]:
+                  - generic [ref=e164]: "Team members:"
+                  - generic [ref=e165]: "10"
+              - link "Start Free Trial" [ref=e166] [cursor=pointer]:
+                - /url: /register/daycare
+          - generic [ref=e167]:
+            - generic [ref=e168]:
+              - generic [ref=e169]: Enterprise
+              - generic [ref=e170]:
+                - generic [ref=e171]: $199
+                - text: /month
+              - paragraph [ref=e172]: For large organizations
+            - generic [ref=e173]:
+              - list [ref=e174]:
+                - listitem [ref=e175]:
+                  - img [ref=e176]
+                  - generic [ref=e178]: Everything in Professional
+                - listitem [ref=e179]:
+                  - img [ref=e180]
+                  - generic [ref=e182]: Multi-location support
+                - listitem [ref=e183]:
+                  - img [ref=e184]
+                  - generic [ref=e186]: Dedicated account manager
+                - listitem [ref=e187]:
+                  - img [ref=e188]
+                  - generic [ref=e190]: Custom integrations
+                - listitem [ref=e191]:
+                  - img [ref=e192]
+                  - generic [ref=e194]: SLA guarantee
+                - listitem [ref=e195]:
+                  - img [ref=e196]
+                  - generic [ref=e198]: Priority support
+                - listitem [ref=e199]:
+                  - img [ref=e200]
+                  - generic [ref=e202]: White-label options
+                - listitem [ref=e203]:
+                  - img [ref=e204]
+                  - generic [ref=e206]: 2% platform fee
+              - generic [ref=e207]:
+                - generic [ref=e208]:
+                  - generic [ref=e209]: "Photos:"
+                  - generic [ref=e210]: Unlimited
+                - generic [ref=e211]:
+                  - generic [ref=e212]: "Programs:"
+                  - generic [ref=e213]: Unlimited
+                - generic [ref=e214]:
+                  - generic [ref=e215]: "Team members:"
+                  - generic [ref=e216]: Unlimited
+              - link "Contact Sales" [ref=e217] [cursor=pointer]:
+                - /url: /contact
+        - generic [ref=e218]:
+          - paragraph [ref=e219]: All paid plans include a 14-day free trial. No credit card required.
+          - paragraph [ref=e220]:
+            - text: Already have an account?
+            - link "Manage your subscription" [ref=e221] [cursor=pointer]:
+              - /url: /portal/billing
+        - generic [ref=e222]:
+          - heading "Frequently Asked Questions" [level=2] [ref=e223]
+          - generic [ref=e224]:
+            - generic [ref=e225]:
+              - heading "Can I change plans later?" [level=3] [ref=e226]
+              - paragraph [ref=e227]: Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately.
+            - generic [ref=e228]:
+              - heading "What payment methods do you accept?" [level=3] [ref=e229]
+              - paragraph [ref=e230]: We accept all major credit cards (Visa, Mastercard, American Express) through our secure payment processor, Stripe.
+            - generic [ref=e231]:
+              - heading "Is there a contract or commitment?" [level=3] [ref=e232]
+              - paragraph [ref=e233]: No contracts or long-term commitments. You can cancel your subscription at any time.
+            - generic [ref=e234]:
+              - heading "What's the platform fee?" [level=3] [ref=e235]
+              - paragraph [ref=e236]: The platform fee is a small percentage taken from payments you receive from parents. Higher tier plans have lower fees.
+    - contentinfo [ref=e237]:
+      - generic [ref=e238]:
+        - generic [ref=e239]:
+          - generic [ref=e240]:
+            - link "K KinderCare" [ref=e241] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e243]: K
+              - generic [ref=e244]: KinderCare
+            - paragraph [ref=e245]: Find the perfect daycare for your child. Trusted by thousands of families across the United States.
+            - generic [ref=e246]:
+              - link "Twitter" [ref=e247] [cursor=pointer]:
+                - /url: https://twitter.com/kindercare
+                - generic [ref=e248]: Twitter
+                - img [ref=e249]
+              - link "Facebook" [ref=e251] [cursor=pointer]:
+                - /url: https://facebook.com/kindercare
+                - generic [ref=e252]: Facebook
+                - img [ref=e253]
+              - link "Instagram" [ref=e255] [cursor=pointer]:
+                - /url: https://instagram.com/kindercare
+                - generic [ref=e256]: Instagram
+                - img [ref=e257]
+          - generic [ref=e259]:
+            - heading "Product" [level=3] [ref=e260]
+            - list [ref=e261]:
+              - listitem [ref=e262]:
+                - link "Find Daycares" [ref=e263] [cursor=pointer]:
+                  - /url: /search
+              - listitem [ref=e264]:
+                - link "For Providers" [ref=e265] [cursor=pointer]:
+                  - /url: /for-daycares
+              - listitem [ref=e266]:
+                - link "Pricing" [ref=e267] [cursor=pointer]:
+                  - /url: /pricing
+              - listitem [ref=e268]:
+                - link "Features" [ref=e269] [cursor=pointer]:
+                  - /url: /features
+          - generic [ref=e270]:
+            - heading "Company" [level=3] [ref=e271]
+            - list [ref=e272]:
+              - listitem [ref=e273]:
+                - link "About Us" [ref=e274] [cursor=pointer]:
+                  - /url: /about
+              - listitem [ref=e275]:
+                - link "Careers" [ref=e276] [cursor=pointer]:
+                  - /url: /careers
+              - listitem [ref=e277]:
+                - link "Blog" [ref=e278] [cursor=pointer]:
+                  - /url: /blog
+              - listitem [ref=e279]:
+                - link "Press" [ref=e280] [cursor=pointer]:
+                  - /url: /press
+          - generic [ref=e281]:
+            - heading "Resources" [level=3] [ref=e282]
+            - list [ref=e283]:
+              - listitem [ref=e284]:
+                - link "Help Center" [ref=e285] [cursor=pointer]:
+                  - /url: /help
+              - listitem [ref=e286]:
+                - link "Safety" [ref=e287] [cursor=pointer]:
+                  - /url: /safety
+              - listitem [ref=e288]:
+                - link "Community" [ref=e289] [cursor=pointer]:
+                  - /url: /community
+              - listitem [ref=e290]:
+                - link "Contact" [ref=e291] [cursor=pointer]:
+                  - /url: /contact
+          - generic [ref=e292]:
+            - heading "Legal" [level=3] [ref=e293]
+            - list [ref=e294]:
+              - listitem [ref=e295]:
+                - link "Privacy Policy" [ref=e296] [cursor=pointer]:
+                  - /url: /privacy
+              - listitem [ref=e297]:
+                - link "Terms of Service" [ref=e298] [cursor=pointer]:
+                  - /url: /terms
+              - listitem [ref=e299]:
+                - link "Cookie Policy" [ref=e300] [cursor=pointer]:
+                  - /url: /cookies
+        - paragraph [ref=e302]: © 2026 KinderCare. All rights reserved.
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e308] [cursor=pointer]:
+    - img [ref=e309]
+  - alert [ref=e312]
+```

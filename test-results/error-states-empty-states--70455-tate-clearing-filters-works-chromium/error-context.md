@@ -1,0 +1,152 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - navigation [ref=e4]:
+        - link "K KinderCare" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: K
+          - generic [ref=e8]: KinderCare
+        - generic [ref=e9]:
+          - link "Find Daycares" [ref=e10] [cursor=pointer]:
+            - /url: /search
+          - link "For Providers" [ref=e11] [cursor=pointer]:
+            - /url: /for-daycares
+          - link "Pricing" [ref=e12] [cursor=pointer]:
+            - /url: /pricing
+          - link "About" [ref=e13] [cursor=pointer]:
+            - /url: /about
+        - generic [ref=e14]:
+          - link "Search" [ref=e15] [cursor=pointer]:
+            - /url: /search
+            - img
+            - generic [ref=e16]: Search
+          - generic [ref=e17]:
+            - link "Sign in" [ref=e18] [cursor=pointer]:
+              - /url: /login
+            - link "Get Started" [ref=e19] [cursor=pointer]:
+              - /url: /register
+    - main [ref=e20]:
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - heading "Find Daycare" [level=1] [ref=e23]
+          - paragraph [ref=e24]: Search for trusted daycare providers in your area
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - generic [ref=e28]:
+              - img [ref=e29]
+              - textbox "Search by name or location..." [ref=e32]: xyznonexistent123
+            - button "Search" [ref=e33]
+            - button [ref=e34]:
+              - img
+            - generic [ref=e35]:
+              - button [ref=e36]:
+                - img
+              - button [ref=e37]:
+                - img
+          - generic [ref=e38]:
+            - combobox [ref=e39]:
+              - generic: All states
+              - img
+            - textbox "City" [ref=e40]
+            - combobox [ref=e41]:
+              - generic: Any price
+              - img
+            - combobox [ref=e42]:
+              - generic: Any age
+              - img
+            - combobox [ref=e43]:
+              - img
+            - button "Clear" [active] [ref=e44]
+        - generic [ref=e45]:
+          - heading "No daycares found" [level=3] [ref=e46]
+          - paragraph [ref=e47]: Try adjusting your filters or search for a different location.
+          - link "Clear filters" [ref=e48] [cursor=pointer]:
+            - /url: /search
+    - contentinfo [ref=e49]:
+      - generic [ref=e50]:
+        - generic [ref=e51]:
+          - generic [ref=e52]:
+            - link "K KinderCare" [ref=e53] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e55]: K
+              - generic [ref=e56]: KinderCare
+            - paragraph [ref=e57]: Find the perfect daycare for your child. Trusted by thousands of families across the United States.
+            - generic [ref=e58]:
+              - link "Twitter" [ref=e59] [cursor=pointer]:
+                - /url: https://twitter.com/kindercare
+                - generic [ref=e60]: Twitter
+                - img [ref=e61]
+              - link "Facebook" [ref=e63] [cursor=pointer]:
+                - /url: https://facebook.com/kindercare
+                - generic [ref=e64]: Facebook
+                - img [ref=e65]
+              - link "Instagram" [ref=e67] [cursor=pointer]:
+                - /url: https://instagram.com/kindercare
+                - generic [ref=e68]: Instagram
+                - img [ref=e69]
+          - generic [ref=e71]:
+            - heading "Product" [level=3] [ref=e72]
+            - list [ref=e73]:
+              - listitem [ref=e74]:
+                - link "Find Daycares" [ref=e75] [cursor=pointer]:
+                  - /url: /search
+              - listitem [ref=e76]:
+                - link "For Providers" [ref=e77] [cursor=pointer]:
+                  - /url: /for-daycares
+              - listitem [ref=e78]:
+                - link "Pricing" [ref=e79] [cursor=pointer]:
+                  - /url: /pricing
+              - listitem [ref=e80]:
+                - link "Features" [ref=e81] [cursor=pointer]:
+                  - /url: /features
+          - generic [ref=e82]:
+            - heading "Company" [level=3] [ref=e83]
+            - list [ref=e84]:
+              - listitem [ref=e85]:
+                - link "About Us" [ref=e86] [cursor=pointer]:
+                  - /url: /about
+              - listitem [ref=e87]:
+                - link "Careers" [ref=e88] [cursor=pointer]:
+                  - /url: /careers
+              - listitem [ref=e89]:
+                - link "Blog" [ref=e90] [cursor=pointer]:
+                  - /url: /blog
+              - listitem [ref=e91]:
+                - link "Press" [ref=e92] [cursor=pointer]:
+                  - /url: /press
+          - generic [ref=e93]:
+            - heading "Resources" [level=3] [ref=e94]
+            - list [ref=e95]:
+              - listitem [ref=e96]:
+                - link "Help Center" [ref=e97] [cursor=pointer]:
+                  - /url: /help
+              - listitem [ref=e98]:
+                - link "Safety" [ref=e99] [cursor=pointer]:
+                  - /url: /safety
+              - listitem [ref=e100]:
+                - link "Community" [ref=e101] [cursor=pointer]:
+                  - /url: /community
+              - listitem [ref=e102]:
+                - link "Contact" [ref=e103] [cursor=pointer]:
+                  - /url: /contact
+          - generic [ref=e104]:
+            - heading "Legal" [level=3] [ref=e105]
+            - list [ref=e106]:
+              - listitem [ref=e107]:
+                - link "Privacy Policy" [ref=e108] [cursor=pointer]:
+                  - /url: /privacy
+              - listitem [ref=e109]:
+                - link "Terms of Service" [ref=e110] [cursor=pointer]:
+                  - /url: /terms
+              - listitem [ref=e111]:
+                - link "Cookie Policy" [ref=e112] [cursor=pointer]:
+                  - /url: /cookies
+        - paragraph [ref=e114]: © 2026 KinderCare. All rights reserved.
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e120] [cursor=pointer]:
+    - img [ref=e121]
+  - alert [ref=e124]
+```

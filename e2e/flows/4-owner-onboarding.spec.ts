@@ -40,7 +40,7 @@ test.describe("Flow 3.4: Daycare Owner Onboarding", () => {
   });
 
   test.describe("Portal Dashboard", () => {
-    test.beforeEach(async ({ page, loginAs }) => {
+    test.beforeEach(async ({ loginAs }) => {
       await loginAs("owner");
     });
 

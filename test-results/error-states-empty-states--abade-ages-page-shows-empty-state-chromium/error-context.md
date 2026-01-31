@@ -1,0 +1,108 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e7]:
+            - generic [ref=e9]: K
+            - generic [ref=e10]: KinderCare Portal
+          - button "Notifications" [ref=e11]:
+            - img
+            - generic [ref=e12]: Notifications
+        - generic [ref=e13]:
+          - generic [ref=e15]: TO
+          - generic [ref=e16]:
+            - paragraph [ref=e17]: Test Owner
+            - paragraph [ref=e18]: test.owner@kindergarten.com
+        - navigation [ref=e19]:
+          - link "Dashboard" [ref=e20] [cursor=pointer]:
+            - /url: /portal
+            - img [ref=e21]
+            - text: Dashboard
+          - link "My Daycare" [ref=e26] [cursor=pointer]:
+            - /url: /portal/daycare
+            - img [ref=e27]
+            - text: My Daycare
+          - link "Verification" [ref=e31] [cursor=pointer]:
+            - /url: /portal/verification
+            - img [ref=e32]
+            - text: Verification
+          - link "Bookings" [ref=e35] [cursor=pointer]:
+            - /url: /portal/bookings
+            - img [ref=e36]
+            - text: Bookings
+          - link "Messages" [ref=e38] [cursor=pointer]:
+            - /url: /portal/messages
+            - img [ref=e39]
+            - text: Messages
+          - link "Enrollments" [ref=e41] [cursor=pointer]:
+            - /url: /portal/enrollments
+            - img [ref=e42]
+            - text: Enrollments
+          - link "Waitlist" [ref=e47] [cursor=pointer]:
+            - /url: /portal/waitlist
+            - img [ref=e48]
+            - text: Waitlist
+          - link "Reviews" [ref=e51] [cursor=pointer]:
+            - /url: /portal/reviews
+            - img [ref=e52]
+            - text: Reviews
+          - link "Analytics" [ref=e54] [cursor=pointer]:
+            - /url: /portal/analytics
+            - img [ref=e55]
+            - text: Analytics
+          - link "Billing" [ref=e57] [cursor=pointer]:
+            - /url: /portal/billing
+            - img [ref=e58]
+            - text: Billing
+          - link "Payments" [ref=e61] [cursor=pointer]:
+            - /url: /portal/payments
+            - img [ref=e62]
+            - text: Payments
+          - link "Settings" [ref=e65] [cursor=pointer]:
+            - /url: /portal/settings
+            - img [ref=e66]
+            - text: Settings
+        - generic [ref=e69]:
+          - link "View Public Site" [ref=e70] [cursor=pointer]:
+            - /url: /
+            - img
+            - text: View Public Site
+          - button "Sign out" [ref=e72]:
+            - img
+            - text: Sign out
+    - main [ref=e73]:
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - generic [ref=e76]:
+            - heading "Messages" [level=1] [ref=e77]
+            - paragraph [ref=e78]: Conversations with parents
+          - button "Bulk Message" [ref=e79]:
+            - img
+            - text: Bulk Message
+        - generic [ref=e80]:
+          - generic [ref=e82]: Conversations
+          - link "TP Test Parent 1 Все нормалек 30/01/2026" [ref=e85] [cursor=pointer]:
+            - /url: /portal/messages/cml0u21gt000004ju1v3h7pf7
+            - generic [ref=e87]: TP
+            - generic [ref=e88]:
+              - generic [ref=e89]:
+                - paragraph [ref=e90]: Test Parent
+                - generic [ref=e91]: "1"
+              - paragraph [ref=e92]: Все нормалек
+            - generic [ref=e93]:
+              - generic [ref=e94]: 30/01/2026
+              - img [ref=e95]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e102] [cursor=pointer]:
+    - generic [ref=e105]:
+      - text: Compiling
+      - generic [ref=e106]:
+        - generic [ref=e107]: .
+        - generic [ref=e108]: .
+        - generic [ref=e109]: .
+  - alert [ref=e110]
+```

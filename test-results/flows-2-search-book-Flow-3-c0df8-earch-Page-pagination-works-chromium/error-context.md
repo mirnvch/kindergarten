@@ -1,0 +1,176 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - navigation [ref=e4]:
+        - link "K KinderCare" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: K
+          - generic [ref=e8]: KinderCare
+        - generic [ref=e9]:
+          - link "Find Daycares" [ref=e10] [cursor=pointer]:
+            - /url: /search
+          - link "For Providers" [ref=e11] [cursor=pointer]:
+            - /url: /for-daycares
+          - link "Pricing" [ref=e12] [cursor=pointer]:
+            - /url: /pricing
+          - link "About" [ref=e13] [cursor=pointer]:
+            - /url: /about
+        - generic [ref=e14]:
+          - link "Search" [ref=e15] [cursor=pointer]:
+            - /url: /search
+            - img
+            - generic [ref=e16]: Search
+          - generic [ref=e17]:
+            - link "Sign in" [ref=e18] [cursor=pointer]:
+              - /url: /login
+            - link "Get Started" [ref=e19] [cursor=pointer]:
+              - /url: /register
+    - main [ref=e20]:
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - heading "Find Daycare" [level=1] [ref=e23]
+          - paragraph [ref=e24]: Search for trusted daycare providers in your area
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - generic [ref=e28]:
+              - img [ref=e29]
+              - textbox "Search by name or location..." [ref=e32]
+            - button "Search" [ref=e33]
+            - button [ref=e34]:
+              - img
+            - generic [ref=e35]:
+              - button [ref=e36]:
+                - img
+              - button [ref=e37]:
+                - img
+          - generic [ref=e38]:
+            - combobox [ref=e39]:
+              - generic: All states
+              - img
+            - textbox "City" [ref=e40]
+            - combobox [ref=e41]:
+              - generic: Any price
+              - img
+            - combobox [ref=e42]:
+              - generic: Any age
+              - img
+            - combobox [ref=e43]:
+              - generic: Any rating
+              - img
+        - paragraph [ref=e45]: 1 daycare found
+        - link "No image Test Daycare Center Irvine, CA Ages 6mo - 5yr $1,500/mo A test daycare for development and testing real-time messaging" [ref=e47] [cursor=pointer]:
+          - /url: /daycare/test-daycare
+          - generic [ref=e48]:
+            - generic [ref=e51]: No image
+            - generic [ref=e52]:
+              - heading "Test Daycare Center" [level=3] [ref=e54]
+              - generic [ref=e55]:
+                - img [ref=e56]
+                - generic [ref=e59]: Irvine, CA
+              - generic [ref=e60]:
+                - generic [ref=e61]: Ages 6mo - 5yr
+                - generic [ref=e62]: $1,500/mo
+              - paragraph [ref=e63]: A test daycare for development and testing real-time messaging
+    - contentinfo [ref=e64]:
+      - generic [ref=e65]:
+        - generic [ref=e66]:
+          - generic [ref=e67]:
+            - link "K KinderCare" [ref=e68] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e70]: K
+              - generic [ref=e71]: KinderCare
+            - paragraph [ref=e72]: Find the perfect daycare for your child. Trusted by thousands of families across the United States.
+            - generic [ref=e73]:
+              - link "Twitter" [ref=e74] [cursor=pointer]:
+                - /url: https://twitter.com/kindercare
+                - generic [ref=e75]: Twitter
+                - img [ref=e76]
+              - link "Facebook" [ref=e78] [cursor=pointer]:
+                - /url: https://facebook.com/kindercare
+                - generic [ref=e79]: Facebook
+                - img [ref=e80]
+              - link "Instagram" [ref=e82] [cursor=pointer]:
+                - /url: https://instagram.com/kindercare
+                - generic [ref=e83]: Instagram
+                - img [ref=e84]
+          - generic [ref=e86]:
+            - heading "Product" [level=3] [ref=e87]
+            - list [ref=e88]:
+              - listitem [ref=e89]:
+                - link "Find Daycares" [ref=e90] [cursor=pointer]:
+                  - /url: /search
+              - listitem [ref=e91]:
+                - link "For Providers" [ref=e92] [cursor=pointer]:
+                  - /url: /for-daycares
+              - listitem [ref=e93]:
+                - link "Pricing" [ref=e94] [cursor=pointer]:
+                  - /url: /pricing
+              - listitem [ref=e95]:
+                - link "Features" [ref=e96] [cursor=pointer]:
+                  - /url: /features
+          - generic [ref=e97]:
+            - heading "Company" [level=3] [ref=e98]
+            - list [ref=e99]:
+              - listitem [ref=e100]:
+                - link "About Us" [ref=e101] [cursor=pointer]:
+                  - /url: /about
+              - listitem [ref=e102]:
+                - link "Careers" [ref=e103] [cursor=pointer]:
+                  - /url: /careers
+              - listitem [ref=e104]:
+                - link "Blog" [ref=e105] [cursor=pointer]:
+                  - /url: /blog
+              - listitem [ref=e106]:
+                - link "Press" [ref=e107] [cursor=pointer]:
+                  - /url: /press
+          - generic [ref=e108]:
+            - heading "Resources" [level=3] [ref=e109]
+            - list [ref=e110]:
+              - listitem [ref=e111]:
+                - link "Help Center" [ref=e112] [cursor=pointer]:
+                  - /url: /help
+              - listitem [ref=e113]:
+                - link "Safety" [ref=e114] [cursor=pointer]:
+                  - /url: /safety
+              - listitem [ref=e115]:
+                - link "Community" [ref=e116] [cursor=pointer]:
+                  - /url: /community
+              - listitem [ref=e117]:
+                - link "Contact" [ref=e118] [cursor=pointer]:
+                  - /url: /contact
+          - generic [ref=e119]:
+            - heading "Legal" [level=3] [ref=e120]
+            - list [ref=e121]:
+              - listitem [ref=e122]:
+                - link "Privacy Policy" [ref=e123] [cursor=pointer]:
+                  - /url: /privacy
+              - listitem [ref=e124]:
+                - link "Terms of Service" [ref=e125] [cursor=pointer]:
+                  - /url: /terms
+              - listitem [ref=e126]:
+                - link "Cookie Policy" [ref=e127] [cursor=pointer]:
+                  - /url: /cookies
+        - paragraph [ref=e129]: © 2026 KinderCare. All rights reserved.
+  - region "Notifications alt+T"
+  - generic [active]:
+    - menu "Next.js Dev Tools Items" [ref=e130]:
+      - generic [ref=e131]:
+        - generic "Loading..." [ref=e132]:
+          - generic [ref=e133]: Route
+          - img [ref=e135]
+        - generic "Turbopack is enabled." [ref=e137]:
+          - generic [ref=e138]: Bundler
+          - generic [ref=e139]: Turbopack
+        - menuitem "Route Info" [ref=e140] [cursor=pointer]:
+          - generic [ref=e141]: Route Info
+          - img [ref=e143]
+      - menuitem "Preferences" [ref=e146]:
+        - generic [ref=e147]: Preferences
+        - img [ref=e149]
+    - button "Close Next.js Dev Tools" [expanded] [ref=e156] [cursor=pointer]:
+      - img [ref=e157]
+  - alert [ref=e160]
+```

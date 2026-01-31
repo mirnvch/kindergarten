@@ -1,0 +1,55 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - link "KinderCare" [ref=e5] [cursor=pointer]:
+        - /url: /
+    - main [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - heading "Welcome back" [level=1] [ref=e9]
+          - paragraph [ref=e10]: Sign in to your account to continue
+        - generic [ref=e11]:
+          - generic [ref=e12]:
+            - generic [ref=e13]: Email
+            - textbox "Email" [ref=e14]:
+              - /placeholder: you@example.com
+              - text: test.parent@kindergarten.com
+          - generic [ref=e15]:
+            - generic [ref=e16]:
+              - generic [ref=e17]: Password
+              - link "Forgot password?" [ref=e18] [cursor=pointer]:
+                - /url: /forgot-password
+            - generic [ref=e20]:
+              - textbox "Password" [ref=e21]:
+                - /placeholder: Enter your password
+                - text: Test123!
+              - button "Show password" [ref=e22]:
+                - img
+          - button "Sign in" [ref=e23]
+        - generic [ref=e28]: Or continue with
+        - button "Continue with Google" [ref=e29]:
+          - img
+          - text: Continue with Google
+        - paragraph [ref=e30]:
+          - text: Don't have an account?
+          - link "Sign up" [ref=e31] [cursor=pointer]:
+            - /url: /register
+    - contentinfo [ref=e32]:
+      - paragraph [ref=e33]: © 2026 KinderCare. All rights reserved.
+  - region "Notifications alt+T"
+  - generic [ref=e38] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e39]:
+      - img [ref=e40]
+    - generic [ref=e43]:
+      - button "Open issues overlay" [ref=e44]:
+        - generic [ref=e45]:
+          - generic [ref=e46]: "0"
+          - generic [ref=e47]: "1"
+        - generic [ref=e48]: Issue
+      - button "Collapse issues badge" [ref=e49]:
+        - img [ref=e50]
+  - alert [ref=e52]
+```

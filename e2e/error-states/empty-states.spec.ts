@@ -16,7 +16,7 @@ import { test, expect } from "../fixtures/auth";
  */
 test.describe("Empty States", () => {
   test.describe("Parent Dashboard Empty States", () => {
-    test.beforeEach(async ({ page, loginAs }) => {
+    test.beforeEach(async ({ loginAs }) => {
       await loginAs("parent");
     });
 
@@ -136,7 +136,7 @@ test.describe("Empty States", () => {
   });
 
   test.describe("Owner Portal Empty States", () => {
-    test.beforeEach(async ({ page, loginAs }) => {
+    test.beforeEach(async ({ loginAs }) => {
       await loginAs("owner");
     });
 
@@ -191,7 +191,7 @@ test.describe("Empty States", () => {
   });
 
   test.describe("Admin Panel Empty States", () => {
-    test.beforeEach(async ({ page, loginAs }) => {
+    test.beforeEach(async ({ loginAs }) => {
       await loginAs("admin");
     });
 

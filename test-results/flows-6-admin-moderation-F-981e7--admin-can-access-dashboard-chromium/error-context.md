@@ -1,0 +1,52 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - link "KinderCare" [ref=e5] [cursor=pointer]:
+        - /url: /
+    - main [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - heading "Welcome back" [level=1] [ref=e9]
+          - paragraph [ref=e10]: Sign in to your account to continue
+        - generic [ref=e11]: Invalid email or password
+        - generic [ref=e12]:
+          - generic [ref=e13]:
+            - generic [ref=e14]: Email
+            - textbox "Email" [ref=e15]:
+              - /placeholder: you@example.com
+              - text: admin@kindergarten.com
+          - generic [ref=e16]:
+            - generic [ref=e17]:
+              - generic [ref=e18]: Password
+              - link "Forgot password?" [ref=e19] [cursor=pointer]:
+                - /url: /forgot-password
+            - generic [ref=e21]:
+              - textbox "Password" [ref=e22]:
+                - /placeholder: Enter your password
+                - text: Admin123!
+              - button "Show password" [ref=e23]:
+                - img
+          - button "Sign in" [ref=e24]
+        - generic [ref=e29]: Or continue with
+        - button "Continue with Google" [ref=e30]:
+          - img
+          - text: Continue with Google
+        - paragraph [ref=e31]:
+          - text: Don't have an account?
+          - link "Sign up" [ref=e32] [cursor=pointer]:
+            - /url: /register
+    - contentinfo [ref=e33]:
+      - paragraph [ref=e34]: © 2026 KinderCare. All rights reserved.
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e40] [cursor=pointer]:
+    - generic [ref=e43]:
+      - text: Compiling
+      - generic [ref=e44]:
+        - generic [ref=e45]: .
+        - generic [ref=e46]: .
+        - generic [ref=e47]: .
+  - alert [ref=e48]
+```

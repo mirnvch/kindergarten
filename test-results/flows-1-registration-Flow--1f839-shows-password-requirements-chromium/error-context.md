@@ -1,0 +1,79 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - link "KinderCare" [ref=e5] [cursor=pointer]:
+        - /url: /
+    - main [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]:
+          - heading "Create an account" [level=1] [ref=e9]
+          - paragraph [ref=e10]: Join KinderCare to find or list daycare services
+        - generic [ref=e11]:
+          - generic [ref=e12]:
+            - generic [ref=e13]:
+              - generic [ref=e14]: First name
+              - textbox "First name" [ref=e15]:
+                - /placeholder: John
+            - generic [ref=e16]:
+              - generic [ref=e17]: Last name
+              - textbox "Last name" [ref=e18]:
+                - /placeholder: Doe
+          - generic [ref=e19]:
+            - generic [ref=e20]: Email
+            - textbox "Email" [ref=e21]:
+              - /placeholder: you@example.com
+          - generic [ref=e22]:
+            - generic [ref=e23]: I am a...
+            - combobox "I am a..." [ref=e24]:
+              - generic: Parent looking for daycare
+              - img
+            - combobox [ref=e25]
+          - generic [ref=e26]:
+            - generic [ref=e27]: Password
+            - generic [ref=e29]:
+              - textbox "Password" [ref=e30]:
+                - /placeholder: Create a password
+              - button "Show password" [ref=e31]:
+                - img
+          - generic [ref=e32]:
+            - generic [ref=e33]: Confirm password
+            - generic [ref=e35]:
+              - textbox "Confirm password" [ref=e36]:
+                - /placeholder: Confirm your password
+              - button "Show password" [ref=e37]:
+                - img
+          - button "Create account" [ref=e38]
+        - generic [ref=e43]: Or continue with
+        - button "Continue with Google" [ref=e44]:
+          - img
+          - text: Continue with Google
+        - paragraph [ref=e45]:
+          - text: Already have an account?
+          - link "Sign in" [ref=e46] [cursor=pointer]:
+            - /url: /login
+        - paragraph [ref=e47]:
+          - text: By creating an account, you agree to our
+          - link "Terms of Service" [ref=e48] [cursor=pointer]:
+            - /url: /terms
+          - text: and
+          - link "Privacy Policy" [ref=e49] [cursor=pointer]:
+            - /url: /privacy
+    - contentinfo [ref=e50]:
+      - paragraph [ref=e51]: © 2026 KinderCare. All rights reserved.
+  - region "Notifications alt+T"
+  - generic [ref=e56] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e57]:
+      - img [ref=e58]
+    - generic [ref=e61]:
+      - button "Open issues overlay" [ref=e62]:
+        - generic [ref=e63]:
+          - generic [ref=e64]: "0"
+          - generic [ref=e65]: "1"
+        - generic [ref=e66]: Issue
+      - button "Collapse issues badge" [ref=e67]:
+        - img [ref=e68]
+  - alert [ref=e70]
+```
