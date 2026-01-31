@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@kindergarten/tsconfig": "*",
-    "@types/bcryptjs": "^2.4.6",
+    "@types/bcryptjs": "^3.0.0",
     "typescript": "^5"
   },
   "peerDependencies": {
