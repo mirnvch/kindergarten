@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "KinderCare",
-  "lastTaskId": 25,
+  "lastTaskId": 26,
   "currentTaskId": null,
   "tasks": [
     {
@@ -409,7 +409,7 @@
       "id": 12,
       "title": "Verification System",
       "description": "Build daycare verification with license checks and badges",
-      "status": "pending",
+      "status": "done",
       "priority": "medium",
       "complexity": 3,
       "phase": "4.1",
@@ -417,10 +417,10 @@
       "blockedBy": [],
       "blocks": [],
       "subtasks": [
-        { "id": "12.1", "title": "Create verification request form", "done": false },
-        { "id": "12.2", "title": "Build admin verification workflow", "done": false },
-        { "id": "12.3", "title": "Add verified badge to listings", "done": false },
-        { "id": "12.4", "title": "Document upload for licenses", "done": false }
+        { "id": "12.1", "title": "Create verification request form", "done": true },
+        { "id": "12.2", "title": "Build admin verification workflow", "done": true },
+        { "id": "12.3", "title": "Add verified badge to listings", "done": true },
+        { "id": "12.4", "title": "Document upload for licenses", "done": true }
       ],
       "acceptanceCriteria": [
         "Daycares can submit verification request",
@@ -433,9 +433,12 @@
         "src/app/(admin)/admin/verifications/*",
         "src/server/actions/verification.ts"
       ],
-      "notes": [],
+      "notes": [
+        "2026-01-30 (Session 8): Completed - Prisma models, server actions, portal page, admin pages, components, upload API"
+      ],
+      "completedAt": "2026-01-30T15:00:00Z",
       "createdAt": "2026-01-29T14:00:00Z",
-      "updatedAt": "2026-01-29T14:00:00Z"
+      "updatedAt": "2026-01-30T15:00:00Z"
     },
     {
       "id": 13,
@@ -735,6 +738,48 @@
       ],
       "createdAt": "2026-01-30T19:00:00Z",
       "updatedAt": "2026-01-30T19:00:00Z"
+    },
+    {
+      "id": 26,
+      "title": "E2E Tests for User Flows",
+      "description": "Create comprehensive E2E tests based on sitemap-v2.md covering all 7 User Flows, Auth Guards, and Empty States",
+      "status": "done",
+      "priority": "high",
+      "complexity": 4,
+      "phase": "QA",
+      "tags": ["testing", "e2e", "playwright", "quality"],
+      "blockedBy": [],
+      "blocks": [],
+      "subtasks": [
+        { "id": "26.1", "title": "Create auth fixtures", "done": true },
+        { "id": "26.2", "title": "Flow 3.1: Guest → Registration", "done": true },
+        { "id": "26.3", "title": "Flow 3.2: Parent Search → Book", "done": true },
+        { "id": "26.4", "title": "Flow 3.3: Parent Manage Bookings", "done": true },
+        { "id": "26.5", "title": "Flow 3.4: Owner Onboarding", "done": true },
+        { "id": "26.6", "title": "Flow 3.5: Owner Handle Bookings", "done": true },
+        { "id": "26.7", "title": "Flow 3.6: Admin Moderation", "done": true },
+        { "id": "26.8", "title": "Flow 3.7: Admin Verification", "done": true },
+        { "id": "26.9", "title": "Auth Guards tests", "done": true },
+        { "id": "26.10", "title": "Empty States tests", "done": true }
+      ],
+      "acceptanceCriteria": [
+        "All 7 User Flows covered with E2E tests",
+        "Auth guards tested for all protected routes",
+        "Empty states tested for all pages",
+        "Tests follow sitemap-v2.md structure"
+      ],
+      "affectedFiles": [
+        "e2e/fixtures/auth.ts",
+        "e2e/flows/*.spec.ts",
+        "e2e/guards/auth-guards.spec.ts",
+        "e2e/error-states/empty-states.spec.ts"
+      ],
+      "notes": [
+        "2026-01-31: Created 10 test files based on sitemap-v2.md"
+      ],
+      "completedAt": "2026-01-31T12:00:00Z",
+      "createdAt": "2026-01-31T11:00:00Z",
+      "updatedAt": "2026-01-31T12:00:00Z"
     }
   ]
 }
