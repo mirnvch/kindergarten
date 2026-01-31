@@ -155,6 +155,9 @@ export async function verify2FASetup(
       }),
     ]);
 
+    // Set 2FA session as verified (user just proved they have the authenticator)
+    await set2FASessionVerified(session.user.id);
+
     return {
       success: true,
       data: { backupCodes },
