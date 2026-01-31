@@ -70,8 +70,8 @@ export function TwoFactorVerifyForm({
         return;
       }
 
-      // 2FA code verified - now complete the login
-      const loginResult = await complete2FALogin();
+      // 2FA code verified - now complete the login and set session cookie
+      const loginResult = await complete2FALogin(userId);
 
       if (!loginResult.success) {
         setError(loginResult.error || "Failed to complete login");

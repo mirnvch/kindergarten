@@ -14,6 +14,7 @@ import {
   verifyBackupCode,
 } from "@/lib/totp";
 import { rateLimit } from "@/lib/rate-limit";
+import { cookies } from "next/headers";
 
 type ActionResult<T = void> = {
   success: boolean;
@@ -415,4 +416,81 @@ export async function check2FAEnabled(userId: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+// ==================== 2FA SESSION VERIFICATION ====================
+
+const TWO_FA_SESSION_COOKIE = "2fa_session_verified";
+const TWO_FA_SESSION_MAX_AGE = 24 * 60 * 60; // 24 hours
+
+/**
+ * Set 2FA session as verified (call after successful 2FA verification)
+ */
+export async function set2FASessionVerified(userId: string): Promise<void> {
+  const cookieStore = await cookies();
+
+  // Cookie value includes userId and timestamp for validation
+  const value = `${userId}:${Date.now()}`;
+
+  cookieStore.set(TWO_FA_SESSION_COOKIE, value, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: TWO_FA_SESSION_MAX_AGE,
+    path: "/",
+  });
+}
+
+/**
+ * Check if current session has verified 2FA
+ */
+export async function is2FASessionVerified(userId: string): Promise<boolean> {
+  try {
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get(TWO_FA_SESSION_COOKIE);
+
+    if (!cookie?.value) {
+      return false;
+    }
+
+    const [cookieUserId, timestamp] = cookie.value.split(":");
+
+    // Verify the cookie is for the current user
+    if (cookieUserId !== userId) {
+      return false;
+    }
+
+    // Verify the cookie hasn't expired (extra safety check)
+    const age = Date.now() - parseInt(timestamp, 10);
+    if (age > TWO_FA_SESSION_MAX_AGE * 1000) {
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Clear 2FA session verification (call on logout)
+ */
+export async function clear2FASession(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.delete(TWO_FA_SESSION_COOKIE);
+}
+
+/**
+ * Check if user needs 2FA verification
+ * Returns true if 2FA is enabled but session is not verified
+ */
+export async function needs2FAVerification(userId: string): Promise<boolean> {
+  const has2FA = await check2FAEnabled(userId);
+
+  if (!has2FA) {
+    return false;
+  }
+
+  const isVerified = await is2FASessionVerified(userId);
+  return !isVerified;
 }

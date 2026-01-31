@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { PortalSidebar } from "@/components/portal/portal-sidebar";
 import { getUnreadNotificationsCount } from "@/server/actions/notifications";
+import { needs2FAVerification } from "@/server/actions/security/two-factor";
 
 export default async function PortalLayout({
   children,
@@ -23,6 +24,12 @@ export default async function PortalLayout({
     session.user.role !== "DAYCARE_STAFF"
   ) {
     redirect("/dashboard");
+  }
+
+  // Check if 2FA verification is needed (for OAuth users with 2FA enabled)
+  const needs2FA = await needs2FAVerification(session.user.id);
+  if (needs2FA) {
+    redirect(`/login/verify-2fa?userId=${session.user.id}&callbackUrl=/portal`);
   }
 
   const user = {

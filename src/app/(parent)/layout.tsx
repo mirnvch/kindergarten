@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ParentSidebar } from "@/components/parent/parent-sidebar";
 import { getUnreadNotificationsCount } from "@/server/actions/notifications";
+import { needs2FAVerification } from "@/server/actions/security/two-factor";
 
 export default async function ParentLayout({
   children,
@@ -20,6 +21,12 @@ export default async function ParentLayout({
 
   if (session.user.role !== "PARENT") {
     redirect("/portal");
+  }
+
+  // Check if 2FA verification is needed (for OAuth users with 2FA enabled)
+  const needs2FA = await needs2FAVerification(session.user.id);
+  if (needs2FA) {
+    redirect(`/login/verify-2fa?userId=${session.user.id}&callbackUrl=/dashboard`);
   }
 
   const user = {

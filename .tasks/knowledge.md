@@ -103,6 +103,26 @@ src/components/
 
 ## Session Notes
 
+### 2026-01-31 (Session 12)
+- **Task #25: 2FA for OAuth Logins — COMPLETED**
+- Implemented cookie-based 2FA session verification:
+  - `set2FASessionVerified(userId)` — устанавливает httpOnly cookie с 24h TTL
+  - `is2FASessionVerified(userId)` — проверяет валидность cookie
+  - `clear2FASession()` — очищает cookie при logout
+  - `needs2FAVerification(userId)` — проверяет нужна ли 2FA верификация
+- Обновлены layouts для page-level 2FA проверки:
+  - `src/app/(parent)/layout.tsx` — проверка `needs2FAVerification` + редирект
+  - `src/app/(portal)/layout.tsx` — аналогично
+- Обновлен `complete2FALogin(userId)`:
+  - Теперь принимает `userId` для установки 2FA session cookie
+  - Обрабатывает оба сценария: credential login (с pending cookie) и OAuth login (без cookie)
+  - Устанавливает `2fa_session_verified` cookie для обоих flows
+- Обновлен `logout()` для очистки 2FA session cookie
+- **Архитектурное решение:** Page-level проверка вместо middleware (middleware вызывала redirect loops с OAuth)
+- **Cookie формат:** `{userId}:{timestamp}` с httpOnly, secure (в prod), sameSite: lax
+- **Task #26: E2E Tests — COMPLETED** (предыдущая сессия)
+- **Следующее:** Task #11 (PWA), #14 (Analytics)
+
 ### 2026-01-30 (Session 11)
 - **Sitemap & Navigation Documentation — COMPLETED**
 - Создана полная дорожная карта проекта по best practices:

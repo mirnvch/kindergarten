@@ -8,7 +8,7 @@ import { UserRole } from "@prisma/client";
 import { AuthError } from "next-auth";
 import { headers } from "next/headers";
 import { recordLoginAttempt } from "@/server/actions/security/login-tracking";
-import { check2FAEnabled } from "@/server/actions/security/two-factor";
+import { check2FAEnabled, set2FASessionVerified, clear2FASession } from "@/server/actions/security/two-factor";
 import crypto from "crypto";
 import { cookies } from "next/headers";
 
@@ -404,8 +404,9 @@ export async function loginWithCredentials(
 
 /**
  * Complete login after successful 2FA verification
+ * Handles both credential login (with pending cookie) and OAuth login (no cookie)
  */
-export async function complete2FALogin(): Promise<{
+export async function complete2FALogin(userId: string): Promise<{
   success: boolean;
   error?: string;
 }> {
@@ -413,51 +414,53 @@ export async function complete2FALogin(): Promise<{
     const cookieStore = await cookies();
     const pendingCookie = cookieStore.get("pending_2fa_login");
 
-    if (!pendingCookie?.value) {
-      return { success: false, error: "Login session expired. Please try again." };
-    }
+    if (pendingCookie?.value) {
+      // Credential login flow - complete the sign in
+      const encryptionKey = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+      if (!encryptionKey) {
+        return { success: false, error: "Server configuration error" };
+      }
 
-    // Decrypt the pending login data
-    const encryptionKey = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
-    if (!encryptionKey) {
-      return { success: false, error: "Server configuration error" };
-    }
+      const [ivHex, authTagHex, encrypted] = pendingCookie.value.split(":");
+      const key = crypto.scryptSync(encryptionKey, "pending-2fa", 32);
+      const iv = Buffer.from(ivHex, "hex");
+      const authTag = Buffer.from(authTagHex, "hex");
+      const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+      decipher.setAuthTag(authTag);
 
-    const [ivHex, authTagHex, encrypted] = pendingCookie.value.split(":");
-    const key = crypto.scryptSync(encryptionKey, "pending-2fa", 32);
-    const iv = Buffer.from(ivHex, "hex");
-    const authTag = Buffer.from(authTagHex, "hex");
-    const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
-    decipher.setAuthTag(authTag);
+      let decrypted = decipher.update(encrypted, "hex", "utf8");
+      decrypted += decipher.final("utf8");
 
-    let decrypted = decipher.update(encrypted, "hex", "utf8");
-    decrypted += decipher.final("utf8");
+      const { email, password, timestamp } = JSON.parse(decrypted);
 
-    const { email, password, timestamp } = JSON.parse(decrypted);
+      // Check if the pending login hasn't expired (5 minutes)
+      if (Date.now() - timestamp > 5 * 60 * 1000) {
+        cookieStore.delete("pending_2fa_login");
+        return { success: false, error: "Login session expired. Please try again." };
+      }
 
-    // Check if the pending login hasn't expired (5 minutes)
-    if (Date.now() - timestamp > 5 * 60 * 1000) {
+      // Complete the login with NextAuth
+      await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      // Delete the pending login cookie
       cookieStore.delete("pending_2fa_login");
-      return { success: false, error: "Login session expired. Please try again." };
+
+      // Record successful login
+      await recordLoginAttempt({
+        email,
+        success: true,
+        ipAddress: "unknown",
+        userAgent: undefined,
+      });
     }
+    // For OAuth login: session already exists, no pending cookie needed
 
-    // Complete the login with NextAuth
-    await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-
-    // Delete the pending login cookie
-    cookieStore.delete("pending_2fa_login");
-
-    // Record successful login
-    await recordLoginAttempt({
-      email,
-      success: true,
-      ipAddress: "unknown", // We don't have headers here
-      userAgent: undefined,
-    });
+    // Set 2FA session verified cookie for both flows
+    await set2FASessionVerified(userId);
 
     return { success: true };
   } catch (error) {
@@ -471,6 +474,8 @@ export async function loginWithGoogle() {
 }
 
 export async function logout() {
+  // Clear 2FA session cookie on logout
+  await clear2FASession();
   await signOut({ redirectTo: "/" });
 }
 
