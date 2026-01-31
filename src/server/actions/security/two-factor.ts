@@ -486,6 +486,7 @@ export async function clear2FASession(): Promise<void> {
 /**
  * Check if user needs 2FA verification
  * Returns true if 2FA is enabled but session is not verified
+ * Also checks for trusted devices - if device is trusted, skip 2FA
  */
 export async function needs2FAVerification(userId: string): Promise<boolean> {
   const has2FA = await check2FAEnabled(userId);
@@ -494,6 +495,20 @@ export async function needs2FAVerification(userId: string): Promise<boolean> {
     return false;
   }
 
+  // Check if already verified this session
   const isVerified = await is2FASessionVerified(userId);
-  return !isVerified;
+  if (isVerified) {
+    return false;
+  }
+
+  // Check if this is a trusted device
+  const { isTrustedDevice } = await import("./trusted-devices");
+  const isTrusted = await isTrustedDevice(userId);
+  if (isTrusted) {
+    // Device is trusted, set session as verified
+    await set2FASessionVerified(userId);
+    return false;
+  }
+
+  return true;
 }

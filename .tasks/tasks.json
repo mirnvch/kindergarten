@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "KinderCare",
-  "lastTaskId": 26,
+  "lastTaskId": 27,
   "currentTaskId": null,
   "tasks": [
     {
@@ -783,6 +783,47 @@
       "completedAt": "2026-01-31T12:00:00Z",
       "createdAt": "2026-01-31T11:00:00Z",
       "updatedAt": "2026-01-31T12:00:00Z"
+    },
+    {
+      "id": 27,
+      "title": "Trusted Device for 2FA",
+      "description": "Add 'Trust this device' feature to skip 2FA on recognized devices for 30 days",
+      "status": "done",
+      "priority": "medium",
+      "complexity": 3,
+      "phase": "4.2",
+      "tags": ["security", "2fa", "ux"],
+      "blockedBy": [],
+      "blocks": [],
+      "subtasks": [
+        { "id": "27.1", "title": "Add TrustedDevice Prisma model", "done": true },
+        { "id": "27.2", "title": "Create trusted device server actions", "done": true },
+        { "id": "27.3", "title": "Add checkbox on verify-2fa page", "done": true },
+        { "id": "27.4", "title": "Check trusted device in needs2FAVerification", "done": true },
+        { "id": "27.5", "title": "UI for managing trusted devices in settings", "done": true },
+        { "id": "27.6", "title": "Email notification on new device", "done": true }
+      ],
+      "acceptanceCriteria": [
+        "User can check 'Trust this device' on 2FA verification",
+        "Trusted device skips 2FA for 30 days",
+        "IP change requires re-verification",
+        "Max 5 trusted devices per user",
+        "User can view and remove trusted devices in settings",
+        "Email sent when new device is trusted"
+      ],
+      "affectedFiles": [
+        "prisma/schema.prisma",
+        "src/server/actions/security/trusted-devices.ts",
+        "src/app/(auth)/login/verify-2fa/two-factor-verify-form.tsx",
+        "src/server/actions/security/two-factor.ts",
+        "src/components/settings/security/trusted-devices.tsx"
+      ],
+      "notes": [
+        "2026-01-31: Completed all subtasks - Prisma model, server actions, 2FA form checkbox, needs2FAVerification check, settings UI, email notification"
+      ],
+      "completedAt": "2026-01-31T15:00:00Z",
+      "createdAt": "2026-01-31T14:00:00Z",
+      "updatedAt": "2026-01-31T15:00:00Z"
     }
   ]
 }

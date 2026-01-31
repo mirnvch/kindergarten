@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardContent,
@@ -18,6 +19,7 @@ import { Shield, KeyRound, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { verify2FAToken, useBackupCode as verifyBackupCode } from "@/server/actions/security/two-factor";
 import { complete2FALogin } from "@/server/actions/auth";
+import { addTrustedDevice } from "@/server/actions/security/trusted-devices";
 
 interface TwoFactorVerifyFormProps {
   userId: string;
@@ -32,6 +34,7 @@ export function TwoFactorVerifyForm({
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [useBackup, setUseBackup] = useState(false);
+  const [trustDevice, setTrustDevice] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,6 +79,11 @@ export function TwoFactorVerifyForm({
       if (!loginResult.success) {
         setError(loginResult.error || "Failed to complete login");
         return;
+      }
+
+      // If user wants to trust this device, add it
+      if (trustDevice) {
+        await addTrustedDevice();
       }
 
       // Login successful
@@ -137,6 +145,20 @@ export function TwoFactorVerifyForm({
               autoComplete="one-time-code"
               autoFocus
             />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="trust-device"
+              checked={trustDevice}
+              onCheckedChange={(checked) => setTrustDevice(checked === true)}
+            />
+            <Label
+              htmlFor="trust-device"
+              className="text-sm font-normal text-muted-foreground cursor-pointer"
+            >
+              Trust this device for 30 days
+            </Label>
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">

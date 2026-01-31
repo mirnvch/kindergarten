@@ -9,6 +9,7 @@ import {
   TwoFactorSetup,
   LoginHistory,
   ActiveSessions,
+  TrustedDevices,
   DataExportCard,
   DeleteAccountDialog,
 } from "@/components/settings/security";
@@ -65,6 +66,9 @@ export default async function SecuritySettingsPage() {
         verifiedAt={twoFAStatus.data?.verifiedAt ?? null}
         backupCodesRemaining={twoFAStatus.data?.backupCodesRemaining ?? 0}
       />
+
+      {/* Trusted Devices */}
+      {twoFAStatus.data?.enabled && <TrustedDevices />}
 
       {/* Active Sessions */}
       <ActiveSessions />

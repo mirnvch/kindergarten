@@ -363,3 +363,52 @@ export function reviewResponseEmail({
 </html>
   `.trim();
 }
+
+export function newTrustedDeviceEmail({
+  userName,
+  deviceName,
+  ipAddress,
+  location,
+}: {
+  userName: string;
+  deviceName: string;
+  ipAddress: string;
+  location?: string;
+}) {
+  const securitySettingsUrl = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings/security`;
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Trusted Device Added</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">New Trusted Device Added</h1>
+  </div>
+
+  <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+    <p>Hi ${userName},</p>
+
+    <p>A new device has been added to your trusted devices list. This device can now skip two-factor authentication for the next 30 days.</p>
+
+    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
+      <p style="margin: 5px 0;"><strong>Device:</strong> ${deviceName}</p>
+      <p style="margin: 5px 0;"><strong>IP Address:</strong> ${ipAddress}</p>
+      ${location ? `<p style="margin: 5px 0;"><strong>Location:</strong> ${location}</p>` : ""}
+      <p style="margin: 5px 0;"><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+    </div>
+
+    <p style="color: #666;">If you did not add this device, please review your security settings immediately and remove any unrecognized devices.</p>
+
+    <a href="${securitySettingsUrl}" style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px;">Review Security Settings</a>
+
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">Best regards,<br>The KinderCare Team</p>
+  </div>
+</body>
+</html>
+  `.trim();
+}

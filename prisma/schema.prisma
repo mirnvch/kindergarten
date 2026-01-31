@@ -124,6 +124,7 @@ model User {
 
   // Security relations
   twoFactorAuth      TwoFactorAuth?
+  trustedDevices     TrustedDevice[]
   loginAttempts      LoginAttempt[]
   userSessions       UserSession[]
   dataExportRequests DataExportRequest[]
@@ -791,6 +792,24 @@ model TwoFactorBackupCode {
   twoFactorAuth TwoFactorAuth @relation(fields: [twoFactorAuthId], references: [id], onDelete: Cascade)
 
   @@index([twoFactorAuthId])
+}
+
+model TrustedDevice {
+  id         String   @id @default(cuid())
+  userId     String
+  deviceHash String   // Hash of user-agent + IP + accept-language
+  name       String?  // e.g. "Chrome on macOS"
+  userAgent  String
+  ipAddress  String
+  lastUsedAt DateTime @default(now())
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceHash])
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model LoginAttempt {
