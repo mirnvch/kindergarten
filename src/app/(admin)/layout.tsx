@@ -24,7 +24,7 @@ export default async function AdminLayout({
   const user = {
     firstName: session.user.firstName,
     lastName: session.user.lastName,
-    email: session.user.email,
+    email: session.user.email ?? "",
     role: session.user.role,
   };
 

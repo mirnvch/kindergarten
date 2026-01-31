@@ -13,7 +13,7 @@ export default async function MarketingLayout({
     ? {
         firstName: session.user.firstName,
         lastName: session.user.lastName,
-        email: session.user.email,
+        email: session.user.email ?? "",
         avatarUrl: session.user.image,
         role: session.user.role,
       }

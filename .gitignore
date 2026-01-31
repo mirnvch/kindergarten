@@ -49,6 +49,9 @@ next-env.d.ts
 .mcp.json
 .taskmaster/
 
+# Turborepo
+.turbo
+
 # PWA
 /public/sw.js
 /public/sw.js.map

@@ -63,9 +63,19 @@ const stats = [
 export default async function HomePage() {
   const session = await auth();
 
+  const user = session?.user
+    ? {
+        firstName: session.user.firstName,
+        lastName: session.user.lastName,
+        email: session.user.email ?? "",
+        avatarUrl: session.user.image,
+        role: session.user.role,
+      }
+    : null;
+
   return (
     <div className="flex min-h-screen flex-col">
-      <Header user={session?.user} />
+      <Header user={user} />
 
       <main className="flex-1">
         {/* Hero Section */}
