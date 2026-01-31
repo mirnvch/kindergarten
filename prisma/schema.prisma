@@ -129,6 +129,10 @@ model User {
   userSessions       UserSession[]
   dataExportRequests DataExportRequest[]
 
+  // Analytics relations
+  pageViews       PageView[]
+  analyticsEvents AnalyticsEvent[]
+
   @@index([email])
   @@index([role])
 }
@@ -262,6 +266,11 @@ model Daycare {
   waitlist         WaitlistEntry[]
   favorites        Favorite[]
   verificationRequests VerificationRequest[]
+
+  // Analytics relations
+  pageViews       PageView[]
+  analyticsEvents AnalyticsEvent[]
+  dailyAnalytics  DailyAnalytics[]
 
   @@index([slug])
   @@index([city, state])
@@ -859,4 +868,73 @@ model DataExportRequest {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, status])
+}
+
+// ==================== ANALYTICS ====================
+
+model PageView {
+  id         String   @id @default(cuid())
+  daycareId  String
+  userId     String?  // Null for anonymous visitors
+  sessionId  String   // Anonymous session tracking
+  path       String   // e.g. "/daycare/sunny-kids"
+  referrer   String?  // Where they came from
+  source     String?  // "search", "direct", "referral", "social", "email"
+  userAgent  String?
+  ipAddress  String?
+  country    String?
+  city       String?
+  deviceType String?  // "desktop", "mobile", "tablet"
+  duration   Int?     // Time on page in seconds
+  createdAt  DateTime @default(now())
+
+  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([daycareId, createdAt])
+  @@index([userId])
+  @@index([sessionId])
+  @@index([source])
+  @@index([createdAt])
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(cuid())
+  daycareId  String?
+  userId     String?
+  sessionId  String
+  eventType  String   // "booking_started", "booking_completed", "message_sent", "contact_clicked", etc.
+  eventData  Json?    // Additional event data
+  path       String?
+  createdAt  DateTime @default(now())
+
+  daycare Daycare? @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([daycareId, eventType, createdAt])
+  @@index([eventType, createdAt])
+  @@index([userId])
+  @@index([sessionId])
+}
+
+// Aggregated daily stats for faster dashboard queries
+model DailyAnalytics {
+  id          String   @id @default(cuid())
+  daycareId   String?  // Null for platform-wide stats
+  date        DateTime @db.Date
+  pageViews   Int      @default(0)
+  uniqueVisitors Int   @default(0)
+  bookingStarts  Int   @default(0)
+  bookingCompletes Int @default(0)
+  messagesSent   Int   @default(0)
+  contactClicks  Int   @default(0)
+  searchImpressions Int @default(0)
+  searchClicks   Int   @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  daycare Daycare? @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+
+  @@unique([daycareId, date])
+  @@index([date])
 }

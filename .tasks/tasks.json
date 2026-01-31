@@ -493,7 +493,7 @@
       "id": 14,
       "title": "Analytics Dashboard",
       "description": "Build comprehensive analytics for platform and daycares",
-      "status": "pending",
+      "status": "done",
       "priority": "low",
       "complexity": 4,
       "phase": "5.1",
@@ -501,11 +501,11 @@
       "blockedBy": [1, 5],
       "blocks": [],
       "subtasks": [
-        { "id": "14.1", "title": "Set up analytics tracking", "done": false },
-        { "id": "14.2", "title": "Build admin analytics dashboard", "done": false },
-        { "id": "14.3", "title": "Create daycare analytics page", "done": false },
-        { "id": "14.4", "title": "Implement booking funnel tracking", "done": false },
-        { "id": "14.5", "title": "Add export to CSV/PDF", "done": false }
+        { "id": "14.1", "title": "Set up analytics tracking", "done": true },
+        { "id": "14.2", "title": "Build admin analytics dashboard", "done": true },
+        { "id": "14.3", "title": "Create daycare analytics page", "done": true },
+        { "id": "14.4", "title": "Implement booking funnel tracking", "done": true },
+        { "id": "14.5", "title": "Add export to CSV/PDF", "done": true }
       ],
       "acceptanceCriteria": [
         "Admin sees platform metrics",
@@ -514,13 +514,22 @@
         "Can export reports"
       ],
       "affectedFiles": [
-        "src/app/(admin)/admin/analytics/*",
-        "src/app/(portal)/portal/analytics/*",
-        "src/lib/analytics.ts"
+        "prisma/schema.prisma (PageView, AnalyticsEvent, DailyAnalytics)",
+        "src/server/actions/analytics.ts",
+        "src/app/(admin)/admin/analytics/page.tsx",
+        "src/components/analytics/page-view-tracker.tsx",
+        "src/components/analytics/export-button.tsx"
       ],
-      "notes": [],
+      "notes": [
+        "2026-01-31: Added Prisma models - PageView, AnalyticsEvent, DailyAnalytics",
+        "2026-01-31: Created analytics server actions with tracking, platform/daycare queries, CSV export",
+        "2026-01-31: Built admin analytics page with overview, funnel, top daycares, distributions",
+        "2026-01-31: Added PageViewTracker component for daycare pages",
+        "2026-01-31: Portal analytics already existed with basic stats and premium features"
+      ],
+      "completedAt": "2026-01-31T20:00:00Z",
       "createdAt": "2026-01-29T14:00:00Z",
-      "updatedAt": "2026-01-29T14:00:00Z"
+      "updatedAt": "2026-01-31T20:00:00Z"
     },
     {
       "id": 15,

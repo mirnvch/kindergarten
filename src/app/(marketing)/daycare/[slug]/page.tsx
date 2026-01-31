@@ -35,6 +35,7 @@ import { ReviewsSection } from "@/components/reviews/reviews-section";
 import { canUserReview } from "@/server/actions/reviews";
 import { WaitlistForm } from "@/components/waitlist/waitlist-form";
 import { ContactDaycareButton } from "@/components/daycare/contact-button";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 
 interface DaycarePageProps {
   params: Promise<{ slug: string }>;
@@ -77,6 +78,9 @@ export default async function DaycarePage({ params }: DaycarePageProps) {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Analytics tracking */}
+      <PageViewTracker daycareId={daycare.id} />
+
       {/* Back link */}
       <Link
         href="/search"
