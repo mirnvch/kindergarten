@@ -239,6 +239,24 @@ dev branch → Test on Vercel Preview → main branch → Production
 
 ## Session Notes
 
+### 2026-02-02 (Session 19 — CodeRabbit Review)
+- **CodeRabbit Review Fixes — COMPLETED**
+- Fixed 11 issues found by CodeRabbit:
+  - **Major:** Created `GoBackButton` client component (not-found.tsx used javascript:)
+  - **Accessibility:** Added sr-only labels for inputs (community, help)
+  - **Accessibility:** Added aria-label for icon-only links (press)
+  - **Security:** Added maxAttempts limit to slug generation loop
+  - **UX:** Replaced href="#" with static "Coming soon" state
+  - **UX:** Updated contact form toast to indicate demo mode
+  - **Content:** Updated dates to February 2, 2026 (privacy, terms)
+  - **Linting:** Removed quotes from .env.example
+- **Lessons Learned:**
+  - Always add aria-label for icon-only buttons/links
+  - Always add labels for form inputs (even hidden ones via sr-only)
+  - Never use javascript: in Server Components — create Client Component
+  - Always add safety limits to loops
+  - Check knowledge.md patterns BEFORE coding
+
 ### 2026-02-02 (Session 19 continued)
 - **Navigation Link Audit — COMPLETED**
 - Found and fixed 3 broken links:

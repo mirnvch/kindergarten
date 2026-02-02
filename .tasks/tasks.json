@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "KinderCare",
-  "lastTaskId": 42,
+  "lastTaskId": 43,
   "currentTaskId": null,
   "tasks": [
     {
@@ -1484,6 +1484,53 @@
       "completedAt": "2026-02-02T16:30:00Z",
       "createdAt": "2026-02-02T16:00:00Z",
       "updatedAt": "2026-02-02T16:30:00Z"
+    },
+    {
+      "id": 43,
+      "title": "Fix CodeRabbit Review Issues",
+      "description": "Address all issues found by CodeRabbit automated code review on PR #10",
+      "status": "done",
+      "priority": "high",
+      "complexity": 2,
+      "phase": "BP",
+      "tags": ["code-review", "accessibility", "security"],
+      "blockedBy": [42],
+      "blocks": [],
+      "subtasks": [
+        { "id": "43.1", "title": "Fix not-found.tsx javascript: URL (Major)", "done": true },
+        { "id": "43.2", "title": "Add accessibility labels for inputs", "done": true },
+        { "id": "43.3", "title": "Add aria-labels for icon-only links", "done": true },
+        { "id": "43.4", "title": "Add safety limit to slug generation loop", "done": true },
+        { "id": "43.5", "title": "Replace placeholder href='#' links", "done": true },
+        { "id": "43.6", "title": "Update contact form toast message", "done": true },
+        { "id": "43.7", "title": "Update dates in legal pages", "done": true },
+        { "id": "43.8", "title": "Fix .env.example linting", "done": true }
+      ],
+      "acceptanceCriteria": [
+        "All CodeRabbit issues resolved",
+        "Build passes",
+        "No new lint errors"
+      ],
+      "affectedFiles": [
+        "src/app/not-found.tsx",
+        "src/components/ui/go-back-button.tsx",
+        "src/app/(marketing)/community/page.tsx",
+        "src/app/(marketing)/help/page.tsx",
+        "src/app/(marketing)/press/page.tsx",
+        "src/app/(marketing)/privacy/page.tsx",
+        "src/app/(marketing)/terms/page.tsx",
+        "src/app/(marketing)/contact/page.tsx",
+        "src/server/actions/portal/daycare.ts",
+        ".env.example"
+      ],
+      "notes": [
+        "2026-02-02: CodeRabbit found 1 major + 10 minor issues",
+        "2026-02-02: Created GoBackButton client component for history.back()",
+        "2026-02-02: Added lessons learned to knowledge.md"
+      ],
+      "completedAt": "2026-02-02T17:30:00Z",
+      "createdAt": "2026-02-02T17:00:00Z",
+      "updatedAt": "2026-02-02T17:30:00Z"
     }
   ]
 }
