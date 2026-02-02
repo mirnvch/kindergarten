@@ -2,14 +2,32 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import dynamic from "next/dynamic";
+import { ChevronLeft, ChevronRight, MapPin, Loader2 } from "lucide-react";
 
 import { SearchFilters } from "./search-filters";
-import { SearchMap } from "./search-map";
 import { SaveSearchButton } from "./save-search-button";
 import { DaycareCard } from "@/components/daycare/daycare-card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { DaycareSearchResult } from "@/server/actions/daycare";
+
+// Dynamic import for SearchMap (Mapbox GL is heavy ~200KB)
+// Only loaded when user switches to map view
+const SearchMap = dynamic(
+  () => import("./search-map").then((mod) => mod.SearchMap),
+  {
+    loading: () => (
+      <div className="aspect-[4/3] w-full rounded-lg bg-muted flex items-center justify-center">
+        <div className="text-center space-y-2">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading map...</p>
+        </div>
+      </div>
+    ),
+    ssr: false, // Mapbox GL doesn't support SSR
+  }
+);
 
 interface SearchResultsClientProps {
   daycares: DaycareSearchResult[];

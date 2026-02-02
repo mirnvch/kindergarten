@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "KinderCare",
-  "lastTaskId": 40,
+  "lastTaskId": 41,
   "currentTaskId": null,
   "tasks": [
     {
@@ -1115,7 +1115,7 @@
       "id": 35,
       "title": "Initialize Turborepo Structure",
       "description": "Set up Turborepo monorepo with apps/ and packages/ directories",
-      "status": "done",
+      "status": "reverted",
       "priority": "high",
       "complexity": 3,
       "phase": "M.1",
@@ -1151,17 +1151,19 @@
         "2026-02-01: Using npm workspaces (already using npm), created packageManager field",
         "2026-02-01: Created 6 packages: ui, database, auth, utils, email, tsconfig",
         "2026-02-01: Created shared TypeScript configs (base.json, nextjs.json, react-library.json)",
-        "2026-02-01: Build and tests pass successfully"
+        "2026-02-01: Build and tests pass successfully",
+        "2026-02-02: REVERTED - решили деплоить как монолит, удалены apps/, packages/, turbo.json"
       ],
       "completedAt": "2026-02-01T00:10:00Z",
+      "revertedAt": "2026-02-02T15:30:00Z",
       "createdAt": "2026-01-31T22:00:00Z",
-      "updatedAt": "2026-02-01T00:10:00Z"
+      "updatedAt": "2026-02-02T15:30:00Z"
     },
     {
       "id": 36,
       "title": "Create UI Package (@kindergarten/ui)",
       "description": "Extract shared UI components to packages/ui with proper exports",
-      "status": "done",
+      "status": "reverted",
       "priority": "high",
       "complexity": 2,
       "phase": "M.2",
@@ -1190,17 +1192,19 @@
         "2026-02-01: Created UI package with cn utility and core components",
         "2026-02-01: Migrated: button, card, input, label, textarea, skeleton, badge, dialog",
         "2026-02-01: Remaining 20 components stay in src/components/ui/ until app split",
-        "2026-02-01: Package builds successfully with turbo"
+        "2026-02-01: Package builds successfully with turbo",
+        "2026-02-02: REVERTED - monorepo не используется"
       ],
       "completedAt": "2026-02-01T00:20:00Z",
+      "revertedAt": "2026-02-02T15:30:00Z",
       "createdAt": "2026-01-31T22:00:00Z",
-      "updatedAt": "2026-02-01T00:20:00Z"
+      "updatedAt": "2026-02-02T15:30:00Z"
     },
     {
       "id": 37,
       "title": "Create Database Package (@kindergarten/database)",
       "description": "Extract Prisma schema and client to packages/database",
-      "status": "done",
+      "status": "reverted",
       "priority": "high",
       "complexity": 2,
       "phase": "M.2",
@@ -1228,17 +1232,19 @@
       "notes": [
         "2026-02-01: Created database package with db client and type exports",
         "2026-02-01: Re-exports all Prisma model types and enums",
-        "2026-02-01: Prisma schema stays at root level until Task #39"
+        "2026-02-01: Prisma schema stays at root level until Task #39",
+        "2026-02-02: REVERTED - monorepo не используется"
       ],
       "completedAt": "2026-02-01T00:30:00Z",
+      "revertedAt": "2026-02-02T15:30:00Z",
       "createdAt": "2026-01-31T22:00:00Z",
-      "updatedAt": "2026-02-01T00:30:00Z"
+      "updatedAt": "2026-02-02T15:30:00Z"
     },
     {
       "id": 38,
       "title": "Create Auth Package (@kindergarten/auth)",
       "description": "Extract NextAuth configuration to packages/auth with cross-domain cookie support",
-      "status": "done",
+      "status": "reverted",
       "priority": "high",
       "complexity": 3,
       "phase": "M.2",
@@ -1269,17 +1275,19 @@
         "Need to test locally with /etc/hosts entries",
         "2026-02-01: Created auth package with Edge-compatible config",
         "2026-02-01: Local types avoid conflicts with main app type augmentations",
-        "2026-02-01: Cookie config prepared for cross-subdomain auth"
+        "2026-02-01: Cookie config prepared for cross-subdomain auth",
+        "2026-02-02: REVERTED - monorepo не используется"
       ],
       "completedAt": "2026-02-01T00:40:00Z",
+      "revertedAt": "2026-02-02T15:30:00Z",
       "createdAt": "2026-01-31T22:00:00Z",
-      "updatedAt": "2026-01-31T22:00:00Z"
+      "updatedAt": "2026-02-02T15:30:00Z"
     },
     {
       "id": 39,
       "title": "Split into Separate Apps",
       "description": "Create apps/web, apps/portal, apps/admin from current monolith",
-      "status": "done",
+      "status": "reverted",
       "priority": "high",
       "complexity": 4,
       "phase": "M.3",
@@ -1314,17 +1322,20 @@
         "2026-02-01: Admin app has dashboard page with DB queries",
         "2026-02-01: Portal and web apps are shell apps ready for route migration",
         "2026-02-01: Full route migration deferred - monolith continues to work",
-        "2026-02-01: Excluded apps/ and packages/ from root tsconfig"
+        "2026-02-01: Excluded apps/ and packages/ from root tsconfig",
+        "2026-02-02: REVERTED - monorepo не используется"
       ],
       "completedAt": "2026-02-01T01:00:00Z",
+      "revertedAt": "2026-02-02T15:30:00Z",
       "createdAt": "2026-01-31T22:00:00Z",
-      "updatedAt": "2026-02-01T01:00:00Z"
+      "updatedAt": "2026-02-02T15:30:00Z"
     },
     {
       "id": 40,
       "title": "DNS & Vercel Deployment",
       "description": "Configure subdomains and deploy each app to Vercel",
-      "status": "blocked",
+      "status": "reverted",
+      "completedAt": "2026-02-02T12:00:00Z",
       "priority": "high",
       "complexity": 2,
       "phase": "M.4",
@@ -1333,18 +1344,18 @@
       "blocks": [],
       "subtasks": [
         { "id": "40.0", "title": "Create vercel.json for each app", "done": true },
-        { "id": "40.1", "title": "Create Vercel project for apps/web", "done": false, "note": "Manual: vercel link" },
-        { "id": "40.2", "title": "Create Vercel project for apps/portal", "done": false, "note": "Manual: vercel link" },
-        { "id": "40.3", "title": "Create Vercel project for apps/admin", "done": false, "note": "Manual: vercel link" },
-        { "id": "40.4", "title": "Configure DNS for portal.kindergarten.com", "done": false, "note": "Requires custom domain" },
-        { "id": "40.5", "title": "Configure DNS for admin.kindergarten.com", "done": false, "note": "Requires custom domain" },
-        { "id": "40.6", "title": "Update OAuth redirect URLs in Google Console", "done": false },
-        { "id": "40.7", "title": "Smoke test all production apps", "done": false }
+        { "id": "40.1", "title": "Create Vercel project for apps/web", "done": true },
+        { "id": "40.2", "title": "Create Vercel project for apps/portal", "done": true },
+        { "id": "40.3", "title": "Create Vercel project for apps/admin", "done": true },
+        { "id": "40.4", "title": "Configure DNS for portal.toddlerhq.com", "done": true },
+        { "id": "40.5", "title": "Configure DNS for admin.toddlerhq.com", "done": true },
+        { "id": "40.6", "title": "Update OAuth redirect URLs in Google Console", "done": false, "note": "Manual: user needs to add redirect URLs" },
+        { "id": "40.7", "title": "Smoke test all production apps", "done": true }
       ],
       "acceptanceCriteria": [
-        "kindergarten.com serves web app",
-        "portal.kindergarten.com serves portal app",
-        "admin.kindergarten.com serves admin app",
+        "toddlerhq.com serves web app",
+        "portal.toddlerhq.com serves portal app",
+        "admin.toddlerhq.com serves admin app",
         "Auth works across all domains",
         "OAuth redirects work on all domains"
       ],
@@ -1355,14 +1366,66 @@
         ".tasks/DEPLOYMENT.md"
       ],
       "notes": [
-        "May need custom domain if using kindergarten-lime.vercel.app",
-        "Consider IP whitelist for admin subdomain",
         "2026-02-01: Created vercel.json configs for all 3 apps",
         "2026-02-01: Created deployment guide at .tasks/DEPLOYMENT.md",
-        "2026-02-01: BLOCKED: Requires manual Vercel project creation and custom domain setup"
+        "2026-02-02: Purchased domain toddlerhq.com on Cloudflare",
+        "2026-02-02: Configured DNS: A record for root, CNAME for www/portal/admin",
+        "2026-02-02: Created 3 Vercel projects with environment variables",
+        "2026-02-02: All apps deployed and accessible",
+        "2026-02-02: Portal/Admin show 404 on root - need landing pages (Task #41)",
+        "2026-02-02: REVERTED - деплоим как монолит на toddlerhq.com"
       ],
+      "revertedAt": "2026-02-02T15:30:00Z",
       "createdAt": "2026-01-31T22:00:00Z",
-      "updatedAt": "2026-02-01T01:00:00Z"
+      "updatedAt": "2026-02-02T15:30:00Z"
+    },
+    {
+      "id": 41,
+      "title": "Полный рефакторинг согласно Best Practices",
+      "description": "Рефакторинг проекта для устранения дублирования кода, создания service layer, улучшения тестируемости и безопасности. Целевая оценка: 7.7/10 → 9.0/10",
+      "status": "done",
+      "priority": "high",
+      "complexity": 5,
+      "phase": "BP",
+      "tags": ["refactoring", "architecture", "best-practices"],
+      "blockedBy": [],
+      "blocks": [],
+      "subtasks": [
+        { "id": "41.1", "title": "Фаза 1: Централизованный ActionResult и хелперы", "done": true },
+        { "id": "41.2", "title": "Фаза 2: DRY для Layout и Sidebar (~840 строк)", "done": true },
+        { "id": "41.3", "title": "Фаза 3: Service Layer", "done": true },
+        { "id": "41.4", "title": "Фаза 4: Консолидация Zod валидации", "done": true },
+        { "id": "41.5", "title": "Фаза 5: Unit тесты для services", "done": true },
+        { "id": "41.6", "title": "Фаза 6: Оптимизация производительности", "done": true },
+        { "id": "41.7", "title": "Фаза 7: Безопасность (CSP, 2FA Admin)", "done": true }
+      ],
+      "acceptanceCriteria": [
+        "ActionResult<T> в одном месте",
+        "DashboardLayout и BaseSidebar переиспользуются",
+        "Service layer для booking и child",
+        "Zod схемы централизованы",
+        "Unit test coverage ~40%",
+        "CSP headers настроены",
+        "2FA обязателен для Admin"
+      ],
+      "affectedFiles": [
+        "src/types/action-result.ts",
+        "src/lib/action-helpers.ts",
+        "src/components/shared/",
+        "src/server/services/",
+        "src/server/validators/",
+        "next.config.ts",
+        "src/app/(admin)/layout.tsx",
+        "src/app/admin/setup-2fa/"
+      ],
+      "notes": [
+        "2026-02-02: Начат рефакторинг по плану Best Practices",
+        "2026-02-02: Фаза 1-6 выполнены (ActionResult, DRY layouts, Service Layer, Validators, Tests, Performance)",
+        "2026-02-02: Фаза 7 выполнена - CSP headers добавлены, mandatory 2FA для Admin реализован"
+      ],
+      "completedAt": "2026-02-02T15:00:00Z",
+      "createdAt": "2026-02-02T12:00:00Z",
+      "updatedAt": "2026-02-02T15:00:00Z"
     }
   ]
 }

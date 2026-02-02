@@ -1,10 +1,7 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ParentSidebar } from "@/components/parent/parent-sidebar";
+import { DashboardLayout } from "@/components/shared";
 import { getUnreadNotificationsCount } from "@/server/actions/notifications";
 import { needs2FAVerification } from "@/server/actions/security/two-factor";
 
@@ -38,38 +35,24 @@ export default async function ParentLayout({
 
   const notificationCount = await getUnreadNotificationsCount();
 
+  const sidebar = (
+    <ParentSidebar user={user} notificationCount={notificationCount} />
+  );
+
   return (
-    <div className="min-h-screen bg-muted/30">
-      {/* Mobile header */}
-      <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b bg-background px-4 md:hidden">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-0">
-            <ParentSidebar user={user} notificationCount={notificationCount} />
-          </SheetContent>
-        </Sheet>
-        <Link href="/dashboard" className="flex items-center gap-2">
+    <DashboardLayout
+      sidebar={sidebar}
+      branding={{
+        icon: (
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <span className="text-lg font-bold text-primary-foreground">K</span>
           </div>
-          <span className="font-bold">KinderCare</span>
-        </Link>
-      </header>
-
-      <div className="flex">
-        {/* Desktop sidebar */}
-        <aside className="hidden w-72 border-r bg-background md:block">
-          <ParentSidebar user={user} notificationCount={notificationCount} />
-        </aside>
-
-        {/* Main content */}
-        <main className="flex-1 p-6">{children}</main>
-      </div>
-    </div>
+        ),
+        text: "KinderCare",
+        href: "/dashboard",
+      }}
+    >
+      {children}
+    </DashboardLayout>
   );
 }

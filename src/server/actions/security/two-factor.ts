@@ -15,12 +15,7 @@ import {
 } from "@/lib/totp";
 import { rateLimit } from "@/lib/rate-limit";
 import { cookies } from "next/headers";
-
-type ActionResult<T = void> = {
-  success: boolean;
-  error?: string;
-  data?: T;
-};
+import type { ActionResult } from "@/types/action-result";
 
 /**
  * Start 2FA setup - generates secret and QR code

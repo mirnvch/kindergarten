@@ -4,12 +4,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { sendEmail } from "@/lib/email";
-
-type ActionResult<T = void> = {
-  success: boolean;
-  error?: string;
-  data?: T;
-};
+import type { ActionResult } from "@/types/action-result";
 
 export interface DataExportStatus {
   id: string;

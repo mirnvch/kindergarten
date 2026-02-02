@@ -4,12 +4,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { parseUserAgent, getDeviceDescription } from "@/lib/user-agent";
 import crypto from "crypto";
-
-type ActionResult<T = void> = {
-  success: boolean;
-  error?: string;
-  data?: T;
-};
+import type { ActionResult } from "@/types/action-result";
 
 export interface SessionInfo {
   id: string;

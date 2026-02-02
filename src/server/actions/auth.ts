@@ -94,11 +94,10 @@ const loginSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 
-// Action results
-type ActionResult<T = void> = {
-  success: boolean;
-  error?: string;
-  data?: T;
+import type { ActionResult } from "@/types/action-result";
+
+// Extended result type for auth actions with 2FA support
+type AuthActionResult<T = void> = ActionResult<T> & {
   requires2FA?: boolean;
   userId?: string;
 };
@@ -203,7 +202,7 @@ export async function registerUser(
 
 export async function loginWithCredentials(
   input: LoginInput
-): Promise<ActionResult> {
+): Promise<AuthActionResult> {
   const ipAddress = await getClientIP();
   const userAgent = await getUserAgent();
 

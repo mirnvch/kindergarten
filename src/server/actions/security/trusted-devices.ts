@@ -6,15 +6,10 @@ import { headers } from "next/headers";
 import crypto from "crypto";
 import { parseUserAgent } from "@/lib/user-agent";
 import { sendEmailAsync, newTrustedDeviceEmail } from "@/lib/email";
+import type { ActionResult } from "@/types/action-result";
 
 const MAX_TRUSTED_DEVICES = 5;
 const TRUSTED_DEVICE_TTL_DAYS = 30;
-
-type ActionResult<T = void> = {
-  success: boolean;
-  error?: string;
-  data?: T;
-};
 
 /**
  * Generate a device hash from request headers

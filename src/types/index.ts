@@ -5,6 +5,13 @@
 
 import { Prisma } from "@prisma/client";
 
+// Re-export ActionResult types for convenience
+export type {
+  ActionResult,
+  PaginatedResult,
+  ActionResultWithMeta,
+} from "./action-result";
+
 // ==================== BOOKING TYPES ====================
 
 /**

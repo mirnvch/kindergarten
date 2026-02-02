@@ -6,12 +6,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { sendEmail } from "@/lib/email";
 import bcrypt from "bcryptjs";
 import { revokeAllUserSessions } from "./sessions";
-
-type ActionResult<T = void> = {
-  success: boolean;
-  error?: string;
-  data?: T;
-};
+import type { ActionResult } from "@/types/action-result";
 
 // Grace period in days before account is permanently deleted
 const DELETION_GRACE_PERIOD_DAYS = 14;

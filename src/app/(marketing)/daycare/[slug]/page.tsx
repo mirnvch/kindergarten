@@ -41,6 +41,13 @@ interface DaycarePageProps {
   params: Promise<{ slug: string }>;
 }
 
+/**
+ * Enable ISR (Incremental Static Regeneration).
+ * Daycare pages are revalidated every 5 minutes.
+ * This balances freshness with performance.
+ */
+export const revalidate = 300; // 5 minutes
+
 export async function generateMetadata({
   params,
 }: DaycarePageProps): Promise<Metadata> {
