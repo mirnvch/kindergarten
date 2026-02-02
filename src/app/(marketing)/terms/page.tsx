@@ -12,7 +12,7 @@ export default function TermsPage() {
       <div className="mx-auto max-w-3xl">
         <h1 className="mb-4 text-4xl font-bold">Terms of Service</h1>
         <p className="mb-8 text-muted-foreground">
-          Last updated: January 1, 2025
+          Last updated: February 2, 2026
         </p>
 
         {/* Table of Contents */}

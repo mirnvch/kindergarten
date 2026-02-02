@@ -94,12 +94,16 @@ export async function createDaycare(data: z.infer<typeof createDaycareSchema>) {
   try {
     const validated = createDaycareSchema.parse(data);
 
-    // Generate unique slug
+    // Generate unique slug with safety limit
     const baseSlug = slugify(validated.name);
     let slug = baseSlug;
     let counter = 1;
+    const maxAttempts = 100;
 
     while (await db.daycare.findUnique({ where: { slug } })) {
+      if (counter > maxAttempts) {
+        return { success: false, error: "Unable to generate unique name. Please try a different daycare name." };
+      }
       slug = `${baseSlug}-${counter}`;
       counter++;
     }
@@ -123,7 +127,9 @@ export async function createDaycare(data: z.infer<typeof createDaycareSchema>) {
           openingTime: validated.openingTime,
           closingTime: validated.closingTime,
           pricePerMonth: validated.pricePerMonth,
-          // Default coordinates (will be updated later via geocoding)
+          // TODO: Implement geocoding to convert address to coordinates
+          // Currently using placeholder (0,0) - daycares won't appear in location-based search
+          // until coordinates are updated via geocoding service (e.g., Mapbox, Google Geocoding API)
           latitude: 0,
           longitude: 0,
           operatingDays: ["Mon", "Tue", "Wed", "Thu", "Fri"],

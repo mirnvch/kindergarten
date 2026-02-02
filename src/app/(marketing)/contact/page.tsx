@@ -24,10 +24,11 @@ export default function ContactPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission
+    // TODO: Implement real contact form submission via server action
+    // For now, simulate form submission
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    toast.success("Message sent! We'll get back to you soon.");
+    toast.info("Thank you for your message! Contact form submission coming soon.");
     setIsSubmitting(false);
     (e.target as HTMLFormElement).reset();
   };

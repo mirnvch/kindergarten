@@ -128,7 +128,12 @@ export default function PressPage() {
                     <p className="text-sm text-muted-foreground">{release.excerpt}</p>
                   </div>
                   <Button variant="ghost" size="sm" asChild>
-                    <a href={release.link}>
+                    <a
+                      href={release.link}
+                      aria-label={`Read press release: ${release.title}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <ExternalLink className="h-4 w-4" />
                     </a>
                   </Button>

@@ -1,7 +1,8 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { Search, Home, ArrowLeft } from "lucide-react";
+import { Search, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { GoBackButton } from "@/components/ui/go-back-button";
 
 export const metadata: Metadata = {
   title: "Page Not Found | ToddlerHQ",
@@ -24,12 +25,7 @@ export default function NotFound() {
             Go Home
           </Link>
         </Button>
-        <Button variant="outline" size="lg" asChild>
-          <Link href="javascript:history.back()">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Go Back
-          </Link>
-        </Button>
+        <GoBackButton />
       </div>
 
       <div className="mt-12 border-t pt-8">

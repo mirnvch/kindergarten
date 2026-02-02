@@ -89,11 +89,11 @@ const categories = [
 ];
 
 const popularArticles = [
-  { title: "How do I reset my password?", href: "#" },
-  { title: "How to cancel a booking", href: "#" },
-  { title: "Updating payment information", href: "#" },
-  { title: "How verification works for daycares", href: "#" },
-  { title: "Understanding platform fees", href: "#" },
+  { title: "How do I reset my password?", href: "/help/reset-password", comingSoon: true },
+  { title: "How to cancel a booking", href: "/help/cancel-booking", comingSoon: true },
+  { title: "Updating payment information", href: "/help/payment-info", comingSoon: true },
+  { title: "How verification works for daycares", href: "/help/verification", comingSoon: true },
+  { title: "Understanding platform fees", href: "/help/platform-fees", comingSoon: true },
 ];
 
 export default function HelpPage() {
@@ -109,8 +109,12 @@ export default function HelpPage() {
         {/* Search */}
         <div className="mx-auto flex max-w-xl gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <label htmlFor="help-search" className="sr-only">
+              Search help articles
+            </label>
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
             <Input
+              id="help-search"
               placeholder="Search for help articles..."
               className="pl-10"
             />
@@ -124,14 +128,16 @@ export default function HelpPage() {
         <h2 className="mb-6 text-2xl font-bold">Popular Articles</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {popularArticles.map((article) => (
-            <Link
+            <div
               key={article.title}
-              href={article.href}
-              className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-muted/50"
+              className="flex items-center gap-3 rounded-lg border p-4 text-muted-foreground"
             >
               <HelpCircle className="h-5 w-5 flex-shrink-0 text-primary" />
               <span className="text-sm">{article.title}</span>
-            </Link>
+              {article.comingSoon && (
+                <span className="ml-auto text-xs text-muted-foreground">Soon</span>
+              )}
+            </div>
           ))}
         </div>
       </section>
@@ -152,13 +158,8 @@ export default function HelpPage() {
               <CardContent>
                 <ul className="space-y-2">
                   {category.articles.map((article) => (
-                    <li key={article}>
-                      <Link
-                        href="#"
-                        className="text-sm text-muted-foreground hover:text-foreground hover:underline"
-                      >
-                        {article}
-                      </Link>
+                    <li key={article} className="text-sm text-muted-foreground">
+                      {article}
                     </li>
                   ))}
                 </ul>
