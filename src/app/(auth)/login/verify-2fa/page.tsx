@@ -18,7 +18,7 @@ export default async function Verify2FAPage({ searchParams }: Verify2FAPageProps
 
   // For OAuth flow, get userId from cookie
   let userId = params.userId;
-  let callbackUrl = params.callbackUrl || "/dashboard";
+  const callbackUrl = params.callbackUrl || "/dashboard";
 
   if (params.oauth === "true") {
     const oauthCookie = cookieStore.get("oauth_2fa_pending");
