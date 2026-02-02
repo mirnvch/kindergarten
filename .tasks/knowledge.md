@@ -23,35 +23,23 @@ src/app/
 └── (admin)/      # Admin panel — с sidebar (red theme)
 ```
 
-### Target Architecture (Monorepo - Turborepo)
-**Решение принято:** 2026-01-31
+### ~~Target Architecture (Monorepo - Turborepo)~~ — ОТМЕНЕНО
 
-**Причины миграции:**
-- Безопасность: Admin panel не должен быть в том же bundle что и public site
-- Производительность: Parent app не грузит код admin/portal
-- Масштабирование: Portal может иметь больше трафика чем Admin
-- Независимые деплои: Можно деплоить admin без риска сломать parent
+> **Статус:** REVERTED (2026-02-02)
+> Monorepo был реализован (Tasks #35-40), но решено деплоить как монолит на toddlerhq.com.
+> Папки apps/, packages/, turbo.json удалены.
 
-**Целевая структура:**
+**Причина отмены:** Монолит проще для текущего масштаба проекта. При необходимости можно вернуться к monorepo позже.
+
+**Текущая архитектура:** Монолит с route groups
 ```
-kindergarten/
-├── apps/
-│   ├── web/              # kindergarten.com (marketing + parent)
-│   ├── portal/           # portal.kindergarten.com (owner portal)
-│   └── admin/            # admin.kindergarten.com (admin panel)
-├── packages/
-│   ├── ui/               # @kindergarten/ui — shared components
-│   ├── database/         # @kindergarten/database — Prisma
-│   ├── auth/             # @kindergarten/auth — NextAuth config
-│   ├── email/            # @kindergarten/email — templates + Resend
-│   └── utils/            # @kindergarten/utils — helpers
-└── turbo.json
+src/app/
+├── (auth)/       # Login, register
+├── (marketing)/  # Public pages
+├── (parent)/     # Parent dashboard
+├── (portal)/     # Daycare owner portal
+└── (admin)/      # Admin panel
 ```
-
-**Cross-Domain Auth:**
-- Cookie domain: `.kindergarten.com` для всех субдоменов
-- 2FA session cookie также на root domain
-- OAuth redirect URLs для каждого субдомена
 
 ### Role-Based Access
 | Role | Access |
@@ -250,6 +238,60 @@ dev branch → Test on Vercel Preview → main branch → Production
 ---
 
 ## Session Notes
+
+### 2026-02-02 (Session 19 continued)
+- **Navigation Link Audit — COMPLETED**
+- Found and fixed 3 broken links:
+  1. `/parent/children/${id}/edit` → `/dashboard/children/${id}/edit` (child-card.tsx)
+  2. `revalidatePath('/parent/children/${id}')` → `/dashboard/children/${id}` (children.ts)
+  3. Created missing `/portal/daycare/setup` page with form for new daycare creation
+- Added `createDaycare` server action to `portal/daycare.ts`
+- Total pages now: **64**
+
+### 2026-02-02 (Session 19)
+- **Task #42: Create 17 Missing Pages — COMPLETED**
+- Created all missing pages that were linked from navigation, buttons, and CTA elements:
+  - **Phase 1: Critical (Navigation)**
+    - `/portal/enrollments` — Enrollment management for daycare providers
+    - `/portal/settings` — Portal settings with profile, notifications, security
+    - `/portal/settings/security` — Security settings for portal users
+    - `/for-daycares` — Landing page for daycare providers
+  - **Phase 2: Legal Pages**
+    - `/privacy` — Privacy Policy
+    - `/terms` — Terms of Service
+    - `/cookies` — Cookie Policy
+  - **Phase 3: Marketing Pages**
+    - `/features` — Platform features overview
+    - `/contact` — Contact form with info cards
+    - `/help` — Help Center with categories
+    - `/safety` — Trust & Safety information
+    - `/careers` — Careers page (no positions)
+    - `/blog` — Blog (coming soon)
+    - `/press` — Press & Media kit
+    - `/community` — Community & social links
+  - **Phase 4: Error Pages**
+    - `/not-found.tsx` — Global 404 page
+    - `/(auth)/error.tsx` — Auth layout error page
+    - `/(marketing)/error.tsx` — Marketing layout error page
+  - **Phase 5: Settings Redirect**
+    - `/settings` — Role-based redirect to correct settings page
+- **New Files Created:**
+  - `src/server/actions/portal-enrollments.ts` — Server actions for enrollment management
+  - `src/components/portal/enrollment-card.tsx` — Enrollment card component
+- **Build verified:** All 17+ pages compile successfully
+- **Lint verified:** No new errors (only pre-existing warnings)
+
+### 2026-02-02 (Session 18)
+- **Documentation Sync — COMPLETED**
+- Обновлены файлы документации для соответствия реальному состоянию проекта:
+  - **CLAUDE.md:**
+    - Обновлена таблица фаз: R.x (done), M.x (reverted), BP (done)
+    - Секция "Целевая архитектура" переписана — теперь описывает монолит
+    - Обновлён URL деплоя: toddlerhq.com
+  - **knowledge.md:**
+    - Секция "Target Architecture" помечена как ОТМЕНЕНО
+    - Добавлено объяснение причины отмены monorepo
+- Проект деплоится как монолит на https://www.toddlerhq.com
 
 ### 2026-02-02 (Session 17)
 - **Task #41: Полный рефакторинг согласно Best Practices — COMPLETED**

@@ -124,7 +124,7 @@ export async function updateChild(id: string, data: ChildFormData) {
   });
 
   revalidatePath("/dashboard/children");
-  revalidatePath(`/parent/children/${id}`);
+  revalidatePath(`/dashboard/children/${id}`);
   revalidatePath("/dashboard");
   redirect("/dashboard/children");
 }

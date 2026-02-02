@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "project": "KinderCare",
-  "lastTaskId": 41,
+  "lastTaskId": 42,
   "currentTaskId": null,
   "tasks": [
     {
@@ -1426,6 +1426,64 @@
       "completedAt": "2026-02-02T15:00:00Z",
       "createdAt": "2026-02-02T12:00:00Z",
       "updatedAt": "2026-02-02T15:00:00Z"
+    },
+    {
+      "id": 42,
+      "title": "Create Missing Pages",
+      "description": "Create all missing pages that are linked from navigation, buttons, and CTA elements. Total: 17+ pages across marketing, portal, and error handling.",
+      "status": "done",
+      "priority": "high",
+      "complexity": 3,
+      "phase": "BP",
+      "tags": ["pages", "navigation", "ux"],
+      "blockedBy": [],
+      "blocks": [],
+      "subtasks": [
+        { "id": "42.1", "title": "Phase 1: Critical pages (enrollments, settings, for-daycares)", "done": true },
+        { "id": "42.2", "title": "Phase 2: Legal pages (privacy, terms, cookies)", "done": true },
+        { "id": "42.3", "title": "Phase 3: Marketing pages (features, contact, help, safety, careers, blog, press, community)", "done": true },
+        { "id": "42.4", "title": "Phase 4: Error pages (not-found, auth error, marketing error)", "done": true },
+        { "id": "42.5", "title": "Phase 5: Settings redirect (role-based)", "done": true }
+      ],
+      "acceptanceCriteria": [
+        "All navigation links work",
+        "All footer links work",
+        "All sidebar links work",
+        "404 page shows for non-existent URLs",
+        "/settings redirects correctly by role"
+      ],
+      "affectedFiles": [
+        "src/app/not-found.tsx",
+        "src/app/(portal)/portal/enrollments/page.tsx",
+        "src/app/(portal)/portal/settings/page.tsx",
+        "src/app/(portal)/portal/settings/security/page.tsx",
+        "src/app/(marketing)/for-daycares/page.tsx",
+        "src/app/(marketing)/privacy/page.tsx",
+        "src/app/(marketing)/terms/page.tsx",
+        "src/app/(marketing)/cookies/page.tsx",
+        "src/app/(marketing)/features/page.tsx",
+        "src/app/(marketing)/contact/page.tsx",
+        "src/app/(marketing)/help/page.tsx",
+        "src/app/(marketing)/safety/page.tsx",
+        "src/app/(marketing)/careers/page.tsx",
+        "src/app/(marketing)/blog/page.tsx",
+        "src/app/(marketing)/press/page.tsx",
+        "src/app/(marketing)/community/page.tsx",
+        "src/app/(auth)/error.tsx",
+        "src/app/(marketing)/error.tsx",
+        "src/app/settings/page.tsx",
+        "src/server/actions/portal-enrollments.ts",
+        "src/components/portal/enrollment-card.tsx"
+      ],
+      "notes": [
+        "2026-02-02: Created 17+ pages based on sitemap analysis",
+        "2026-02-02: Added enrollment management system (server actions + UI)",
+        "2026-02-02: All legal pages include TOC and proper sections",
+        "2026-02-02: Build and lint verified successfully"
+      ],
+      "completedAt": "2026-02-02T16:30:00Z",
+      "createdAt": "2026-02-02T16:00:00Z",
+      "updatedAt": "2026-02-02T16:30:00Z"
     }
   ]
 }

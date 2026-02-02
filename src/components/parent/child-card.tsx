@@ -93,7 +93,7 @@ export function ChildCard({ child }: ChildCardProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
-                <Link href={`/parent/children/${child.id}/edit`}>
+                <Link href={`/dashboard/children/${child.id}/edit`}>
                   <Pencil className="mr-2 h-4 w-4" />
                   Edit
                 </Link>

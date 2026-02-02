@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { slugify } from "@/lib/utils";
 
 async function requireDaycareOwner() {
   const session = await auth();
@@ -56,6 +58,110 @@ const profileSchema = z.object({
   minAge: z.number().min(0, "Min age must be at least 0"),
   maxAge: z.number().min(1, "Max age must be at least 1"),
 });
+
+const createDaycareSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  description: z.string().optional(),
+  email: z.string().email("Invalid email"),
+  phone: z.string().min(10, "Invalid phone number"),
+  address: z.string().min(5, "Address is required"),
+  city: z.string().min(2, "City is required"),
+  state: z.string().min(2, "State is required"),
+  zipCode: z.string().min(5, "Zip code is required"),
+  capacity: z.number().min(1, "Capacity must be at least 1"),
+  minAge: z.number().min(0, "Min age must be at least 0"),
+  maxAge: z.number().min(1, "Max age must be at least 1"),
+  openingTime: z.string().default("07:00"),
+  closingTime: z.string().default("18:00"),
+  pricePerMonth: z.number().min(0, "Price must be positive"),
+});
+
+export async function createDaycare(data: z.infer<typeof createDaycareSchema>) {
+  const session = await auth();
+  if (!session?.user) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  // Check if user already has a daycare
+  const existingStaff = await db.daycareStaff.findFirst({
+    where: { userId: session.user.id },
+  });
+
+  if (existingStaff) {
+    return { success: false, error: "You already have a daycare" };
+  }
+
+  try {
+    const validated = createDaycareSchema.parse(data);
+
+    // Generate unique slug
+    const baseSlug = slugify(validated.name);
+    let slug = baseSlug;
+    let counter = 1;
+
+    while (await db.daycare.findUnique({ where: { slug } })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
+    // Create daycare and staff record in transaction
+    await db.$transaction(async (tx) => {
+      const daycare = await tx.daycare.create({
+        data: {
+          name: validated.name,
+          slug,
+          description: validated.description || null,
+          email: validated.email,
+          phone: validated.phone,
+          address: validated.address,
+          city: validated.city,
+          state: validated.state,
+          zipCode: validated.zipCode,
+          capacity: validated.capacity,
+          minAge: validated.minAge,
+          maxAge: validated.maxAge,
+          openingTime: validated.openingTime,
+          closingTime: validated.closingTime,
+          pricePerMonth: validated.pricePerMonth,
+          // Default coordinates (will be updated later via geocoding)
+          latitude: 0,
+          longitude: 0,
+          operatingDays: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+          status: "PENDING",
+        },
+      });
+
+      await tx.daycareStaff.create({
+        data: {
+          daycareId: daycare.id,
+          userId: session.user.id,
+          role: "owner",
+        },
+      });
+
+      // Update user role if needed
+      if (session.user.role !== "DAYCARE_OWNER") {
+        await tx.user.update({
+          where: { id: session.user.id },
+          data: { role: "DAYCARE_OWNER" },
+        });
+      }
+    });
+
+    revalidatePath("/portal");
+    redirect("/portal/daycare");
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false, error: error.issues[0].message };
+    }
+    // Re-throw redirect
+    if ((error as { digest?: string }).digest?.startsWith("NEXT_REDIRECT")) {
+      throw error;
+    }
+    console.error("Error creating daycare:", error);
+    return { success: false, error: "Failed to create daycare" };
+  }
+}
 
 export async function updateDaycareProfile(data: z.infer<typeof profileSchema>) {
   try {
