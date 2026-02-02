@@ -239,6 +239,36 @@ dev branch → Test on Vercel Preview → main branch → Production
 
 ## Session Notes
 
+### 2026-02-02 (Session 20 — DocConnect Migration Phase 4)
+- **Миграция ToddlerHQ → DocConnect — IN PROGRESS**
+- **Выполнено в предыдущей сессии:**
+  - Фаза 2: База данных (Prisma schema) — DONE
+  - Фаза 3: Server Actions — DONE
+  - Фаза 4: Компоненты и страницы — 80% done
+- **Изменения терминологии:**
+  - Daycare → Provider
+  - Parent → Patient
+  - Booking → Appointment
+  - Child → FamilyMember
+  - PARENT role → PATIENT role
+  - DAYCARE_OWNER → PROVIDER
+  - DAYCARE_STAFF → CLINIC_STAFF
+- **Текущая ошибка билда:**
+  ```
+  Type error: Property 'daycareStaff' does not exist on type 'PrismaClient'
+  ```
+  - Некоторые portal pages всё ещё используют `db.daycareStaff` вместо `db.providerStaff`
+  - Также нужно заменить `include: { daycare: {...} }` на `include: { provider: {...} }`
+- **Файлы для исправления (завтра):**
+  - Portal pages с `db.daycareStaff`:
+    - src/app/(portal)/portal/billing/page.tsx
+    - src/app/(portal)/portal/payments/page.tsx
+    - src/app/(portal)/portal/verification/page.tsx
+    - И другие portal pages
+  - Settings page: `emailBookings` → `emailAppointments` в fallback
+- **Коммит WIP сделан:** 90 файлов изменено
+- **Следующее:** Исправить оставшиеся ошибки билда, продолжить Phase 4
+
 ### 2026-02-02 (Session 19 — CodeRabbit Review)
 - **CodeRabbit Review Fixes — COMPLETED**
 - Fixed 11 issues found by CodeRabbit:
