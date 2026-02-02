@@ -10,28 +10,28 @@ import { ReviewResponseForm } from "@/components/portal/review-response-form";
 import { Pagination } from "@/components/ui/pagination";
 
 export const metadata: Metadata = {
-  title: "Reviews | KinderCare Portal",
+  title: "Reviews | DocConnect Portal",
   description: "Manage your daycare reviews",
 };
 
 const REVIEWS_PER_PAGE = 10;
 
 async function getReviews(userId: string, page: number = 1) {
-  const daycareStaff = await db.daycareStaff.findFirst({
+  const providerStaff = await db.providerStaff.findFirst({
     where: { userId, role: { in: ["owner", "manager"] } },
     include: { daycare: true },
   });
 
-  if (!daycareStaff) {
+  if (!providerStaff) {
     return null;
   }
 
-  const daycareId = daycareStaff.daycare.id;
+  const providerId = providerStaff.daycare.id;
 
   // Get paginated reviews and stats in parallel
   const [reviews, totalCount, statsData] = await Promise.all([
     db.review.findMany({
-      where: { daycareId, isApproved: true },
+      where: { providerId, isApproved: true },
       include: {
         user: {
           select: {
@@ -46,10 +46,10 @@ async function getReviews(userId: string, page: number = 1) {
       take: REVIEWS_PER_PAGE,
     }),
     db.review.count({
-      where: { daycareId, isApproved: true },
+      where: { providerId, isApproved: true },
     }),
     db.review.aggregate({
-      where: { daycareId, isApproved: true },
+      where: { providerId, isApproved: true },
       _avg: { rating: true },
       _count: { _all: true },
     }),
@@ -57,13 +57,13 @@ async function getReviews(userId: string, page: number = 1) {
 
   // Get responded count separately (aggregate doesn't support conditional counts well)
   const respondedCount = await db.review.count({
-    where: { daycareId, isApproved: true, response: { not: null } },
+    where: { providerId, isApproved: true, response: { not: null } },
   });
 
   const avgRating = statsData._avg.rating || 0;
 
   return {
-    daycare: daycareStaff.daycare,
+    daycare: providerStaff.daycare,
     reviews,
     pagination: {
       page,

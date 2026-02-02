@@ -38,25 +38,25 @@ async function getOwnerDaycareId(): Promise<string | null> {
     return null;
   }
 
-  const staff = await db.daycareStaff.findFirst({
+  const staff = await db.providerStaff.findFirst({
     where: { userId: session.user.id },
-    select: { daycareId: true },
+    select: { providerId: true },
   });
 
-  return staff?.daycareId || null;
+  return staff?.providerId || null;
 }
 
 export async function getPortalEnrollments(
   filter: PortalEnrollmentFilter = "pending"
 ): Promise<PortalEnrollment[]> {
-  const daycareId = await getOwnerDaycareId();
-  if (!daycareId) {
+  const providerId = await getOwnerDaycareId();
+  if (!providerId) {
     throw new Error("Unauthorized");
   }
 
-  const enrollments = await db.enrollment.findMany({
+  const enrollments = await db.appointment.findMany({
     where: {
-      daycareId,
+      providerId,
       status: filter,
     },
     include: {
@@ -100,23 +100,23 @@ export async function getPortalEnrollments(
 }
 
 export async function getPortalEnrollmentStats() {
-  const daycareId = await getOwnerDaycareId();
-  if (!daycareId) {
+  const providerId = await getOwnerDaycareId();
+  if (!providerId) {
     throw new Error("Unauthorized");
   }
 
   const [pending, active, completed, cancelled] = await Promise.all([
-    db.enrollment.count({
-      where: { daycareId, status: "pending" },
+    db.appointment.count({
+      where: { providerId, status: "pending" },
     }),
-    db.enrollment.count({
-      where: { daycareId, status: "active" },
+    db.appointment.count({
+      where: { providerId, status: "active" },
     }),
-    db.enrollment.count({
-      where: { daycareId, status: "completed" },
+    db.appointment.count({
+      where: { providerId, status: "completed" },
     }),
-    db.enrollment.count({
-      where: { daycareId, status: "cancelled" },
+    db.appointment.count({
+      where: { providerId, status: "cancelled" },
     }),
   ]);
 
@@ -124,15 +124,15 @@ export async function getPortalEnrollmentStats() {
 }
 
 export async function approveEnrollment(enrollmentId: string) {
-  const daycareId = await getOwnerDaycareId();
-  if (!daycareId) {
+  const providerId = await getOwnerDaycareId();
+  if (!providerId) {
     throw new Error("Unauthorized");
   }
 
-  const enrollment = await db.enrollment.findFirst({
+  const enrollment = await db.appointment.findFirst({
     where: {
       id: enrollmentId,
-      daycareId,
+      providerId,
       status: "pending",
     },
   });
@@ -141,7 +141,7 @@ export async function approveEnrollment(enrollmentId: string) {
     throw new Error("Enrollment not found or already processed");
   }
 
-  await db.enrollment.update({
+  await db.appointment.update({
     where: { id: enrollmentId },
     data: { status: "active" },
   });
@@ -151,15 +151,15 @@ export async function approveEnrollment(enrollmentId: string) {
 }
 
 export async function declineEnrollment(enrollmentId: string, reason?: string) {
-  const daycareId = await getOwnerDaycareId();
-  if (!daycareId) {
+  const providerId = await getOwnerDaycareId();
+  if (!providerId) {
     throw new Error("Unauthorized");
   }
 
-  const enrollment = await db.enrollment.findFirst({
+  const enrollment = await db.appointment.findFirst({
     where: {
       id: enrollmentId,
-      daycareId,
+      providerId,
       status: { in: ["pending", "active"] },
     },
   });
@@ -168,7 +168,7 @@ export async function declineEnrollment(enrollmentId: string, reason?: string) {
     throw new Error("Enrollment not found or already processed");
   }
 
-  await db.enrollment.update({
+  await db.appointment.update({
     where: { id: enrollmentId },
     data: {
       status: "cancelled",
@@ -181,15 +181,15 @@ export async function declineEnrollment(enrollmentId: string, reason?: string) {
 }
 
 export async function completeEnrollment(enrollmentId: string) {
-  const daycareId = await getOwnerDaycareId();
-  if (!daycareId) {
+  const providerId = await getOwnerDaycareId();
+  if (!providerId) {
     throw new Error("Unauthorized");
   }
 
-  const enrollment = await db.enrollment.findFirst({
+  const enrollment = await db.appointment.findFirst({
     where: {
       id: enrollmentId,
-      daycareId,
+      providerId,
       status: "active",
     },
   });
@@ -198,7 +198,7 @@ export async function completeEnrollment(enrollmentId: string) {
     throw new Error("Enrollment not found or cannot be completed");
   }
 
-  await db.enrollment.update({
+  await db.appointment.update({
     where: { id: enrollmentId },
     data: {
       status: "completed",

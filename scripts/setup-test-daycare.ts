@@ -1,28 +1,40 @@
 import { db } from "../src/lib/db";
 
 async function setup() {
-  // Find the owner
+  // Find the provider owner
   const owner = await db.user.findUnique({
-    where: { email: "test.owner@kindergarten.com" },
+    where: { email: "test.provider@docconnect.com" },
   });
 
   if (!owner) {
-    console.log("Owner not found");
+    // Try legacy email
+    const legacyOwner = await db.user.findUnique({
+      where: { email: "test.owner@kindergarten.com" },
+    });
+    if (!legacyOwner) {
+      console.log("Owner not found. Run create-test-users.ts first.");
+      return;
+    }
+  }
+
+  const ownerId = owner?.id;
+  if (!ownerId) {
+    console.log("Owner ID not found");
     return;
   }
 
-  // Create or find daycare
-  let daycare = await db.daycare.findFirst({
-    where: { slug: "test-daycare" },
+  // Create or find provider
+  let provider = await db.provider.findFirst({
+    where: { slug: "test-provider" },
   });
 
-  if (!daycare) {
-    daycare = await db.daycare.create({
+  if (!provider) {
+    provider = await db.provider.create({
       data: {
-        slug: "test-daycare",
-        name: "Test Daycare Center",
-        description: "A test daycare for development and testing real-time messaging",
-        email: "test@daycare.com",
+        slug: "test-provider",
+        name: "Test Medical Practice",
+        description: "A test medical practice for development and testing",
+        email: "test@provider.com",
         phone: "555-1234",
         address: "123 Test Street",
         city: "Irvine",
@@ -30,45 +42,45 @@ async function setup() {
         zipCode: "92602",
         latitude: 33.6846,
         longitude: -117.8265,
-        capacity: 50,
-        minAge: 6,
-        maxAge: 60,
-        pricePerMonth: 1500,
-        openingTime: "07:00",
-        closingTime: "18:00",
+        specialty: "Family Medicine",
+        credentials: "MD",
+        consultationFee: 150,
+        openingTime: "08:00",
+        closingTime: "17:00",
         operatingDays: ["Mon", "Tue", "Wed", "Thu", "Fri"],
         status: "APPROVED",
+        acceptingNewPatients: true,
       },
     });
-    console.log("✅ Daycare created:", daycare.name);
+    console.log("✅ Provider created:", provider.name);
   } else {
     // Update to approved if not already
-    daycare = await db.daycare.update({
-      where: { id: daycare.id },
+    provider = await db.provider.update({
+      where: { id: provider.id },
       data: { status: "APPROVED" },
     });
-    console.log("✅ Daycare found and approved:", daycare.name);
+    console.log("✅ Provider found and approved:", provider.name);
   }
 
-  // Link owner to daycare
-  await db.daycareStaff.upsert({
+  // Link owner to provider
+  await db.providerStaff.upsert({
     where: {
-      daycareId_userId: {
-        daycareId: daycare.id,
-        userId: owner.id,
+      providerId_userId: {
+        providerId: provider.id,
+        userId: ownerId,
       },
     },
     update: {},
     create: {
-      daycareId: daycare.id,
-      userId: owner.id,
+      providerId: provider.id,
+      userId: ownerId,
       role: "owner",
     },
   });
-  console.log("✅ Owner linked to daycare");
+  console.log("✅ Owner linked to provider");
 
-  console.log("\n🔗 Test the chat at:");
-  console.log("https://kindergarten-lime.vercel.app/daycare/test-daycare");
+  console.log("\n🔗 Test the provider at:");
+  console.log("http://localhost:3000/provider/test-provider");
 
   await db.$disconnect();
 }

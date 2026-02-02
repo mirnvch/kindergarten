@@ -12,7 +12,7 @@ async function requireDaycareOwner() {
     throw new Error("Unauthorized");
   }
 
-  const daycareStaff = await db.daycareStaff.findFirst({
+  const providerStaff = await db.providerStaff.findFirst({
     where: {
       userId: session.user.id,
       role: { in: ["owner", "manager"] },
@@ -20,11 +20,11 @@ async function requireDaycareOwner() {
     include: { daycare: true },
   });
 
-  if (!daycareStaff) {
+  if (!providerStaff) {
     throw new Error("No daycare found");
   }
 
-  return { user: session.user, daycare: daycareStaff.daycare };
+  return { user: session.user, daycare: providerStaff.daycare };
 }
 
 const pricingSchema = z.object({
@@ -42,7 +42,7 @@ export async function updatePricing(data: PricingInput) {
 
     const validated = pricingSchema.parse(data);
 
-    await db.daycare.update({
+    await db.provider.update({
       where: { id: daycare.id },
       data: {
         pricePerMonth: new Prisma.Decimal(validated.pricePerMonth),

@@ -5,18 +5,18 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { FavoriteItem } from "@/types";
 
-export async function toggleFavorite(daycareId: string) {
+export async function toggleFavorite(providerId: string) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PARENT") {
+  if (!session?.user || session.user.role !== "PATIENT") {
     throw new Error("Unauthorized");
   }
 
   // Check if favorite exists
   const existing = await db.favorite.findUnique({
     where: {
-      userId_daycareId: {
+      userId_providerId: {
         userId: session.user.id,
-        daycareId,
+        providerId,
       },
     },
   });
@@ -33,7 +33,7 @@ export async function toggleFavorite(daycareId: string) {
     await db.favorite.create({
       data: {
         userId: session.user.id,
-        daycareId,
+        providerId,
       },
     });
     revalidatePath("/dashboard/favorites");
@@ -43,14 +43,14 @@ export async function toggleFavorite(daycareId: string) {
 
 export async function getFavorites(): Promise<FavoriteItem[]> {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PARENT") {
+  if (!session?.user || session.user.role !== "PATIENT") {
     throw new Error("Unauthorized");
   }
 
   const favorites = await db.favorite.findMany({
     where: { userId: session.user.id },
     include: {
-      daycare: {
+      provider: {
         include: {
           photos: {
             where: { isPrimary: true },
@@ -67,33 +67,34 @@ export async function getFavorites(): Promise<FavoriteItem[]> {
 
   return favorites.map((fav) => {
     const avgRating =
-      fav.daycare.reviews.length > 0
-        ? fav.daycare.reviews.reduce((sum, r) => sum + r.rating, 0) /
-          fav.daycare.reviews.length
+      fav.provider.reviews.length > 0
+        ? fav.provider.reviews.reduce((sum, r) => sum + r.rating, 0) /
+          fav.provider.reviews.length
         : null;
 
     return {
       id: fav.id,
       createdAt: fav.createdAt,
-      daycare: {
-        id: fav.daycare.id,
-        name: fav.daycare.name,
-        slug: fav.daycare.slug,
-        address: fav.daycare.address,
-        city: fav.daycare.city,
-        state: fav.daycare.state,
-        pricePerMonth: fav.daycare.pricePerMonth,
-        minAge: fav.daycare.minAge,
-        maxAge: fav.daycare.maxAge,
-        photo: fav.daycare.photos[0]?.url || null,
+      provider: {
+        id: fav.provider.id,
+        name: fav.provider.name,
+        slug: fav.provider.slug,
+        address: fav.provider.address,
+        city: fav.provider.city,
+        state: fav.provider.state,
+        specialty: fav.provider.specialty,
+        credentials: fav.provider.credentials,
+        consultationFee: fav.provider.consultationFee,
+        offersTelehealth: fav.provider.offersTelehealth,
+        photo: fav.provider.photos[0]?.url || null,
         rating: avgRating,
-        reviewCount: fav.daycare.reviews.length,
+        reviewCount: fav.provider.reviews.length,
       },
     };
   });
 }
 
-export async function isFavorited(daycareId: string) {
+export async function isFavorited(providerId: string) {
   const session = await auth();
   if (!session?.user) {
     return false;
@@ -101,9 +102,9 @@ export async function isFavorited(daycareId: string) {
 
   const favorite = await db.favorite.findUnique({
     where: {
-      userId_daycareId: {
+      userId_providerId: {
         userId: session.user.id,
-        daycareId,
+        providerId,
       },
     },
   });

@@ -31,7 +31,7 @@ async function getThreads(searchParams: SearchParams) {
   if (searchParams.search) {
     where.OR = [
       { subject: { contains: searchParams.search, mode: "insensitive" } },
-      { daycare: { name: { contains: searchParams.search, mode: "insensitive" } } },
+      { provider: { name: { contains: searchParams.search, mode: "insensitive" } } },
     ];
   }
 
@@ -48,7 +48,7 @@ async function getThreads(searchParams: SearchParams) {
       take: perPage,
       orderBy: { lastMessageAt: "desc" },
       include: {
-        daycare: { select: { name: true, slug: true } },
+        provider: { select: { name: true, slug: true } },
         messages: {
           take: 1,
           orderBy: { createdAt: "desc" },
@@ -178,7 +178,7 @@ export default async function MessagesPage({
             <TableHeader>
               <TableRow>
                 <TableHead>Thread</TableHead>
-                <TableHead>Daycare</TableHead>
+                <TableHead>Provider</TableHead>
                 <TableHead>Messages</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Last Activity</TableHead>
@@ -214,11 +214,11 @@ export default async function MessagesPage({
                       </TableCell>
                       <TableCell>
                         <Link
-                          href={`/daycare/${thread.daycare.slug}`}
+                          href={`/provider/${thread.provider.slug}`}
                           className="text-sm hover:underline"
                           target="_blank"
                         >
-                          {thread.daycare.name}
+                          {thread.provider.name}
                         </Link>
                       </TableCell>
                       <TableCell>

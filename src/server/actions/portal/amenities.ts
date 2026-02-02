@@ -10,7 +10,7 @@ async function requireDaycareOwner() {
     throw new Error("Unauthorized");
   }
 
-  const daycareStaff = await db.daycareStaff.findFirst({
+  const providerStaff = await db.providerStaff.findFirst({
     where: {
       userId: session.user.id,
       role: { in: ["owner", "manager"] },
@@ -18,11 +18,11 @@ async function requireDaycareOwner() {
     include: { daycare: true },
   });
 
-  if (!daycareStaff) {
+  if (!providerStaff) {
     throw new Error("No daycare found");
   }
 
-  return { user: session.user, daycare: daycareStaff.daycare };
+  return { user: session.user, daycare: providerStaff.daycare };
 }
 
 export async function getAllAmenities() {
@@ -34,8 +34,8 @@ export async function getAllAmenities() {
 export async function getDaycareAmenities() {
   const { daycare } = await requireDaycareOwner();
 
-  const amenities = await db.daycareAmenity.findMany({
-    where: { daycareId: daycare.id },
+  const amenities = await db.providerAmenity.findMany({
+    where: { providerId: daycare.id },
     select: { amenityId: true },
   });
 
@@ -47,15 +47,15 @@ export async function updateDaycareAmenities(amenityIds: string[]) {
     const { daycare } = await requireDaycareOwner();
 
     // Delete existing amenities
-    await db.daycareAmenity.deleteMany({
-      where: { daycareId: daycare.id },
+    await db.providerAmenity.deleteMany({
+      where: { providerId: daycare.id },
     });
 
     // Add new amenities
     if (amenityIds.length > 0) {
-      await db.daycareAmenity.createMany({
+      await db.providerAmenity.createMany({
         data: amenityIds.map((amenityId) => ({
-          daycareId: daycare.id,
+          providerId: daycare.id,
           amenityId,
         })),
       });

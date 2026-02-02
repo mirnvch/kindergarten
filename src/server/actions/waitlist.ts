@@ -11,12 +11,12 @@ import { sendEmail, waitlistSpotAvailableEmail } from "@/lib/email";
 // ==================== SCHEMAS ====================
 
 const joinWaitlistSchema = z.object({
-  daycareId: z.string().min(1),
-  parentName: z.string().min(1, "Name is required"),
-  parentEmail: z.string().email("Valid email is required"),
-  parentPhone: z.string().optional(),
-  childAge: z.number().min(0, "Age must be positive").max(144, "Age must be under 12 years"),
-  desiredStart: z.string().min(1, "Desired start date is required"),
+  providerId: z.string().min(1),
+  patientName: z.string().min(1, "Name is required"),
+  patientEmail: z.string().email("Valid email is required"),
+  patientPhone: z.string().optional(),
+  desiredDate: z.string().min(1, "Desired appointment date is required"),
+  reasonForVisit: z.string().max(500).optional(),
   notes: z.string().max(500).optional(),
 });
 
@@ -33,37 +33,37 @@ export async function joinWaitlist(data: z.infer<typeof joinWaitlistSchema>) {
     const validated = joinWaitlistSchema.parse(data);
 
     // Rate limit by email: 10 waitlist joins per hour
-    const rateLimitResult = await rateLimit(validated.parentEmail, "waitlist");
+    const rateLimitResult = await rateLimit(validated.patientEmail, "waitlist");
     if (!rateLimitResult.success) {
       return { success: false, error: "Too many requests. Please try again later." };
     }
 
-    // Check if daycare exists
-    const daycare = await db.daycare.findUnique({
-      where: { id: validated.daycareId },
-      select: { id: true, name: true, capacity: true },
+    // Check if provider exists
+    const provider = await db.provider.findUnique({
+      where: { id: validated.providerId },
+      select: { id: true, name: true, acceptingNewPatients: true },
     });
 
-    if (!daycare) {
-      return { success: false, error: "Daycare not found" };
+    if (!provider) {
+      return { success: false, error: "Provider not found" };
     }
 
     // Check if already on waitlist
     const existing = await db.waitlistEntry.findFirst({
       where: {
-        daycareId: validated.daycareId,
-        parentEmail: validated.parentEmail,
+        providerId: validated.providerId,
+        patientEmail: validated.patientEmail,
         notifiedAt: null, // Only check active entries
       },
     });
 
     if (existing) {
-      return { success: false, error: "You are already on the waitlist for this daycare" };
+      return { success: false, error: "You are already on the waitlist for this provider" };
     }
 
     // Get next position
     const lastEntry = await db.waitlistEntry.findFirst({
-      where: { daycareId: validated.daycareId, notifiedAt: null },
+      where: { providerId: validated.providerId, notifiedAt: null },
       orderBy: { position: "desc" },
       select: { position: true },
     });
@@ -73,18 +73,18 @@ export async function joinWaitlist(data: z.infer<typeof joinWaitlistSchema>) {
     // Create entry
     const entry = await db.waitlistEntry.create({
       data: {
-        daycareId: validated.daycareId,
-        parentName: validated.parentName,
-        parentEmail: validated.parentEmail,
-        parentPhone: validated.parentPhone || null,
-        childAge: validated.childAge,
-        desiredStart: new Date(validated.desiredStart),
+        providerId: validated.providerId,
+        patientName: validated.patientName,
+        patientEmail: validated.patientEmail,
+        patientPhone: validated.patientPhone || null,
+        desiredDate: new Date(validated.desiredDate),
+        reasonForVisit: validated.reasonForVisit || null,
         notes: validated.notes || null,
         position,
       },
     });
 
-    revalidatePath(`/daycare/${validated.daycareId}`);
+    revalidatePath(`/provider/${validated.providerId}`);
 
     return { success: true, data: { position: entry.position } };
   } catch (error) {
@@ -96,18 +96,18 @@ export async function joinWaitlist(data: z.infer<typeof joinWaitlistSchema>) {
   }
 }
 
-export async function getWaitlistPosition(daycareId: string, email: string) {
+export async function getWaitlistPosition(providerId: string, email: string) {
   const entry = await db.waitlistEntry.findFirst({
     where: {
-      daycareId,
-      parentEmail: email,
+      providerId,
+      patientEmail: email,
       notifiedAt: null,
     },
     select: {
       id: true,
       position: true,
       createdAt: true,
-      daycare: {
+      provider: {
         select: { name: true, slug: true },
       },
     },
@@ -122,17 +122,18 @@ export async function getMyWaitlistEntries() {
 
   const entries = await db.waitlistEntry.findMany({
     where: {
-      parentEmail: session.user.email,
+      patientEmail: session.user.email,
       notifiedAt: null,
     },
     include: {
-      daycare: {
+      provider: {
         select: {
           id: true,
           name: true,
           slug: true,
           city: true,
           state: true,
+          specialty: true,
         },
       },
     },
@@ -142,7 +143,7 @@ export async function getMyWaitlistEntries() {
   return entries;
 }
 
-export async function leaveWaitlist(daycareId: string) {
+export async function leaveWaitlist(providerId: string) {
   const session = await auth();
   if (!session?.user?.email) {
     return { success: false, error: "Unauthorized" };
@@ -151,8 +152,8 @@ export async function leaveWaitlist(daycareId: string) {
   try {
     const entry = await db.waitlistEntry.findFirst({
       where: {
-        daycareId,
-        parentEmail: session.user.email,
+        providerId,
+        patientEmail: session.user.email,
         notifiedAt: null,
       },
     });
@@ -170,7 +171,7 @@ export async function leaveWaitlist(daycareId: string) {
     await db.$executeRaw`
       UPDATE "WaitlistEntry"
       SET position = position - 1
-      WHERE "daycareId" = ${daycareId}
+      WHERE "providerId" = ${providerId}
         AND position > ${entry.position}
         AND "notifiedAt" IS NULL
     `;
@@ -184,21 +185,21 @@ export async function leaveWaitlist(daycareId: string) {
   }
 }
 
-// ==================== PORTAL ACTIONS (DAYCARE OWNERS) ====================
+// ==================== PORTAL ACTIONS (PROVIDER OWNERS) ====================
 
-export async function getWaitlistForDaycare() {
+export async function getWaitlistForProvider() {
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  const staff = await db.daycareStaff.findFirst({
+  const staff = await db.providerStaff.findFirst({
     where: { userId: session.user.id, role: { in: ["owner", "manager"] } },
-    select: { daycareId: true },
+    select: { providerId: true },
   });
 
   if (!staff) return null;
 
   const entries = await db.waitlistEntry.findMany({
-    where: { daycareId: staff.daycareId },
+    where: { providerId: staff.providerId },
     orderBy: [{ notifiedAt: "asc" }, { position: "asc" }],
   });
 
@@ -228,7 +229,7 @@ export async function updateWaitlistEntry(data: z.infer<typeof updateWaitlistEnt
     const entry = await db.waitlistEntry.findUnique({
       where: { id: validated.id },
       include: {
-        daycare: {
+        provider: {
           include: {
             staff: { where: { userId: session.user.id, role: { in: ["owner", "manager"] } } },
           },
@@ -236,7 +237,7 @@ export async function updateWaitlistEntry(data: z.infer<typeof updateWaitlistEnt
       },
     });
 
-    if (!entry || entry.daycare.staff.length === 0) {
+    if (!entry || entry.provider.staff.length === 0) {
       return { success: false, error: "Entry not found or access denied" };
     }
 
@@ -250,7 +251,7 @@ export async function updateWaitlistEntry(data: z.infer<typeof updateWaitlistEnt
         await db.$executeRaw`
           UPDATE "WaitlistEntry"
           SET position = position - 1
-          WHERE "daycareId" = ${entry.daycareId}
+          WHERE "providerId" = ${entry.providerId}
             AND position > ${oldPosition}
             AND position <= ${newPosition}
             AND "notifiedAt" IS NULL
@@ -260,7 +261,7 @@ export async function updateWaitlistEntry(data: z.infer<typeof updateWaitlistEnt
         await db.$executeRaw`
           UPDATE "WaitlistEntry"
           SET position = position + 1
-          WHERE "daycareId" = ${entry.daycareId}
+          WHERE "providerId" = ${entry.providerId}
             AND position >= ${newPosition}
             AND position < ${oldPosition}
             AND "notifiedAt" IS NULL
@@ -299,7 +300,7 @@ export async function removeFromWaitlist(entryId: string) {
     const entry = await db.waitlistEntry.findUnique({
       where: { id: entryId },
       include: {
-        daycare: {
+        provider: {
           include: {
             staff: { where: { userId: session.user.id, role: { in: ["owner", "manager"] } } },
           },
@@ -307,7 +308,7 @@ export async function removeFromWaitlist(entryId: string) {
       },
     });
 
-    if (!entry || entry.daycare.staff.length === 0) {
+    if (!entry || entry.provider.staff.length === 0) {
       return { success: false, error: "Entry not found or access denied" };
     }
 
@@ -317,7 +318,7 @@ export async function removeFromWaitlist(entryId: string) {
     await db.$executeRaw`
       UPDATE "WaitlistEntry"
       SET position = position - 1
-      WHERE "daycareId" = ${entry.daycareId}
+      WHERE "providerId" = ${entry.providerId}
         AND position > ${entry.position}
         AND "notifiedAt" IS NULL
     `;
@@ -342,7 +343,7 @@ export async function notifyWaitlistEntry(entryId: string) {
     const entry = await db.waitlistEntry.findUnique({
       where: { id: entryId },
       include: {
-        daycare: {
+        provider: {
           include: {
             staff: { where: { userId: session.user.id, role: { in: ["owner", "manager"] } } },
           },
@@ -350,7 +351,7 @@ export async function notifyWaitlistEntry(entryId: string) {
       },
     });
 
-    if (!entry || entry.daycare.staff.length === 0) {
+    if (!entry || entry.provider.staff.length === 0) {
       return { success: false, error: "Entry not found or access denied" };
     }
 
@@ -366,18 +367,18 @@ export async function notifyWaitlistEntry(entryId: string) {
 
     // Send email notification
     await sendEmail({
-      to: entry.parentEmail,
-      subject: `Spot Available at ${entry.daycare.name}!`,
+      to: entry.patientEmail,
+      subject: `Appointment Available at ${entry.provider.name}!`,
       html: waitlistSpotAvailableEmail(
-        entry.parentName,
-        entry.daycare.name,
-        entry.daycare.slug
+        entry.patientName,
+        entry.provider.name,
+        entry.provider.slug
       ),
     });
 
     // Also create in-app notification if user exists
     const user = await db.user.findUnique({
-      where: { email: entry.parentEmail },
+      where: { email: entry.patientEmail },
       select: { id: true },
     });
 
@@ -385,11 +386,11 @@ export async function notifyWaitlistEntry(entryId: string) {
       await createNotification({
         userId: user.id,
         type: "waitlist_spot_available",
-        title: "Spot Available!",
-        body: `A spot is now available at ${entry.daycare.name}. Contact them soon to secure your spot!`,
+        title: "Appointment Slot Available!",
+        body: `An appointment slot is now available with ${entry.provider.name}. Book your appointment soon!`,
         data: {
-          daycareId: entry.daycareId,
-          daycareSlug: entry.daycare.slug,
+          providerId: entry.providerId,
+          providerSlug: entry.provider.slug,
         },
       });
     }
@@ -398,7 +399,7 @@ export async function notifyWaitlistEntry(entryId: string) {
     await db.$executeRaw`
       UPDATE "WaitlistEntry"
       SET position = position - 1
-      WHERE "daycareId" = ${entry.daycareId}
+      WHERE "providerId" = ${entry.providerId}
         AND position > ${entry.position}
         AND "notifiedAt" IS NULL
     `;
@@ -412,27 +413,67 @@ export async function notifyWaitlistEntry(entryId: string) {
   }
 }
 
-// ==================== HELPER: CHECK IF DAYCARE IS FULL ====================
+// ==================== HELPER: CHECK PROVIDER AVAILABILITY ====================
 
-export async function isDaycareFull(daycareId: string) {
-  const daycare = await db.daycare.findUnique({
-    where: { id: daycareId },
-    select: { capacity: true },
-  });
-
-  if (!daycare) return { isFull: false, capacity: 0, enrolled: 0, spotsAvailable: 0 };
-
-  const enrolledCount = await db.enrollment.count({
-    where: {
-      daycareId,
-      status: "active",
+export async function getProviderAvailability(providerId: string) {
+  const provider = await db.provider.findUnique({
+    where: { id: providerId },
+    select: {
+      acceptingNewPatients: true,
+      averageWaitDays: true,
     },
   });
 
+  if (!provider) {
+    return { acceptingNewPatients: false, averageWaitDays: null };
+  }
+
   return {
-    isFull: enrolledCount >= daycare.capacity,
-    capacity: daycare.capacity,
-    enrolled: enrolledCount,
-    spotsAvailable: Math.max(0, daycare.capacity - enrolledCount),
+    acceptingNewPatients: provider.acceptingNewPatients,
+    averageWaitDays: provider.averageWaitDays,
   };
 }
+
+// ==================== LEGACY CAPACITY CHECK (for daycare model compatibility) ====================
+
+/**
+ * Check if a provider/daycare is at full capacity
+ * Used by daycare detail pages to show waitlist form
+ */
+export async function isDaycareFull(daycareId: string) {
+  // For providers model, we use acceptingNewPatients flag
+  // This function maintains compatibility with old daycare pages
+  const provider = await db.provider.findUnique({
+    where: { id: daycareId },
+    select: {
+      acceptingNewPatients: true,
+      // Provider model doesn't have capacity fields by default
+      // Return defaults for compatibility
+    },
+  });
+
+  if (!provider) {
+    return {
+      isFull: true,
+      capacity: 0,
+      enrolled: 0,
+      spotsAvailable: 0,
+    };
+  }
+
+  // For medical providers, isFull means not accepting new patients
+  return {
+    isFull: !provider.acceptingNewPatients,
+    capacity: 100, // Placeholder for compatibility
+    enrolled: provider.acceptingNewPatients ? 50 : 100, // Placeholder
+    spotsAvailable: provider.acceptingNewPatients ? 50 : 0, // Placeholder
+  };
+}
+
+// Alias for provider availability
+export const isProviderFull = isDaycareFull;
+
+// ==================== LEGACY ALIASES ====================
+
+// Legacy alias for backward compatibility
+export const getWaitlistForDaycare = getWaitlistForProvider;

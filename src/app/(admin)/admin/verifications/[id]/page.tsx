@@ -33,7 +33,7 @@ async function getVerificationRequest(id: string) {
   return db.verificationRequest.findUnique({
     where: { id },
     include: {
-      daycare: {
+      provider: {
         select: {
           id: true,
           name: true,
@@ -102,11 +102,15 @@ function getStatusConfig(status: VerificationStatus) {
 function getDocumentTypeLabel(type: string) {
   switch (type) {
     case "license":
-      return "Daycare License";
+      return "Medical License";
     case "insurance":
       return "Insurance Certificate";
     case "background_check":
       return "Background Check";
+    case "npi":
+      return "NPI Verification";
+    case "board_certification":
+      return "Board Certification";
     default:
       return "Other Document";
   }
@@ -158,25 +162,25 @@ export default async function VerificationDetailPage({
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Daycare Info */}
+        {/* Provider Info */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              Daycare Information
+              Provider Information
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-lg font-semibold flex items-center gap-2">
-                  {request.daycare.name}
-                  {request.daycare.isVerified && (
+                  {request.provider.name}
+                  {request.provider.isVerified && (
                     <ShieldCheck className="h-5 w-5 text-green-600" />
                   )}
                 </h3>
                 <Link
-                  href={`/daycare/${request.daycare.slug}`}
+                  href={`/provider/${request.provider.slug}`}
                   target="_blank"
                   className="text-sm text-muted-foreground hover:underline flex items-center gap-1"
                 >
@@ -186,10 +190,10 @@ export default async function VerificationDetailPage({
               </div>
               <Badge
                 variant={
-                  request.daycare.status === "APPROVED" ? "default" : "secondary"
+                  request.provider.status === "APPROVED" ? "default" : "secondary"
                 }
               >
-                {request.daycare.status}
+                {request.provider.status}
               </Badge>
             </div>
 
@@ -197,23 +201,23 @@ export default async function VerificationDetailPage({
               <div className="flex items-center gap-2 text-muted-foreground">
                 <MapPin className="h-4 w-4" />
                 <span>
-                  {request.daycare.address}, {request.daycare.city},{" "}
-                  {request.daycare.state} {request.daycare.zipCode}
+                  {request.provider.address}, {request.provider.city},{" "}
+                  {request.provider.state} {request.provider.zipCode}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Mail className="h-4 w-4" />
-                <span>{request.daycare.email}</span>
+                <span>{request.provider.email}</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Phone className="h-4 w-4" />
-                <span>{request.daycare.phone}</span>
+                <span>{request.provider.phone}</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="h-4 w-4" />
                 <span>
                   Registered:{" "}
-                  {new Date(request.daycare.createdAt).toLocaleDateString()}
+                  {new Date(request.provider.createdAt).toLocaleDateString()}
                 </span>
               </div>
             </div>

@@ -56,8 +56,8 @@ export default {
       const pathname = nextUrl.pathname;
 
       const roleRoutes: Record<string, string[]> = {
-        "/dashboard": ["PARENT"],
-        "/portal": ["DAYCARE_OWNER", "DAYCARE_STAFF"],
+        "/dashboard": ["PATIENT"],
+        "/portal": ["PROVIDER", "CLINIC_STAFF"],
         "/admin": ["ADMIN"],
       };
 
@@ -125,10 +125,10 @@ function getDefaultRedirect(role?: UserRole): string {
   switch (role) {
     case "ADMIN":
       return "/admin";
-    case "DAYCARE_OWNER":
-    case "DAYCARE_STAFF":
+    case "PROVIDER":
+    case "CLINIC_STAFF":
       return "/portal";
-    case "PARENT":
+    case "PATIENT":
       return "/dashboard";
     default:
       return "/";

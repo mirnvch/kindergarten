@@ -8,13 +8,15 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 interface FavoriteButtonProps {
-  daycareId: string;
+  providerId?: string;
+  daycareId?: string; // Legacy alias
   initialFavorited?: boolean;
   variant?: "default" | "icon";
   className?: string;
 }
 
 export function FavoriteButton({
+  providerId,
   daycareId,
   initialFavorited = false,
   variant = "icon",
@@ -23,10 +25,15 @@ export function FavoriteButton({
   const [isPending, startTransition] = useTransition();
   const [isFavorited, setIsFavorited] = useState(initialFavorited);
 
+  // Support both new and legacy prop names
+  const entityId = providerId || daycareId;
+
   function handleToggle() {
+    if (!entityId) return;
+
     startTransition(async () => {
       try {
-        const result = await toggleFavorite(daycareId);
+        const result = await toggleFavorite(entityId);
         setIsFavorited(result.favorited);
         toast.success(
           result.favorited ? "Added to favorites" : "Removed from favorites"

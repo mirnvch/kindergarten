@@ -7,15 +7,16 @@ import { rateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
 const reviewSchema = z.object({
-  daycareId: z.string().min(1, "Daycare ID is required"),
+  providerId: z.string().min(1, "Provider ID is required"),
   rating: z.number().min(1).max(5),
   title: z.string().max(100).optional(),
   content: z.string().max(2000).optional(),
-  safetyRating: z.number().min(1).max(5).optional(),
-  cleanlinessRating: z.number().min(1).max(5).optional(),
+  // Medical-specific detailed ratings
+  communicationRating: z.number().min(1).max(5).optional(),
+  waitTimeRating: z.number().min(1).max(5).optional(),
   staffRating: z.number().min(1).max(5).optional(),
-  programRating: z.number().min(1).max(5).optional(),
-  valueRating: z.number().min(1).max(5).optional(),
+  facilityRating: z.number().min(1).max(5).optional(),
+  overallCareRating: z.number().min(1).max(5).optional(),
 });
 
 export type ReviewInput = z.infer<typeof reviewSchema>;
@@ -35,27 +36,27 @@ export async function createReview(data: ReviewInput) {
 
     const validated = reviewSchema.parse(data);
 
-    // Check if daycare exists and is approved
-    const daycare = await db.daycare.findUnique({
-      where: { id: validated.daycareId },
+    // Check if provider exists and is approved
+    const provider = await db.provider.findUnique({
+      where: { id: validated.providerId },
     });
 
-    if (!daycare || daycare.status !== "APPROVED") {
-      return { success: false, error: "Daycare not found" };
+    if (!provider || provider.status !== "APPROVED") {
+      return { success: false, error: "Provider not found" };
     }
 
-    // Check if user already reviewed this daycare
+    // Check if user already reviewed this provider
     const existingReview = await db.review.findUnique({
       where: {
-        daycareId_userId: {
-          daycareId: validated.daycareId,
+        providerId_userId: {
+          providerId: validated.providerId,
           userId: session.user.id,
         },
       },
     });
 
     if (existingReview) {
-      return { success: false, error: "You have already reviewed this daycare" };
+      return { success: false, error: "You have already reviewed this provider" };
     }
 
     // Check if auto-approve is enabled
@@ -67,21 +68,21 @@ export async function createReview(data: ReviewInput) {
 
     await db.review.create({
       data: {
-        daycareId: validated.daycareId,
+        providerId: validated.providerId,
         userId: session.user.id,
         rating: validated.rating,
         title: validated.title || null,
         content: validated.content || null,
-        safetyRating: validated.safetyRating || null,
-        cleanlinessRating: validated.cleanlinessRating || null,
+        communicationRating: validated.communicationRating || null,
+        waitTimeRating: validated.waitTimeRating || null,
         staffRating: validated.staffRating || null,
-        programRating: validated.programRating || null,
-        valueRating: validated.valueRating || null,
+        facilityRating: validated.facilityRating || null,
+        overallCareRating: validated.overallCareRating || null,
         isApproved,
       },
     });
 
-    revalidatePath(`/daycare/${daycare.slug}`);
+    revalidatePath(`/provider/${provider.slug}`);
     return {
       success: true,
       message: isApproved
@@ -107,7 +108,7 @@ export async function updateReview(reviewId: string, data: Partial<ReviewInput>)
     // Verify review belongs to user
     const review = await db.review.findFirst({
       where: { id: reviewId, userId: session.user.id },
-      include: { daycare: true },
+      include: { provider: true },
     });
 
     if (!review) {
@@ -120,15 +121,15 @@ export async function updateReview(reviewId: string, data: Partial<ReviewInput>)
         rating: data.rating,
         title: data.title,
         content: data.content,
-        safetyRating: data.safetyRating,
-        cleanlinessRating: data.cleanlinessRating,
+        communicationRating: data.communicationRating,
+        waitTimeRating: data.waitTimeRating,
         staffRating: data.staffRating,
-        programRating: data.programRating,
-        valueRating: data.valueRating,
+        facilityRating: data.facilityRating,
+        overallCareRating: data.overallCareRating,
       },
     });
 
-    revalidatePath(`/daycare/${review.daycare.slug}`);
+    revalidatePath(`/provider/${review.provider.slug}`);
     return { success: true };
   } catch (error) {
     console.error("Error updating review:", error);
@@ -146,7 +147,7 @@ export async function deleteReview(reviewId: string) {
     // Verify review belongs to user
     const review = await db.review.findFirst({
       where: { id: reviewId, userId: session.user.id },
-      include: { daycare: true },
+      include: { provider: true },
     });
 
     if (!review) {
@@ -157,7 +158,7 @@ export async function deleteReview(reviewId: string) {
       where: { id: reviewId },
     });
 
-    revalidatePath(`/daycare/${review.daycare.slug}`);
+    revalidatePath(`/provider/${review.provider.slug}`);
     return { success: true };
   } catch (error) {
     console.error("Error deleting review:", error);
@@ -165,7 +166,7 @@ export async function deleteReview(reviewId: string) {
   }
 }
 
-export async function getUserReviewForDaycare(daycareId: string) {
+export async function getUserReviewForProvider(providerId: string) {
   const session = await auth();
   if (!session?.user) {
     return null;
@@ -173,23 +174,23 @@ export async function getUserReviewForDaycare(daycareId: string) {
 
   return db.review.findUnique({
     where: {
-      daycareId_userId: {
-        daycareId,
+      providerId_userId: {
+        providerId,
         userId: session.user.id,
       },
     },
   });
 }
 
-export async function canUserReview(daycareId: string) {
+export async function canUserReview(providerId: string) {
   const session = await auth();
   if (!session?.user) {
     return { canReview: false, reason: "not_logged_in" as const };
   }
 
-  // Check if user is daycare owner/staff
-  const isStaff = await db.daycareStaff.findFirst({
-    where: { daycareId, userId: session.user.id },
+  // Check if user is provider owner/staff
+  const isStaff = await db.providerStaff.findFirst({
+    where: { providerId, userId: session.user.id },
   });
 
   if (isStaff) {
@@ -199,8 +200,8 @@ export async function canUserReview(daycareId: string) {
   // Check if already reviewed
   const existingReview = await db.review.findUnique({
     where: {
-      daycareId_userId: {
-        daycareId,
+      providerId_userId: {
+        providerId,
         userId: session.user.id,
       },
     },
@@ -213,7 +214,7 @@ export async function canUserReview(daycareId: string) {
   return { canReview: true, reason: null };
 }
 
-// Portal: Daycare owner can respond to reviews
+// Portal: Provider owner can respond to reviews
 export async function respondToReview(reviewId: string, response: string) {
   try {
     const session = await auth();
@@ -224,17 +225,17 @@ export async function respondToReview(reviewId: string, response: string) {
     // Get review and verify ownership
     const review = await db.review.findUnique({
       where: { id: reviewId },
-      include: { daycare: true },
+      include: { provider: true },
     });
 
     if (!review) {
       return { success: false, error: "Review not found" };
     }
 
-    // Check if user is owner/manager of this daycare
-    const isStaff = await db.daycareStaff.findFirst({
+    // Check if user is owner/manager of this provider
+    const isStaff = await db.providerStaff.findFirst({
       where: {
-        daycareId: review.daycareId,
+        providerId: review.providerId,
         userId: session.user.id,
         role: { in: ["owner", "manager"] },
       },
@@ -252,7 +253,7 @@ export async function respondToReview(reviewId: string, response: string) {
       },
     });
 
-    revalidatePath(`/daycare/${review.daycare.slug}`);
+    revalidatePath(`/provider/${review.provider.slug}`);
     revalidatePath("/portal/reviews");
     return { success: true };
   } catch (error) {

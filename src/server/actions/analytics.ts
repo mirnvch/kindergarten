@@ -2,17 +2,16 @@
 
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { cache } from "react";
 
 // ==================== TRACKING ====================
 
 /**
- * Track a page view for a daycare
+ * Track a page view for a provider
  */
 export async function trackPageView(data: {
-  daycareId: string;
+  providerId: string;
   path: string;
   sessionId: string;
   referrer?: string;
@@ -47,7 +46,7 @@ export async function trackPageView(data: {
 
     await db.pageView.create({
       data: {
-        daycareId: data.daycareId,
+        providerId: data.providerId,
         userId: session?.user?.id,
         sessionId: data.sessionId,
         path: data.path,
@@ -70,7 +69,7 @@ export async function trackPageView(data: {
  * Track an analytics event
  */
 export async function trackEvent(data: {
-  daycareId?: string;
+  providerId?: string;
   sessionId: string;
   eventType: string;
   eventData?: Record<string, string | number | boolean | null>;
@@ -81,7 +80,7 @@ export async function trackEvent(data: {
 
     await db.analyticsEvent.create({
       data: {
-        daycareId: data.daycareId,
+        providerId: data.providerId,
         userId: session?.user?.id,
         sessionId: data.sessionId,
         eventType: data.eventType,
@@ -119,22 +118,21 @@ export const getPlatformAnalytics = cache(async (days: number = 30) => {
   const [
     currentUsers,
     previousUsers,
-    currentDaycares,
-    previousDaycares,
-    currentBookings,
-    previousBookings,
+    currentProviders,
+    previousProviders,
+    currentAppointments,
+    previousAppointments,
     currentRevenue,
     previousRevenue,
-    currentEnrollments,
-    previousEnrollments,
+    currentCompletedAppointments,
   ] = await Promise.all([
     // Current period
     db.user.count({ where: { createdAt: { gte: startDate } } }),
     db.user.count({ where: { createdAt: { gte: previousStartDate, lt: startDate } } }),
-    db.daycare.count({ where: { createdAt: { gte: startDate }, status: "APPROVED" } }),
-    db.daycare.count({ where: { createdAt: { gte: previousStartDate, lt: startDate }, status: "APPROVED" } }),
-    db.booking.count({ where: { createdAt: { gte: startDate } } }),
-    db.booking.count({ where: { createdAt: { gte: previousStartDate, lt: startDate } } }),
+    db.provider.count({ where: { createdAt: { gte: startDate }, status: "APPROVED" } }),
+    db.provider.count({ where: { createdAt: { gte: previousStartDate, lt: startDate }, status: "APPROVED" } }),
+    db.appointment.count({ where: { createdAt: { gte: startDate } } }),
+    db.appointment.count({ where: { createdAt: { gte: previousStartDate, lt: startDate } } }),
     db.payment.aggregate({
       where: { createdAt: { gte: startDate }, status: "SUCCEEDED" },
       _sum: { amount: true },
@@ -143,8 +141,7 @@ export const getPlatformAnalytics = cache(async (days: number = 30) => {
       where: { createdAt: { gte: previousStartDate, lt: startDate }, status: "SUCCEEDED" },
       _sum: { amount: true },
     }),
-    db.enrollment.count({ where: { createdAt: { gte: startDate } } }),
-    db.enrollment.count({ where: { createdAt: { gte: previousStartDate, lt: startDate } } }),
+    db.appointment.count({ where: { createdAt: { gte: startDate }, status: "COMPLETED" } }),
   ]);
 
   // Calculate changes
@@ -154,14 +151,14 @@ export const getPlatformAnalytics = cache(async (days: number = 30) => {
   // Get totals
   const [
     totalUsers,
-    totalDaycares,
-    totalBookings,
+    totalProviders,
+    totalAppointments,
     activeSubscriptions,
     pendingVerifications,
   ] = await Promise.all([
     db.user.count(),
-    db.daycare.count({ where: { status: "APPROVED" } }),
-    db.booking.count(),
+    db.provider.count({ where: { status: "APPROVED" } }),
+    db.appointment.count(),
     db.subscription.count({ where: { status: "ACTIVE" } }),
     db.verificationRequest.count({ where: { status: "PENDING" } }),
   ]);
@@ -180,7 +177,7 @@ export const getPlatformAnalytics = cache(async (days: number = 30) => {
     db.analyticsEvent.count({
       where: { eventType: "booking_started", createdAt: { gte: startDate } },
     }),
-    db.booking.count({
+    db.appointment.count({
       where: { createdAt: { gte: startDate }, status: "CONFIRMED" },
     }),
   ]);
@@ -190,14 +187,14 @@ export const getPlatformAnalytics = cache(async (days: number = 30) => {
     Array<{
       date: Date;
       users: bigint;
-      bookings: bigint;
+      appointments: bigint;
       revenue: number;
     }>
   >`
     SELECT
       gs.day::date as date,
       COALESCE(ud.count, 0) as users,
-      COALESCE(bd.count, 0) as bookings,
+      COALESCE(ad.count, 0) as appointments,
       COALESCE(pd.total, 0) as revenue
     FROM generate_series(${startDate}::date, ${now}::date, '1 day'::interval) gs(day)
     LEFT JOIN (
@@ -208,10 +205,10 @@ export const getPlatformAnalytics = cache(async (days: number = 30) => {
     ) ud ON gs.day::date = ud.day
     LEFT JOIN (
       SELECT DATE("createdAt") as day, COUNT(*) as count
-      FROM "Booking"
+      FROM "Appointment"
       WHERE "createdAt" >= ${startDate}
       GROUP BY DATE("createdAt")
-    ) bd ON gs.day::date = bd.day
+    ) ad ON gs.day::date = ad.day
     LEFT JOIN (
       SELECT DATE("createdAt") as day, SUM(amount) as total
       FROM "Payment"
@@ -221,8 +218,8 @@ export const getPlatformAnalytics = cache(async (days: number = 30) => {
     ORDER BY date
   `;
 
-  // Get top daycares by bookings
-  const topDaycares = await db.daycare.findMany({
+  // Get top providers by appointments
+  const topProviders = await db.provider.findMany({
     where: { status: "APPROVED" },
     select: {
       id: true,
@@ -232,14 +229,14 @@ export const getPlatformAnalytics = cache(async (days: number = 30) => {
       state: true,
       _count: {
         select: {
-          bookings: {
+          appointments: {
             where: { createdAt: { gte: startDate } },
           },
         },
       },
     },
     orderBy: {
-      bookings: { _count: "desc" },
+      appointments: { _count: "desc" },
     },
     take: 10,
   });
@@ -258,7 +255,7 @@ export const getPlatformAnalytics = cache(async (days: number = 30) => {
   });
 
   // Get geographic distribution
-  const daycaresByState = await db.daycare.groupBy({
+  const providersByState = await db.provider.groupBy({
     by: ["state"],
     where: { status: "APPROVED" },
     _count: true,
@@ -269,26 +266,25 @@ export const getPlatformAnalytics = cache(async (days: number = 30) => {
   return {
     overview: {
       totalUsers,
-      totalDaycares,
-      totalBookings,
+      totalProviders,
+      totalAppointments,
       activeSubscriptions,
       pendingVerifications,
     },
     currentPeriod: {
       newUsers: currentUsers,
-      newDaycares: currentDaycares,
-      newBookings: currentBookings,
+      newProviders: currentProviders,
+      newAppointments: currentAppointments,
+      completedAppointments: currentCompletedAppointments,
       revenue: Number(currentRevenue._sum.amount || 0),
-      enrollments: currentEnrollments,
       changes: {
         users: calculateChange(currentUsers, previousUsers),
-        daycares: calculateChange(currentDaycares, previousDaycares),
-        bookings: calculateChange(currentBookings, previousBookings),
+        providers: calculateChange(currentProviders, previousProviders),
+        appointments: calculateChange(currentAppointments, previousAppointments),
         revenue: calculateChange(
           Number(currentRevenue._sum.amount || 0),
           Number(previousRevenue._sum.amount || 0)
         ),
-        enrollments: calculateChange(currentEnrollments, previousEnrollments),
       },
     },
     funnel: {
@@ -314,15 +310,15 @@ export const getPlatformAnalytics = cache(async (days: number = 30) => {
     trends: dailyStats.map((s) => ({
       date: s.date.toISOString().split("T")[0],
       users: Number(s.users),
-      bookings: Number(s.bookings),
+      appointments: Number(s.appointments),
       revenue: Number(s.revenue),
     })),
-    topDaycares: topDaycares.map((d) => ({
-      id: d.id,
-      name: d.name,
-      slug: d.slug,
-      location: `${d.city}, ${d.state}`,
-      bookings: d._count.bookings,
+    topProviders: topProviders.map((p) => ({
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      location: `${p.city}, ${p.state}`,
+      bookings: p._count.appointments,
     })),
     distributions: {
       usersByRole: usersByRole.map((r) => ({
@@ -333,7 +329,7 @@ export const getPlatformAnalytics = cache(async (days: number = 30) => {
         plan: s.plan,
         count: s._count,
       })),
-      daycaresByState: daycaresByState.map((s) => ({
+      providersByState: providersByState.map((s) => ({
         state: s.state,
         count: s._count,
       })),
@@ -341,22 +337,22 @@ export const getPlatformAnalytics = cache(async (days: number = 30) => {
   };
 });
 
-// ==================== DAYCARE ANALYTICS ====================
+// ==================== PROVIDER ANALYTICS ====================
 
 /**
- * Get analytics for a specific daycare
+ * Get analytics for a specific provider
  */
-export const getDaycareAnalytics = cache(async (daycareId: string, days: number = 30) => {
+export const getProviderAnalytics = cache(async (providerId: string, days: number = 30) => {
   const session = await auth();
   if (!session?.user) {
     throw new Error("Unauthorized");
   }
 
-  // Verify user has access to this daycare
-  const staff = await db.daycareStaff.findFirst({
+  // Verify user has access to this provider
+  const staff = await db.providerStaff.findFirst({
     where: {
       userId: session.user.id,
-      daycareId,
+      providerId,
       role: { in: ["owner", "manager"] },
     },
   });
@@ -372,18 +368,18 @@ export const getDaycareAnalytics = cache(async (daycareId: string, days: number 
   // Get page views and visitors
   const [pageViews, uniqueVisitors] = await Promise.all([
     db.pageView.count({
-      where: { daycareId, createdAt: { gte: startDate } },
+      where: { providerId, createdAt: { gte: startDate } },
     }),
     db.pageView.groupBy({
       by: ["sessionId"],
-      where: { daycareId, createdAt: { gte: startDate } },
+      where: { providerId, createdAt: { gte: startDate } },
     }).then((r) => r.length),
   ]);
 
   // Get traffic sources
   const sourceBreakdown = await db.pageView.groupBy({
     by: ["source"],
-    where: { daycareId, createdAt: { gte: startDate } },
+    where: { providerId, createdAt: { gte: startDate } },
     _count: true,
     orderBy: { _count: { source: "desc" } },
   });
@@ -391,14 +387,14 @@ export const getDaycareAnalytics = cache(async (daycareId: string, days: number 
   // Get device breakdown
   const deviceBreakdown = await db.pageView.groupBy({
     by: ["deviceType"],
-    where: { daycareId, createdAt: { gte: startDate } },
+    where: { providerId, createdAt: { gte: startDate } },
     _count: true,
   });
 
   // Get daily page views
   const dailyViews = await db.pageView.groupBy({
     by: ["createdAt"],
-    where: { daycareId, createdAt: { gte: startDate } },
+    where: { providerId, createdAt: { gte: startDate } },
     _count: true,
     orderBy: { createdAt: "asc" },
   });
@@ -406,7 +402,7 @@ export const getDaycareAnalytics = cache(async (daycareId: string, days: number 
   // Get events
   const events = await db.analyticsEvent.groupBy({
     by: ["eventType"],
-    where: { daycareId, createdAt: { gte: startDate } },
+    where: { providerId, createdAt: { gte: startDate } },
     _count: true,
   });
 
@@ -416,7 +412,7 @@ export const getDaycareAnalytics = cache(async (daycareId: string, days: number 
   >`
     SELECT EXTRACT(HOUR FROM "createdAt") as hour, COUNT(*) as count
     FROM "PageView"
-    WHERE "daycareId" = ${daycareId} AND "createdAt" >= ${startDate}
+    WHERE "providerId" = ${providerId} AND "createdAt" >= ${startDate}
     GROUP BY EXTRACT(HOUR FROM "createdAt")
     ORDER BY hour
   `;
@@ -460,14 +456,17 @@ export const getDaycareAnalytics = cache(async (daycareId: string, days: number 
   };
 });
 
+// Legacy alias
+export const getDaycareAnalytics = getProviderAnalytics;
+
 // ==================== EXPORT ====================
 
 /**
  * Export analytics data to CSV
  */
 export async function exportAnalyticsCSV(
-  type: "platform" | "daycare",
-  daycareId?: string,
+  type: "platform" | "provider",
+  providerId?: string,
   days: number = 30
 ) {
   const session = await auth();
@@ -487,7 +486,7 @@ export async function exportAnalyticsCSV(
 
   if (type === "platform") {
     // Platform-wide export
-    const [users, daycares, bookings, payments] = await Promise.all([
+    const [users, providers, appointments, payments] = await Promise.all([
       db.user.findMany({
         where: { createdAt: { gte: startDate } },
         select: {
@@ -495,7 +494,7 @@ export async function exportAnalyticsCSV(
           role: true,
         },
       }),
-      db.daycare.findMany({
+      db.provider.findMany({
         where: { createdAt: { gte: startDate } },
         select: {
           createdAt: true,
@@ -504,7 +503,7 @@ export async function exportAnalyticsCSV(
           state: true,
         },
       }),
-      db.booking.findMany({
+      db.appointment.findMany({
         where: { createdAt: { gte: startDate } },
         select: {
           createdAt: true,
@@ -521,14 +520,14 @@ export async function exportAnalyticsCSV(
       }),
     ]);
 
-    csvContent = "Date,New Users,New Daycares,Bookings,Revenue\n";
+    csvContent = "Date,New Users,New Providers,Appointments,Revenue\n";
 
     // Group by date
-    const dateMap = new Map<string, { users: number; daycares: number; bookings: number; revenue: number }>();
+    const dateMap = new Map<string, { users: number; providers: number; appointments: number; revenue: number }>();
 
     for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split("T")[0];
-      dateMap.set(dateStr, { users: 0, daycares: 0, bookings: 0, revenue: 0 });
+      dateMap.set(dateStr, { users: 0, providers: 0, appointments: 0, revenue: 0 });
     }
 
     users.forEach((u) => {
@@ -537,16 +536,16 @@ export async function exportAnalyticsCSV(
       if (entry) entry.users++;
     });
 
-    daycares.forEach((d) => {
-      const dateStr = d.createdAt.toISOString().split("T")[0];
+    providers.forEach((p) => {
+      const dateStr = p.createdAt.toISOString().split("T")[0];
       const entry = dateMap.get(dateStr);
-      if (entry) entry.daycares++;
+      if (entry) entry.providers++;
     });
 
-    bookings.forEach((b) => {
-      const dateStr = b.createdAt.toISOString().split("T")[0];
+    appointments.forEach((a) => {
+      const dateStr = a.createdAt.toISOString().split("T")[0];
       const entry = dateMap.get(dateStr);
-      if (entry) entry.bookings++;
+      if (entry) entry.appointments++;
     });
 
     payments.forEach((p) => {
@@ -556,21 +555,21 @@ export async function exportAnalyticsCSV(
     });
 
     dateMap.forEach((value, date) => {
-      csvContent += `${date},${value.users},${value.daycares},${value.bookings},${value.revenue}\n`;
+      csvContent += `${date},${value.users},${value.providers},${value.appointments},${value.revenue}\n`;
     });
-  } else if (daycareId) {
-    // Daycare-specific export
-    const [pageViews, bookings] = await Promise.all([
+  } else if (providerId) {
+    // Provider-specific export
+    const [pageViews, appointments] = await Promise.all([
       db.pageView.findMany({
-        where: { daycareId, createdAt: { gte: startDate } },
+        where: { providerId, createdAt: { gte: startDate } },
         select: {
           createdAt: true,
           source: true,
           deviceType: true,
         },
       }),
-      db.booking.findMany({
-        where: { daycareId, createdAt: { gte: startDate } },
+      db.appointment.findMany({
+        where: { providerId, createdAt: { gte: startDate } },
         select: {
           createdAt: true,
           status: true,
@@ -579,13 +578,13 @@ export async function exportAnalyticsCSV(
       }),
     ]);
 
-    csvContent = "Date,Page Views,Unique Sources,Bookings,Confirmed\n";
+    csvContent = "Date,Page Views,Appointments,Confirmed\n";
 
-    const dateMap = new Map<string, { views: number; bookings: number; confirmed: number }>();
+    const dateMap = new Map<string, { views: number; appointments: number; confirmed: number }>();
 
     for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split("T")[0];
-      dateMap.set(dateStr, { views: 0, bookings: 0, confirmed: 0 });
+      dateMap.set(dateStr, { views: 0, appointments: 0, confirmed: 0 });
     }
 
     pageViews.forEach((pv) => {
@@ -594,17 +593,17 @@ export async function exportAnalyticsCSV(
       if (entry) entry.views++;
     });
 
-    bookings.forEach((b) => {
-      const dateStr = b.createdAt.toISOString().split("T")[0];
+    appointments.forEach((a) => {
+      const dateStr = a.createdAt.toISOString().split("T")[0];
       const entry = dateMap.get(dateStr);
       if (entry) {
-        entry.bookings++;
-        if (b.status === "CONFIRMED") entry.confirmed++;
+        entry.appointments++;
+        if (a.status === "CONFIRMED") entry.confirmed++;
       }
     });
 
     dateMap.forEach((value, date) => {
-      csvContent += `${date},${value.views},${value.bookings},${value.confirmed}\n`;
+      csvContent += `${date},${value.views},${value.appointments},${value.confirmed}\n`;
     });
   }
 

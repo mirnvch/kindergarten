@@ -30,38 +30,45 @@ export const deleteUserSchema = z.object({
 
 export const updateUserRoleSchema = z.object({
   userId: idSchema,
-  newRole: z.enum(["PARENT", "DAYCARE_OWNER", "DAYCARE_STAFF", "ADMIN"]),
+  newRole: z.enum(["PATIENT", "PROVIDER", "CLINIC_STAFF", "ADMIN"]),
 });
 
 // ============================================
-// Admin Daycare Actions
+// Admin Provider Actions
 // ============================================
 
-export const approveDaycareSchema = z.object({
-  daycareId: idSchema,
+export const approveProviderSchema = z.object({
+  providerId: idSchema,
 });
 
-export const rejectDaycareSchema = z.object({
-  daycareId: idSchema,
+export const rejectProviderSchema = z.object({
+  providerId: idSchema,
   reason: reasonSchema,
 });
 
-export const suspendDaycareSchema = z.object({
-  daycareId: idSchema,
+export const suspendProviderSchema = z.object({
+  providerId: idSchema,
   reason: reasonSchema,
 });
 
-export const reactivateDaycareSchema = z.object({
-  daycareId: idSchema,
+export const reactivateProviderSchema = z.object({
+  providerId: idSchema,
 });
 
-export const deleteDaycareSchema = z.object({
-  daycareId: idSchema,
+export const deleteProviderSchema = z.object({
+  providerId: idSchema,
 });
 
 export const toggleFeaturedSchema = z.object({
-  daycareId: idSchema,
+  providerId: idSchema,
 });
+
+// Legacy aliases for backward compatibility
+export const approveDaycareSchema = approveProviderSchema;
+export const rejectDaycareSchema = rejectProviderSchema;
+export const suspendDaycareSchema = suspendProviderSchema;
+export const reactivateDaycareSchema = reactivateProviderSchema;
+export const deleteDaycareSchema = deleteProviderSchema;
 
 // ============================================
 // Admin Review Actions
@@ -109,12 +116,19 @@ export type SuspendUserInput = z.infer<typeof suspendUserSchema>;
 export type DeleteUserInput = z.infer<typeof deleteUserSchema>;
 export type UpdateUserRoleInput = z.infer<typeof updateUserRoleSchema>;
 
-export type ApproveDaycareInput = z.infer<typeof approveDaycareSchema>;
-export type RejectDaycareInput = z.infer<typeof rejectDaycareSchema>;
-export type SuspendDaycareInput = z.infer<typeof suspendDaycareSchema>;
-export type ReactivateDaycareInput = z.infer<typeof reactivateDaycareSchema>;
-export type DeleteDaycareInput = z.infer<typeof deleteDaycareSchema>;
+export type ApproveProviderInput = z.infer<typeof approveProviderSchema>;
+export type RejectProviderInput = z.infer<typeof rejectProviderSchema>;
+export type SuspendProviderInput = z.infer<typeof suspendProviderSchema>;
+export type ReactivateProviderInput = z.infer<typeof reactivateProviderSchema>;
+export type DeleteProviderInput = z.infer<typeof deleteProviderSchema>;
 export type ToggleFeaturedInput = z.infer<typeof toggleFeaturedSchema>;
+
+// Legacy type aliases
+export type ApproveDaycareInput = ApproveProviderInput;
+export type RejectDaycareInput = RejectProviderInput;
+export type SuspendDaycareInput = SuspendProviderInput;
+export type ReactivateDaycareInput = ReactivateProviderInput;
+export type DeleteDaycareInput = DeleteProviderInput;
 
 export type ApproveReviewInput = z.infer<typeof approveReviewSchema>;
 export type RejectReviewInput = z.infer<typeof rejectReviewSchema>;

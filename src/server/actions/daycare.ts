@@ -127,7 +127,7 @@ export async function searchDaycares(filters: SearchFilters) {
   const fetchLimit = needsPostFiltering ? 500 : limit; // Fetch more for post-filtering
 
   const [allDaycares, totalBeforeFilter] = await Promise.all([
-    db.daycare.findMany({
+    db.provider.findMany({
       where,
       take: fetchLimit,
       orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
@@ -144,7 +144,7 @@ export async function searchDaycares(filters: SearchFilters) {
         },
       },
     }),
-    db.daycare.count({ where }),
+    db.provider.count({ where }),
   ]);
 
   // Get avg ratings using SQL aggregation
@@ -255,7 +255,7 @@ export async function searchDaycares(filters: SearchFilters) {
 }
 
 export async function getDaycareBySlug(slug: string) {
-  const daycare = await db.daycare.findUnique({
+  const daycare = await db.provider.findUnique({
     where: { slug, status: DaycareStatus.APPROVED, deletedAt: null },
     include: {
       photos: { orderBy: { order: "asc" } },
@@ -319,7 +319,7 @@ export async function getDaycareBySlug(slug: string) {
 }
 
 export async function getFeaturedDaycares(limit = 6) {
-  const daycares = await db.daycare.findMany({
+  const daycares = await db.provider.findMany({
     where: {
       status: DaycareStatus.APPROVED,
       isFeatured: true,
@@ -362,7 +362,7 @@ export async function getFeaturedDaycares(limit = 6) {
 
 // Get unique cities and states for filter dropdowns
 export async function getLocations() {
-  const locations = await db.daycare.findMany({
+  const locations = await db.provider.findMany({
     where: { status: DaycareStatus.APPROVED, deletedAt: null },
     select: { city: true, state: true },
     distinct: ["city", "state"],

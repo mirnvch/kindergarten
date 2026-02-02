@@ -25,15 +25,16 @@ export async function getMessageThreads() {
 
   const threads = await db.messageThread.findMany({
     where: {
-      parentId: session.user.id,
+      patientId: session.user.id,
       isArchived: false,
     },
     include: {
-      daycare: {
+      provider: {
         select: {
           id: true,
           name: true,
           slug: true,
+          specialty: true,
           photos: {
             where: { isPrimary: true },
             take: 1,
@@ -60,11 +61,12 @@ export async function getMessageThreads() {
     id: thread.id,
     subject: thread.subject,
     lastMessageAt: thread.lastMessageAt,
-    daycare: {
-      id: thread.daycare.id,
-      name: thread.daycare.name,
-      slug: thread.daycare.slug,
-      photo: thread.daycare.photos[0]?.url || null,
+    provider: {
+      id: thread.provider.id,
+      name: thread.provider.name,
+      slug: thread.provider.slug,
+      specialty: thread.provider.specialty,
+      photo: thread.provider.photos[0]?.url || null,
     },
     lastMessage: thread.messages[0] || null,
     unreadCount: 0, // TODO: calculate unread count
@@ -88,14 +90,15 @@ export async function getThreadMessages(
   const thread = await db.messageThread.findFirst({
     where: {
       id: threadId,
-      parentId: session.user.id,
+      patientId: session.user.id,
     },
     include: {
-      daycare: {
+      provider: {
         select: {
           id: true,
           name: true,
           slug: true,
+          specialty: true,
           photos: {
             where: { isPrimary: true },
             take: 1,
@@ -163,11 +166,12 @@ export async function getThreadMessages(
   return {
     id: thread.id,
     subject: thread.subject,
-    daycare: {
-      id: thread.daycare.id,
-      name: thread.daycare.name,
-      slug: thread.daycare.slug,
-      photo: thread.daycare.photos[0]?.url || null,
+    provider: {
+      id: thread.provider.id,
+      name: thread.provider.name,
+      slug: thread.provider.slug,
+      specialty: thread.provider.specialty,
+      photo: thread.provider.photos[0]?.url || null,
     },
     messages: orderedMessages.map((msg) => ({
       id: msg.id,
@@ -248,14 +252,14 @@ export async function sendMessage(
   }
 
   try {
-    // Verify thread belongs to user (parent or daycare staff)
+    // Verify thread belongs to user (patient or provider staff)
     const thread = await db.messageThread.findFirst({
       where: {
         id: threadId,
         OR: [
-          { parentId: session.user.id },
+          { patientId: session.user.id },
           {
-            daycare: {
+            provider: {
               staff: {
                 some: { userId: session.user.id },
               },
@@ -265,9 +269,9 @@ export async function sendMessage(
       },
       select: {
         id: true,
-        parentId: true,
-        daycareId: true,
-        daycare: {
+        patientId: true,
+        providerId: true,
+        provider: {
           select: {
             staff: {
               select: { userId: true },
@@ -328,8 +332,8 @@ export async function sendMessage(
 
     // Notify other party about new message in thread list
     const recipientIds = [
-      thread.parentId,
-      ...thread.daycare.staff.map((s) => s.userId),
+      thread.patientId,
+      ...thread.provider.staff.map((s) => s.userId),
     ].filter((id) => id !== session.user.id);
 
     for (const recipientId of recipientIds) {
@@ -348,7 +352,7 @@ export async function sendMessage(
   }
 }
 
-export async function startNewThread(daycareId: string, subject: string, message: string) {
+export async function startNewThread(providerId: string, subject: string, message: string) {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -380,38 +384,38 @@ export async function startNewThread(daycareId: string, subject: string, message
     };
   }
 
-  // Validate daycareId format (CUID)
-  if (!/^c[a-z0-9]{24}$/.test(daycareId)) {
-    return { success: false, error: "Invalid daycare ID" };
+  // Validate providerId format (CUID)
+  if (!/^c[a-z0-9]{24}$/.test(providerId)) {
+    return { success: false, error: "Invalid provider ID" };
   }
 
   try {
     // Check if thread already exists
     let thread = await db.messageThread.findUnique({
       where: {
-        daycareId_parentId: {
-          daycareId,
-          parentId: session.user.id,
+        providerId_patientId: {
+          providerId,
+          patientId: session.user.id,
         },
       },
     });
 
     if (!thread) {
-      // Verify daycare exists and is active
-      const daycare = await db.daycare.findUnique({
-        where: { id: daycareId },
+      // Verify provider exists and is active
+      const provider = await db.provider.findUnique({
+        where: { id: providerId },
         select: { id: true, status: true },
       });
 
-      if (!daycare || daycare.status !== "APPROVED") {
-        return { success: false, error: "Daycare not found or inactive" };
+      if (!provider || provider.status !== "APPROVED") {
+        return { success: false, error: "Provider not found or inactive" };
       }
 
       // Create new thread
       thread = await db.messageThread.create({
         data: {
-          daycareId,
-          parentId: session.user.id,
+          providerId,
+          patientId: session.user.id,
           subject: trimmedSubject || null,
           lastMessageAt: new Date(),
         },

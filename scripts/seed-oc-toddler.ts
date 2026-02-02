@@ -16,132 +16,152 @@ function createPrismaClient() {
 const prisma = createPrismaClient();
 
 async function main() {
-  console.log("Seeding OC Toddler School...");
+  console.log("Seeding sample medical provider...");
 
-  // Create daycare
-  const daycare = await prisma.daycare.create({
+  // Create provider (medical practice)
+  const provider = await prisma.provider.create({
     data: {
-      slug: "oc-toddler-school-irvine",
-      name: "OC Toddler School and Daycare",
-      description: `A Montessori-based preschool and childcare facility emphasizing independence, creativity, and natural curiosity.
+      slug: "irvine-family-medicine",
+      name: "Irvine Family Medicine Center",
+      description: `A patient-centered family medicine practice serving the Irvine community.
 
-We've been nurturing young minds for over 10 years with more than 100 enrolled learners. Our approach combines the proven Montessori method with hands-on learning experiences that foster each child's natural development.
+We've been providing comprehensive healthcare for over 15 years. Our approach combines modern medical practices with personalized care to help families achieve optimal health.
 
-Key highlights:
-• Full Montessori curriculum
-• Low child-to-caregiver ratios
-• Fresh, mostly organic meals and snacks provided daily
-• Beautiful outdoor play areas
-• Extended care options available
+Services:
+• Annual physicals and wellness exams
+• Preventive care and vaccinations
+• Chronic disease management
+• Minor procedures and urgent care
+• Telemedicine appointments available
 
-We are affiliated with the California Home Schooling Association, Association Montessori Internationale (AMI), American Montessori Society (AMS), and the Greater Irvine Chamber of Commerce.`,
+We accept most major insurance plans and offer affordable self-pay options.`,
 
-      email: "info@octoddlerschool.com",
-      phone: "(949) 484-9990",
-      website: "https://www.octoddlerschool.com",
+      email: "info@irvinefamilymed.com",
+      phone: "(949) 555-1234",
+      website: "https://www.irvinefamilymed.com",
 
-      address: "32 Grassland",
+      address: "123 Medical Center Drive",
       city: "Irvine",
       state: "CA",
       zipCode: "92620",
       country: "US",
 
-      // Coordinates for Irvine, CA (Woodbury area)
+      // Coordinates for Irvine, CA
       latitude: 33.7175,
       longitude: -117.7595,
 
-      capacity: 50,
-      minAge: 12, // 12 months
-      maxAge: 72, // 6 years
+      specialty: "Family Medicine",
+      subspecialty: "Preventive Care",
+      credentials: "MD, FAAFP",
+      npi: "1234567890",
+      education: "Stanford University School of Medicine",
+      experience: 15,
+      languages: ["English", "Spanish"],
 
-      openingTime: "07:00",
-      closingTime: "18:00",
+      offersTelehealth: true,
+      teleHealthPlatform: "doxy.me",
+
+      acceptedInsurance: ["Aetna", "Blue Cross Blue Shield", "Cigna", "UnitedHealthcare", "Medicare"],
+      acceptsMedicaid: false,
+      acceptsMedicare: true,
+
+      consultationFee: 150,
+      telehealthFee: 100,
+      acceptsUninsured: true,
+      slidingScalePricing: true,
+
+      openingTime: "08:00",
+      closingTime: "17:00",
       operatingDays: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-
-      pricePerMonth: 1240,
-      pricePerWeek: 350,
-      pricePerDay: 80,
-      registrationFee: 150,
 
       status: "APPROVED",
       isVerified: true,
       isFeatured: true,
+      acceptingNewPatients: true,
 
-      metaTitle: "OC Toddler School - Montessori Preschool in Irvine, CA",
+      metaTitle: "Irvine Family Medicine - Primary Care in Irvine, CA",
       metaDescription:
-        "Premier Montessori-based preschool and daycare in Irvine. Ages 12 months to 6 years. Organic meals, low ratios, nurturing environment.",
+        "Trusted family medicine practice in Irvine offering comprehensive care, telehealth visits, and accepting most insurance plans.",
     },
   });
 
-  console.log("Created daycare:", daycare.id);
+  console.log("Created provider:", provider.id);
 
-  // Add programs
-  const programs = await Promise.all([
-    prisma.program.create({
+  // Add services (replacing programs)
+  const services = await Promise.all([
+    prisma.service.create({
       data: {
-        daycareId: daycare.id,
-        name: "Infant & Toddler Program",
+        providerId: provider.id,
+        name: "Annual Physical Exam",
         description:
-          "For our youngest learners, we provide a nurturing environment that encourages exploration and development through sensory activities, music, and gentle guidance.",
-        ageMin: 12,
-        ageMax: 24,
-        price: 1310,
-        schedule: "Full-time (8:00 AM - 5:30 PM)",
+          "Comprehensive annual wellness exam including vital signs, physical examination, health screening, and preventive care discussion.",
+        duration: 45,
+        price: 150,
+        isTelehealth: false,
       },
     }),
-    prisma.program.create({
+    prisma.service.create({
       data: {
-        daycareId: daycare.id,
-        name: "Pre-Montessori",
+        providerId: provider.id,
+        name: "Sick Visit",
         description:
-          "Bridge program preparing children for the Primary classroom. Focus on practical life skills, language development, and social interaction.",
-        ageMin: 24,
-        ageMax: 36,
-        price: 1240,
-        schedule: "Full-time (8:00 AM - 5:30 PM)",
+          "Same-day or next-day appointment for acute illnesses such as cold, flu, infections, or other sudden health concerns.",
+        duration: 20,
+        price: 100,
+        isTelehealth: false,
       },
     }),
-    prisma.program.create({
+    prisma.service.create({
       data: {
-        daycareId: daycare.id,
-        name: "Primary Montessori",
+        providerId: provider.id,
+        name: "Telehealth Consultation",
         description:
-          "Our flagship program featuring the complete Montessori curriculum including practical life, sensorial, language, mathematics, and cultural studies.",
-        ageMin: 36,
-        ageMax: 72,
-        price: 1120,
-        schedule: "Full-time (8:00 AM - 5:30 PM)",
+          "Virtual video visit for follow-ups, medication management, or health concerns that don't require in-person examination.",
+        duration: 20,
+        price: 75,
+        isTelehealth: true,
+      },
+    }),
+    prisma.service.create({
+      data: {
+        providerId: provider.id,
+        name: "Chronic Care Management",
+        description:
+          "Ongoing management of chronic conditions like diabetes, hypertension, or heart disease. Monthly check-ins and care coordination.",
+        duration: 30,
+        price: 125,
+        isTelehealth: false,
       },
     }),
   ]);
 
-  console.log("Created programs:", programs.length);
+  console.log("Created services:", services.length);
 
   // Add photos (using placeholder images)
   const photos = await Promise.all([
-    prisma.daycarePhoto.create({
+    prisma.providerPhoto.create({
       data: {
-        daycareId: daycare.id,
-        url: "https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=800",
-        caption: "Montessori classroom",
+        providerId: provider.id,
+        url: "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=800",
+        caption: "Modern medical office",
         isPrimary: true,
         order: 0,
       },
     }),
-    prisma.daycarePhoto.create({
+    prisma.providerPhoto.create({
       data: {
-        daycareId: daycare.id,
-        url: "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=800",
-        caption: "Children learning",
+        providerId: provider.id,
+        url: "https://images.unsplash.com/photo-1666214280250-41f16e09a7c2?w=800",
+        caption: "Consultation room",
         isPrimary: false,
         order: 1,
       },
     }),
-    prisma.daycarePhoto.create({
+    prisma.providerPhoto.create({
       data: {
-        daycareId: daycare.id,
-        url: "https://images.unsplash.com/photo-1544776193-352d25ca82cd?w=800",
-        caption: "Outdoor play area",
+        providerId: provider.id,
+        url: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800",
+        caption: "Reception area",
         isPrimary: false,
         order: 2,
       },
@@ -150,32 +170,32 @@ We are affiliated with the California Home Schooling Association, Association Mo
 
   console.log("Created photos:", photos.length);
 
-  // Link to amenities (if they exist)
-  const amenityNames = [
-    "Organic Meals",
-    "Outdoor Playground",
-    "Montessori Curriculum",
-    "Extended Hours",
-    "Small Class Sizes",
+  // Link to facilities (if they exist)
+  const facilityNames = [
+    "Wheelchair Accessible",
+    "Free Parking",
+    "Private Exam Rooms",
+    "Lab On-Site",
+    "Electronic Health Records",
   ];
 
-  for (const name of amenityNames) {
-    const amenity = await prisma.amenity.findFirst({
+  for (const name of facilityNames) {
+    const facility = await prisma.facility.findFirst({
       where: { name: { contains: name, mode: "insensitive" } },
     });
 
-    if (amenity) {
-      await prisma.daycareAmenity.create({
+    if (facility) {
+      await prisma.providerFacility.create({
         data: {
-          daycareId: daycare.id,
-          amenityId: amenity.id,
+          providerId: provider.id,
+          facilityId: facility.id,
         },
       });
-      console.log("Linked amenity:", name);
+      console.log("Linked facility:", name);
     }
   }
 
-  console.log("\nDone! Daycare URL: /daycare/oc-toddler-school-irvine");
+  console.log("\nDone! Provider URL: /provider/irvine-family-medicine");
 }
 
 main()

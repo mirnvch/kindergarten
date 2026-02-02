@@ -30,35 +30,38 @@ function getSource(): string | undefined {
 }
 
 interface PageViewTrackerProps {
-  daycareId: string;
+  providerId?: string;
+  daycareId?: string; // Legacy alias
 }
 
-export function PageViewTracker({ daycareId }: PageViewTrackerProps) {
+export function PageViewTracker({ providerId, daycareId }: PageViewTrackerProps) {
   const tracked = useRef(false);
+  const id = providerId || daycareId;
 
   useEffect(() => {
     // Only track once per page load
-    if (tracked.current) return;
+    if (tracked.current || !id) return;
     tracked.current = true;
 
     const sessionId = getSessionId();
     if (!sessionId) return;
 
     trackPageView({
-      daycareId,
+      providerId: id,
       path: window.location.pathname,
       sessionId,
       referrer: document.referrer || undefined,
       source: getSource(),
     });
-  }, [daycareId]);
+  }, [id]);
 
   return null;
 }
 
 interface EventTrackerProps {
   children: React.ReactNode;
-  daycareId?: string;
+  providerId?: string;
+  daycareId?: string; // Legacy alias
   eventType: string;
   eventData?: Record<string, string | number | boolean | null>;
   asChild?: boolean;
@@ -66,16 +69,19 @@ interface EventTrackerProps {
 
 export function EventTracker({
   children,
+  providerId,
   daycareId,
   eventType,
   eventData,
 }: EventTrackerProps) {
+  const id = providerId || daycareId;
+
   const handleClick = () => {
     const sessionId = getSessionId();
     if (!sessionId) return;
 
     trackEvent({
-      daycareId,
+      providerId: id,
       sessionId,
       eventType,
       eventData,
@@ -92,12 +98,14 @@ export function EventTracker({
 
 // Hook for tracking events programmatically
 export function useAnalytics() {
-  const track = (eventType: string, data?: { daycareId?: string; eventData?: Record<string, string | number | boolean | null> }) => {
+  const track = (eventType: string, data?: { providerId?: string; daycareId?: string; eventData?: Record<string, string | number | boolean | null> }) => {
     const sessionId = getSessionId();
     if (!sessionId) return;
 
+    const id = data?.providerId || data?.daycareId;
+
     trackEvent({
-      daycareId: data?.daycareId,
+      providerId: id,
       sessionId,
       eventType,
       eventData: data?.eventData,

@@ -6,12 +6,12 @@ import { VerificationStatus } from "@/components/portal/verification-status";
 import { VerificationForm } from "@/components/portal/verification-form";
 
 export const metadata: Metadata = {
-  title: "Verification | KinderCare Portal",
+  title: "Verification | DocConnect Portal",
   description: "Get your daycare verified",
 };
 
 async function getDaycareWithVerification(userId: string) {
-  const daycareStaff = await db.daycareStaff.findFirst({
+  const providerStaff = await db.providerStaff.findFirst({
     where: { userId, role: "owner", isActive: true },
     include: {
       daycare: {
@@ -31,7 +31,7 @@ async function getDaycareWithVerification(userId: string) {
     },
   });
 
-  return daycareStaff?.daycare;
+  return providerStaff?.daycare;
 }
 
 export default async function VerificationPage() {
@@ -92,7 +92,7 @@ export default async function VerificationPage() {
 
       {/* Verification Form */}
       {canSubmitRequest && !daycare.isVerified && (
-        <VerificationForm daycareId={daycare.id} />
+        <VerificationForm providerId={daycare.id} />
       )}
 
       {/* Requirements Info */}

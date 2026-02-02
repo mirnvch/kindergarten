@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 interface NotificationPreferencesProps {
   initialPreferences: {
-    emailBookings: boolean;
+    emailAppointments: boolean;
     emailMessages: boolean;
     emailMarketing: boolean;
     pushEnabled: boolean;
@@ -48,15 +48,15 @@ export function NotificationPreferences({ initialPreferences }: NotificationPref
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="emailBookings">Booking Updates</Label>
+              <Label htmlFor="emailAppointments">Appointment Updates</Label>
               <p className="text-sm text-muted-foreground">
-                Receive emails for booking confirmations and reminders
+                Receive emails for appointment confirmations and reminders
               </p>
             </div>
             <Switch
-              id="emailBookings"
-              checked={preferences.emailBookings}
-              onCheckedChange={() => handleToggle("emailBookings")}
+              id="emailAppointments"
+              checked={preferences.emailAppointments}
+              onCheckedChange={() => handleToggle("emailAppointments")}
               disabled={isPending}
             />
           </div>

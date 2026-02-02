@@ -12,7 +12,7 @@ import { BillingHistory } from "@/components/billing/billing-history";
 import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
 
 export const metadata: Metadata = {
-  title: "Billing | KinderCare Portal",
+  title: "Billing | DocConnect Portal",
   description: "Manage your subscription and billing",
 };
 
@@ -24,7 +24,7 @@ export default async function BillingPage() {
   }
 
   // Get daycare with subscription
-  const daycareStaff = await db.daycareStaff.findFirst({
+  const providerStaff = await db.providerStaff.findFirst({
     where: {
       userId: session.user.id,
       role: "owner",
@@ -38,11 +38,11 @@ export default async function BillingPage() {
     },
   });
 
-  if (!daycareStaff) {
+  if (!providerStaff) {
     redirect("/portal");
   }
 
-  const daycare = daycareStaff.daycare;
+  const daycare = providerStaff.daycare;
   const subscription = daycare.subscription;
   const currentPlan = subscription?.plan || "FREE";
   const planData = PRICING_PLANS[currentPlan];
@@ -50,7 +50,7 @@ export default async function BillingPage() {
   // Get recent payments
   const payments = await db.payment.findMany({
     where: {
-      daycareId: daycare.id,
+      providerId: daycare.id,
       type: "subscription",
     },
     orderBy: { createdAt: "desc" },

@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   XCircle,
   PlayCircle,
-  FileText,
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -39,12 +38,14 @@ import { VerificationStatus } from "@prisma/client";
 interface VerificationActionsProps {
   requestId: string;
   status: VerificationStatus;
-  daycareId: string;
+  providerId?: string;
+  daycareId?: string; // Legacy support
 }
 
 export function VerificationActions({
   requestId,
   status,
+  providerId,
   daycareId,
 }: VerificationActionsProps) {
   const router = useRouter();
@@ -53,6 +54,9 @@ export function VerificationActions({
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [reviewNotes, setReviewNotes] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
+
+  // Support both providerId and daycareId (legacy)
+  const _providerId = providerId || daycareId;
 
   const handleStartReview = () => {
     startTransition(async () => {
@@ -163,7 +167,7 @@ export function VerificationActions({
           <DialogHeader>
             <DialogTitle>Approve Verification</DialogTitle>
             <DialogDescription>
-              This will mark the daycare as verified and display the verification
+              This will mark the provider as verified and display the verification
               badge on their listing.
             </DialogDescription>
           </DialogHeader>
@@ -214,7 +218,7 @@ export function VerificationActions({
             <DialogTitle>Reject Verification</DialogTitle>
             <DialogDescription>
               Please provide a reason for rejection. This will be visible to the
-              daycare owner.
+              provider.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">

@@ -12,18 +12,18 @@ import { db } from "@/lib/db";
 async function getStats() {
   const [
     totalUsers,
-    totalDaycares,
-    pendingDaycares,
-    totalBookings,
-    confirmedBookings,
+    totalProviders,
+    pendingProviders,
+    totalAppointments,
+    confirmedAppointments,
     recentUsers,
-    recentDaycares,
+    recentProviders,
   ] = await Promise.all([
     db.user.count(),
-    db.daycare.count(),
-    db.daycare.count({ where: { status: "PENDING" } }),
-    db.booking.count(),
-    db.booking.count({ where: { status: "CONFIRMED" } }),
+    db.provider.count(),
+    db.provider.count({ where: { status: "PENDING" } }),
+    db.appointment.count(),
+    db.appointment.count({ where: { status: "CONFIRMED" } }),
     db.user.count({
       where: {
         createdAt: {
@@ -31,7 +31,7 @@ async function getStats() {
         },
       },
     }),
-    db.daycare.count({
+    db.provider.count({
       where: {
         createdAt: {
           gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
@@ -42,23 +42,23 @@ async function getStats() {
 
   return {
     totalUsers,
-    totalDaycares,
-    pendingDaycares,
-    totalBookings,
-    confirmedBookings,
+    totalProviders,
+    pendingProviders,
+    totalAppointments,
+    confirmedAppointments,
     recentUsers,
-    recentDaycares,
+    recentProviders,
   };
 }
 
 async function getRecentActivity() {
-  const [recentBookings, recentReviews] = await Promise.all([
-    db.booking.findMany({
+  const [recentAppointments, recentReviews] = await Promise.all([
+    db.appointment.findMany({
       take: 5,
       orderBy: { createdAt: "desc" },
       include: {
-        parent: { select: { firstName: true, lastName: true } },
-        daycare: { select: { name: true } },
+        patient: { select: { firstName: true, lastName: true } },
+        provider: { select: { name: true } },
       },
     }),
     db.review.findMany({
@@ -66,12 +66,12 @@ async function getRecentActivity() {
       orderBy: { createdAt: "desc" },
       include: {
         user: { select: { firstName: true, lastName: true } },
-        daycare: { select: { name: true } },
+        provider: { select: { name: true } },
       },
     }),
   ]);
 
-  return { recentBookings, recentReviews };
+  return { recentAppointments, recentReviews };
 }
 
 function StatsCards({ stats }: { stats: Awaited<ReturnType<typeof getStats>> }) {
@@ -84,24 +84,24 @@ function StatsCards({ stats }: { stats: Awaited<ReturnType<typeof getStats>> }) 
       changeType: "positive",
     },
     {
-      title: "Total Daycares",
-      value: stats.totalDaycares,
+      title: "Total Providers",
+      value: stats.totalProviders,
       icon: Building2,
-      change: `+${stats.recentDaycares} this week`,
+      change: `+${stats.recentProviders} this week`,
       changeType: "positive",
     },
     {
       title: "Pending Approval",
-      value: stats.pendingDaycares,
+      value: stats.pendingProviders,
       icon: Clock,
       change: "Awaiting review",
       changeType: "neutral",
     },
     {
-      title: "Total Bookings",
-      value: stats.totalBookings,
+      title: "Total Appointments",
+      value: stats.totalAppointments,
       icon: Calendar,
-      change: `${stats.confirmedBookings} confirmed`,
+      change: `${stats.confirmedAppointments} confirmed`,
       changeType: "positive",
     },
   ] as const;
@@ -138,36 +138,36 @@ function RecentActivity({
     <div className="grid gap-4 md:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Recent Bookings</CardTitle>
+          <CardTitle className="text-lg">Recent Appointments</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {activity.recentBookings.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No recent bookings</p>
+            {activity.recentAppointments.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No recent appointments</p>
             ) : (
-              activity.recentBookings.map((booking) => (
+              activity.recentAppointments.map((appointment) => (
                 <div
-                  key={booking.id}
+                  key={appointment.id}
                   className="flex items-center justify-between"
                 >
                   <div>
                     <p className="text-sm font-medium">
-                      {booking.parent.firstName} {booking.parent.lastName}
+                      {appointment.patient.firstName} {appointment.patient.lastName}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {booking.daycare.name}
+                      {appointment.provider.name}
                     </p>
                   </div>
                   <span
                     className={`text-xs px-2 py-1 rounded-full ${
-                      booking.status === "CONFIRMED"
+                      appointment.status === "CONFIRMED"
                         ? "bg-green-100 text-green-700"
-                        : booking.status === "PENDING"
+                        : appointment.status === "PENDING"
                         ? "bg-yellow-100 text-yellow-700"
                         : "bg-gray-100 text-gray-700"
                     }`}
                   >
-                    {booking.status}
+                    {appointment.status}
                   </span>
                 </div>
               ))
@@ -195,7 +195,7 @@ function RecentActivity({
                       {review.user.firstName} {review.user.lastName}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {review.daycare.name} - {review.rating}/5
+                      {review.provider.name} - {review.rating}/5
                     </p>
                   </div>
                   <span className="text-xs text-muted-foreground">

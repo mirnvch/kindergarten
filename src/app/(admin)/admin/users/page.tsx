@@ -57,7 +57,7 @@ async function getUsers(params: AdminUsersSearch) {
         createdAt: true,
         _count: {
           select: {
-            bookings: true,
+            appointments: true,
             reviews: true,
           },
         },
@@ -78,9 +78,9 @@ function getRoleBadgeVariant(role: string) {
   switch (role) {
     case "ADMIN":
       return "destructive";
-    case "DAYCARE_OWNER":
+    case "PROVIDER":
       return "default";
-    case "DAYCARE_STAFF":
+    case "CLINIC_STAFF":
       return "secondary";
     default:
       return "outline";
@@ -126,9 +126,9 @@ export default async function UsersPage({
                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
                 <option value="">All Roles</option>
-                <option value="PARENT">Parent</option>
-                <option value="DAYCARE_OWNER">Daycare Owner</option>
-                <option value="DAYCARE_STAFF">Daycare Staff</option>
+                <option value="PATIENT">Patient</option>
+                <option value="PROVIDER">Provider</option>
+                <option value="CLINIC_STAFF">Clinic Staff</option>
                 <option value="ADMIN">Admin</option>
               </select>
               <Button type="submit">
@@ -145,7 +145,7 @@ export default async function UsersPage({
                 <TableHead>User</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Verified</TableHead>
-                <TableHead>Bookings</TableHead>
+                <TableHead>Appointments</TableHead>
                 <TableHead>Reviews</TableHead>
                 <TableHead>Joined</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
@@ -194,7 +194,7 @@ export default async function UsersPage({
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell>{user._count.bookings}</TableCell>
+                    <TableCell>{user._count.appointments}</TableCell>
                     <TableCell>{user._count.reviews}</TableCell>
                     <TableCell>
                       {new Date(user.createdAt).toLocaleDateString()}

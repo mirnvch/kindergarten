@@ -31,7 +31,7 @@ async function getReviews(params: AdminReviewsSearch) {
     where.OR = [
       { title: { contains: search, mode: "insensitive" } },
       { content: { contains: search, mode: "insensitive" } },
-      { daycare: { name: { contains: search, mode: "insensitive" } } },
+      { provider: { name: { contains: search, mode: "insensitive" } } },
     ];
   }
 
@@ -55,7 +55,7 @@ async function getReviews(params: AdminReviewsSearch) {
       orderBy: { createdAt: "desc" },
       include: {
         user: { select: { firstName: true, lastName: true, email: true } },
-        daycare: { select: { name: true, slug: true } },
+        provider: { select: { name: true, slug: true } },
       },
     }),
     db.review.count({ where }),
@@ -209,7 +209,7 @@ export default async function ReviewsPage({
             <TableHeader>
               <TableRow>
                 <TableHead>Review</TableHead>
-                <TableHead>Daycare</TableHead>
+                <TableHead>Provider</TableHead>
                 <TableHead>Rating</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Date</TableHead>
@@ -248,11 +248,11 @@ export default async function ReviewsPage({
                     </TableCell>
                     <TableCell>
                       <Link
-                        href={`/daycare/${review.daycare.slug}`}
+                        href={`/provider/${review.provider.slug}`}
                         className="text-sm hover:underline"
                         target="_blank"
                       >
-                        {review.daycare.name}
+                        {review.provider.name}
                       </Link>
                     </TableCell>
                     <TableCell>{renderStars(review.rating)}</TableCell>
@@ -273,7 +273,7 @@ export default async function ReviewsPage({
                     <TableCell>
                       <ReviewActions
                         reviewId={review.id}
-                        daycareSlug={review.daycare.slug}
+                        providerSlug={review.provider.slug}
                         isApproved={review.isApproved}
                         isVerified={review.isVerified}
                       />

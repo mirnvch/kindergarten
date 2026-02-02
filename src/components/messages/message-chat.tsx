@@ -40,10 +40,11 @@ interface Message {
 interface Thread {
   id: string;
   subject: string | null;
-  daycare: {
+  provider: {
     id: string;
     name: string;
     slug: string;
+    specialty?: string | null;
     photo: string | null;
   };
   messages: Message[];

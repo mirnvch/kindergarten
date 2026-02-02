@@ -9,7 +9,7 @@ import { z } from "zod";
 
 export type VerificationRequestWithDocs = {
   id: string;
-  daycareId: string;
+  providerId: string;
   status: "PENDING" | "IN_REVIEW" | "APPROVED" | "REJECTED";
   licenseNumber: string | null;
   licenseState: string | null;
@@ -39,7 +39,7 @@ export type VerificationRequestWithDocs = {
 // ==================== VALIDATION ====================
 
 const submitVerificationSchema = z.object({
-  daycareId: z.string().cuid(),
+  providerId: z.string().cuid(),
   licenseNumber: z.string().min(1, "License number is required"),
   licenseState: z.string().min(2, "License state is required"),
   licenseExpiry: z.string().datetime().optional(),
@@ -77,12 +77,12 @@ export async function submitVerificationRequest(
     return { success: false, error: validated.error.issues[0].message };
   }
 
-  const { daycareId, licenseNumber, licenseState, licenseExpiry, documents } = validated.data;
+  const { providerId, licenseNumber, licenseState, licenseExpiry, documents } = validated.data;
 
   // Check if user is owner of this daycare
-  const staff = await db.daycareStaff.findFirst({
+  const staff = await db.providerStaff.findFirst({
     where: {
-      daycareId,
+      providerId,
       userId: session.user.id,
       role: "owner",
       isActive: true,
@@ -96,7 +96,7 @@ export async function submitVerificationRequest(
   // Check if there's already a pending request
   const existingRequest = await db.verificationRequest.findFirst({
     where: {
-      daycareId,
+      providerId,
       status: { in: ["PENDING", "IN_REVIEW"] },
     },
   });
@@ -108,7 +108,7 @@ export async function submitVerificationRequest(
   // Create verification request with documents
   const request = await db.verificationRequest.create({
     data: {
-      daycareId,
+      providerId,
       licenseNumber,
       licenseState,
       licenseExpiry: licenseExpiry ? new Date(licenseExpiry) : null,
@@ -135,16 +135,16 @@ export async function submitVerificationRequest(
 /**
  * Get verification status for a daycare
  */
-export async function getVerificationStatus(daycareId: string) {
+export async function getVerificationStatus(providerId: string) {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: "Unauthorized" };
   }
 
   // Check if user has access to this daycare
-  const staff = await db.daycareStaff.findFirst({
+  const staff = await db.providerStaff.findFirst({
     where: {
-      daycareId,
+      providerId,
       userId: session.user.id,
       isActive: true,
     },
@@ -154,8 +154,8 @@ export async function getVerificationStatus(daycareId: string) {
     return { success: false, error: "Access denied" };
   }
 
-  const daycare = await db.daycare.findUnique({
-    where: { id: daycareId },
+  const daycare = await db.provider.findUnique({
+    where: { id: providerId },
     select: {
       id: true,
       name: true,
@@ -169,7 +169,7 @@ export async function getVerificationStatus(daycareId: string) {
 
   // Get latest verification request
   const latestRequest = await db.verificationRequest.findFirst({
-    where: { daycareId },
+    where: { providerId },
     orderBy: { createdAt: "desc" },
     include: {
       documents: true,
@@ -364,7 +364,7 @@ export async function reviewVerificationRequest(
     // If approved, update daycare's isVerified status
     if (status === "APPROVED") {
       await tx.daycare.update({
-        where: { id: request.daycareId },
+        where: { id: request.providerId },
         data: { isVerified: true },
       });
     }
@@ -381,7 +381,7 @@ export async function reviewVerificationRequest(
 /**
  * Revoke verification (admin only)
  */
-export async function revokeVerification(daycareId: string, reason: string) {
+export async function revokeVerification(providerId: string, reason: string) {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== "ADMIN") {
     return { success: false, error: "Unauthorized" };
@@ -391,8 +391,8 @@ export async function revokeVerification(daycareId: string, reason: string) {
     return { success: false, error: "Reason must be at least 10 characters" };
   }
 
-  const daycare = await db.daycare.findUnique({
-    where: { id: daycareId },
+  const daycare = await db.provider.findUnique({
+    where: { id: providerId },
   });
 
   if (!daycare) {
@@ -407,14 +407,14 @@ export async function revokeVerification(daycareId: string, reason: string) {
   await db.$transaction(async (tx) => {
     // Update daycare
     await tx.daycare.update({
-      where: { id: daycareId },
+      where: { id: providerId },
       data: { isVerified: false },
     });
 
     // Update the most recent approved verification request
     await tx.verificationRequest.updateMany({
       where: {
-        daycareId,
+        providerId,
         status: "APPROVED",
       },
       data: {

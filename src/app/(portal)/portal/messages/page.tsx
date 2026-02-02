@@ -12,7 +12,7 @@ import { BulkMessageDialog } from "@/components/portal/bulk-message-dialog";
 import { getBulkMessageStats } from "@/server/actions/bulk-messaging";
 
 export const metadata: Metadata = {
-  title: "Messages | KinderCare Portal",
+  title: "Messages | DocConnect Portal",
   description: "Manage your conversations with parents",
 };
 
@@ -24,7 +24,7 @@ export default async function PortalMessagesPage() {
   }
 
   // Get daycare
-  const daycareStaff = await db.daycareStaff.findFirst({
+  const providerStaff = await db.providerStaff.findFirst({
     where: {
       userId: session.user.id,
       role: { in: ["owner", "manager"] },
@@ -32,14 +32,14 @@ export default async function PortalMessagesPage() {
     include: { daycare: true },
   });
 
-  if (!daycareStaff) {
+  if (!providerStaff) {
     redirect("/portal");
   }
 
   // Get message threads
   const threads = await db.messageThread.findMany({
     where: {
-      daycareId: daycareStaff.daycare.id,
+      providerId: providerStaff.daycare.id,
       isArchived: false,
     },
     include: {
@@ -68,7 +68,7 @@ export default async function PortalMessagesPage() {
   const unreadCounts = await db.message.groupBy({
     by: ["threadId"],
     where: {
-      thread: { daycareId: daycareStaff.daycare.id },
+      thread: { providerId: providerStaff.daycare.id },
       readAt: null,
       senderId: { not: session.user.id },
     },

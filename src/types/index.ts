@@ -1,5 +1,5 @@
 /**
- * Centralized type definitions for the KinderCare application.
+ * Centralized type definitions for the DocConnect application.
  * These types are derived from Prisma schema and used across server actions and components.
  */
 
@@ -12,14 +12,14 @@ export type {
   ActionResultWithMeta,
 } from "./action-result";
 
-// ==================== BOOKING TYPES ====================
+// ==================== APPOINTMENT TYPES ====================
 
 /**
- * Booking with daycare and child relations (used in parent bookings list)
+ * Appointment with provider and family member relations (used in patient appointments list)
  */
-export type BookingWithRelations = Prisma.BookingGetPayload<{
+export type AppointmentWithRelations = Prisma.AppointmentGetPayload<{
   include: {
-    daycare: {
+    provider: {
       select: {
         id: true;
         name: true;
@@ -27,24 +27,32 @@ export type BookingWithRelations = Prisma.BookingGetPayload<{
         address: true;
         city: true;
         state: true;
+        specialty: true;
       };
     };
-    child: {
+    familyMember: {
       select: {
         id: true;
         firstName: true;
         lastName: true;
       };
     };
+    service: {
+      select: {
+        id: true;
+        name: true;
+        duration: true;
+      };
+    };
   };
 }>;
 
 /**
- * Booking with full details (used in confirmation page)
+ * Appointment with full details (used in confirmation page)
  */
-export type BookingFull = Prisma.BookingGetPayload<{
+export type AppointmentFull = Prisma.AppointmentGetPayload<{
   include: {
-    daycare: {
+    provider: {
       select: {
         id: true;
         name: true;
@@ -55,17 +63,20 @@ export type BookingFull = Prisma.BookingGetPayload<{
         zipCode: true;
         phone: true;
         email: true;
+        specialty: true;
+        offersTelehealth: true;
       };
     };
-    child: {
+    familyMember: {
       select: {
         id: true;
         firstName: true;
         lastName: true;
         dateOfBirth: true;
+        relationship: true;
       };
     };
-    parent: {
+    patient: {
       select: {
         id: true;
         firstName: true;
@@ -73,15 +84,24 @@ export type BookingFull = Prisma.BookingGetPayload<{
         email: true;
       };
     };
+    service: {
+      select: {
+        id: true;
+        name: true;
+        duration: true;
+        price: true;
+        isTelehealth: true;
+      };
+    };
   };
 }>;
 
 /**
- * Booking for portal (owner view with parent details)
+ * Appointment for portal (provider view with patient details)
  */
-export type PortalBooking = Prisma.BookingGetPayload<{
+export type PortalAppointment = Prisma.AppointmentGetPayload<{
   include: {
-    parent: {
+    patient: {
       select: {
         id: true;
         firstName: true;
@@ -90,7 +110,7 @@ export type PortalBooking = Prisma.BookingGetPayload<{
         phone: true;
       };
     };
-    child: {
+    familyMember: {
       select: {
         id: true;
         firstName: true;
@@ -98,37 +118,35 @@ export type PortalBooking = Prisma.BookingGetPayload<{
         dateOfBirth: true;
       };
     };
+    service: {
+      select: {
+        id: true;
+        name: true;
+        duration: true;
+      };
+    };
   };
 }>;
 
-// ==================== CHILD TYPES ====================
+// ==================== FAMILY MEMBER TYPES ====================
 
 /**
- * Child basic info
+ * Family member basic info
  */
-export type Child = Prisma.ChildGetPayload<object>;
+export type FamilyMember = Prisma.FamilyMemberGetPayload<object>;
 
 /**
- * Child with enrollments and bookings
+ * Family member with appointments
  */
-export type ChildWithRelations = Prisma.ChildGetPayload<{
+export type FamilyMemberWithRelations = Prisma.FamilyMemberGetPayload<{
   include: {
-    enrollments: {
+    appointments: {
       include: {
-        daycare: {
+        provider: {
           select: {
             name: true;
             slug: true;
-          };
-        };
-      };
-    };
-    bookings: {
-      include: {
-        daycare: {
-          select: {
-            name: true;
-            slug: true;
+            specialty: true;
           };
         };
       };
@@ -136,43 +154,43 @@ export type ChildWithRelations = Prisma.ChildGetPayload<{
   };
 }>;
 
-// ==================== DAYCARE TYPES ====================
+// ==================== PROVIDER TYPES ====================
 
 /**
- * Daycare photo
+ * Provider photo
  */
-export type DaycarePhoto = Prisma.DaycarePhotoGetPayload<object>;
+export type ProviderPhoto = Prisma.ProviderPhotoGetPayload<object>;
 
 /**
- * Daycare program (raw from Prisma)
+ * Service (raw from Prisma)
  */
-export type DaycareProgramRaw = Prisma.ProgramGetPayload<object>;
+export type ServiceRaw = Prisma.ServiceGetPayload<object>;
 
 /**
- * Daycare program (transformed with price as number)
+ * Service (transformed with price as number)
  */
-export type DaycareProgram = Omit<DaycareProgramRaw, "price"> & {
+export type ProviderService = Omit<ServiceRaw, "price"> & {
   price: number;
 };
 
 /**
- * Daycare amenity with relation (raw)
+ * Provider facility with relation (raw)
  */
-export type DaycareAmenityWithDetails = Prisma.DaycareAmenityGetPayload<{
+export type ProviderFacilityWithDetails = Prisma.ProviderFacilityGetPayload<{
   include: {
-    amenity: true;
+    facility: true;
   };
 }>;
 
 /**
- * Amenity (transformed - extracted from junction table)
+ * Facility (transformed - extracted from junction table)
  */
-export type Amenity = Prisma.AmenityGetPayload<object>;
+export type Facility = Prisma.FacilityGetPayload<object>;
 
 /**
- * Daycare review with user
+ * Provider review with user
  */
-export type DaycareReview = Prisma.ReviewGetPayload<{
+export type ProviderReview = Prisma.ReviewGetPayload<{
   include: {
     user: {
       select: {
@@ -185,15 +203,15 @@ export type DaycareReview = Prisma.ReviewGetPayload<{
 }>;
 
 /**
- * Full daycare details (used in daycare page)
+ * Full provider details (used in provider page)
  */
-export type DaycareFull = Prisma.DaycareGetPayload<{
+export type ProviderFull = Prisma.ProviderGetPayload<{
   include: {
     photos: true;
-    programs: true;
-    amenities: {
+    services: true;
+    facilities: {
       include: {
-        amenity: true;
+        facility: true;
       };
     };
     reviews: {
@@ -220,14 +238,47 @@ export type DaycareFull = Prisma.DaycareGetPayload<{
   };
 }>;
 
+/**
+ * Provider for search results (compact)
+ */
+export type ProviderSearchResult = Prisma.ProviderGetPayload<{
+  select: {
+    id: true;
+    slug: true;
+    name: true;
+    type: true;
+    specialty: true;
+    credentials: true;
+    address: true;
+    city: true;
+    state: true;
+    zipCode: true;
+    latitude: true;
+    longitude: true;
+    consultationFee: true;
+    telehealthFee: true;
+    offersTelehealth: true;
+    acceptingNewPatients: true;
+    acceptedInsurance: true;
+    languages: true;
+    isVerified: true;
+    photos: {
+      select: {
+        url: true;
+      };
+      take: 1;
+    };
+  };
+}>;
+
 // ==================== FAVORITE TYPES ====================
 
 /**
- * Favorite with daycare details (raw)
+ * Favorite with provider details (raw)
  */
-export type FavoriteWithDaycareRaw = Prisma.FavoriteGetPayload<{
+export type FavoriteWithProviderRaw = Prisma.FavoriteGetPayload<{
   include: {
-    daycare: {
+    provider: {
       include: {
         photos: true;
         reviews: {
@@ -246,16 +297,17 @@ export type FavoriteWithDaycareRaw = Prisma.FavoriteGetPayload<{
 export interface FavoriteItem {
   id: string;
   createdAt: Date;
-  daycare: {
+  provider: {
     id: string;
     name: string;
     slug: string;
     address: string;
     city: string;
     state: string;
-    pricePerMonth: Prisma.Decimal;
-    minAge: number;
-    maxAge: number;
+    specialty: string | null;
+    credentials: string | null;
+    consultationFee: Prisma.Decimal | null;
+    offersTelehealth: boolean;
     photo: string | null;
     rating: number | null;
     reviewCount: number;
@@ -265,24 +317,38 @@ export interface FavoriteItem {
 // ==================== DASHBOARD TYPES ====================
 
 /**
- * Dashboard booking item for parent (compact view)
+ * Dashboard appointment item for patient (compact view)
  */
-export type DashboardBooking = Prisma.BookingGetPayload<{
+export type DashboardAppointment = Prisma.AppointmentGetPayload<{
   include: {
-    daycare: { select: { name: true; slug: true } };
-    child: { select: { firstName: true } };
+    provider: { select: { name: true; slug: true; specialty: true } };
+    familyMember: { select: { firstName: true } };
+    service: { select: { name: true } };
   };
 }>;
 
 /**
- * Dashboard booking item for portal owner (compact view)
+ * Dashboard appointment item for portal provider (compact view)
  */
-export type PortalDashboardBooking = Prisma.BookingGetPayload<{
+export type PortalDashboardAppointment = Prisma.AppointmentGetPayload<{
   include: {
-    parent: { select: { firstName: true; lastName: true } };
-    child: { select: { firstName: true } };
+    patient: { select: { firstName: true; lastName: true } };
+    familyMember: { select: { firstName: true } };
+    service: { select: { name: true } };
   };
 }>;
+
+// ==================== SPECIALTY & INSURANCE TYPES ====================
+
+/**
+ * Medical specialty
+ */
+export type Specialty = Prisma.SpecialtyGetPayload<object>;
+
+/**
+ * Insurance provider
+ */
+export type Insurance = Prisma.InsuranceGetPayload<object>;
 
 // ==================== UTILITY TYPES ====================
 
@@ -296,3 +362,51 @@ export type ArrayElement<T> = T extends (infer U)[] ? U : never;
  */
 export type AsyncReturnType<T extends (...args: unknown[]) => Promise<unknown>> =
   T extends (...args: unknown[]) => Promise<infer R> ? R : never;
+
+// ==================== LEGACY TYPE ALIASES (for gradual migration) ====================
+// These aliases help with backwards compatibility during migration
+
+/** @deprecated Use AppointmentWithRelations instead */
+export type BookingWithRelations = AppointmentWithRelations;
+
+/** @deprecated Use AppointmentFull instead */
+export type BookingFull = AppointmentFull;
+
+/** @deprecated Use PortalAppointment instead */
+export type PortalBooking = PortalAppointment;
+
+/** @deprecated Use FamilyMember instead */
+export type Child = FamilyMember;
+
+/** @deprecated Use FamilyMemberWithRelations instead */
+export type ChildWithRelations = FamilyMemberWithRelations;
+
+/** @deprecated Use ProviderPhoto instead */
+export type DaycarePhoto = ProviderPhoto;
+
+/** @deprecated Use ServiceRaw instead */
+export type DaycareProgramRaw = ServiceRaw;
+
+/** @deprecated Use ProviderService instead */
+export type DaycareProgram = ProviderService;
+
+/** @deprecated Use ProviderFacilityWithDetails instead */
+export type DaycareAmenityWithDetails = ProviderFacilityWithDetails;
+
+/** @deprecated Use Facility instead */
+export type Amenity = Facility;
+
+/** @deprecated Use ProviderReview instead */
+export type DaycareReview = ProviderReview;
+
+/** @deprecated Use ProviderFull instead */
+export type DaycareFull = ProviderFull;
+
+/** @deprecated Use FavoriteWithProviderRaw instead */
+export type FavoriteWithDaycareRaw = FavoriteWithProviderRaw;
+
+/** @deprecated Use DashboardAppointment instead */
+export type DashboardBooking = DashboardAppointment;
+
+/** @deprecated Use PortalDashboardAppointment instead */
+export type PortalDashboardBooking = PortalDashboardAppointment;

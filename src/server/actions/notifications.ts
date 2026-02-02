@@ -168,7 +168,7 @@ export async function createNotification(input: CreateNotificationInput) {
 // ==================== EMAIL NOTIFICATIONS ====================
 
 export async function sendBookingConfirmation(bookingId: string) {
-  const booking = await db.booking.findUnique({
+  const booking = await db.appointment.findUnique({
     where: { id: bookingId },
     include: {
       parent: true,
@@ -195,7 +195,7 @@ export async function sendBookingConfirmation(bookingId: string) {
 
   // Create in-app notification
   await createNotification({
-    userId: booking.parentId,
+    userId: booking.patientId,
     type: "booking_confirmed",
     title: "Booking Confirmed",
     body: `Your tour at ${booking.daycare.name} on ${dateStr} has been confirmed.`,
@@ -220,7 +220,7 @@ export async function sendBookingConfirmation(bookingId: string) {
 }
 
 export async function sendBookingReminder(bookingId: string) {
-  const booking = await db.booking.findUnique({
+  const booking = await db.appointment.findUnique({
     where: { id: bookingId },
     include: {
       parent: true,
@@ -247,7 +247,7 @@ export async function sendBookingReminder(bookingId: string) {
 
   // Create in-app notification
   await createNotification({
-    userId: booking.parentId,
+    userId: booking.patientId,
     type: "booking_reminder",
     title: "Tour Tomorrow",
     body: `Reminder: Your tour at ${booking.daycare.name} is tomorrow at ${timeStr}.`,
@@ -419,7 +419,7 @@ export async function getNotificationPreferences() {
   // Return defaults if no preferences exist
   return (
     prefs || {
-      emailBookings: true,
+      emailAppointments: true,
       emailMessages: true,
       emailMarketing: false,
       pushEnabled: false,
@@ -428,7 +428,7 @@ export async function getNotificationPreferences() {
 }
 
 export async function updateNotificationPreferences(data: {
-  emailBookings?: boolean;
+  emailAppointments?: boolean;
   emailMessages?: boolean;
   emailMarketing?: boolean;
   pushEnabled?: boolean;
@@ -468,7 +468,7 @@ export async function sendScheduledReminders() {
   dayAfter.setDate(dayAfter.getDate() + 1);
 
   // Find bookings scheduled for tomorrow
-  const bookings = await db.booking.findMany({
+  const bookings = await db.appointment.findMany({
     where: {
       scheduledAt: {
         gte: tomorrow,

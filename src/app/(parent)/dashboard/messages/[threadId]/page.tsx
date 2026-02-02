@@ -17,12 +17,12 @@ export async function generateMetadata({
   const thread = await getThreadMessages(threadId);
 
   if (!thread) {
-    return { title: "Messages | KinderCare" };
+    return { title: "Messages | DocConnect" };
   }
 
   return {
-    title: `Chat with ${thread.daycare.name} | KinderCare`,
-    description: `Conversation with ${thread.daycare.name}`,
+    title: `Chat with ${thread.provider.name} | DocConnect`,
+    description: `Conversation with ${thread.provider.name}`,
   };
 }
 
@@ -44,14 +44,14 @@ export default async function ThreadPage({ params }: ThreadPageProps) {
           </Link>
         </Button>
         <div>
-          <h1 className="font-semibold">{thread.daycare.name}</h1>
+          <h1 className="font-semibold">{thread.provider.name}</h1>
           {thread.subject && (
             <p className="text-sm text-muted-foreground">{thread.subject}</p>
           )}
         </div>
         <div className="ml-auto">
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/daycare/${thread.daycare.slug}`}>View Daycare</Link>
+            <Link href={`/provider/${thread.provider.slug}`}>View Provider</Link>
           </Button>
         </div>
       </div>

@@ -37,7 +37,7 @@ interface SearchResultsClientProps {
     total: number;
     totalPages: number;
   };
-  filters: Record<string, string | number | undefined>;
+  filters: Record<string, string | number | boolean | undefined>;
 }
 
 export function SearchResultsClient({

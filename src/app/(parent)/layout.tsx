@@ -16,7 +16,7 @@ export default async function ParentLayout({
     redirect("/login");
   }
 
-  if (session.user.role !== "PARENT") {
+  if (session.user.role !== "PATIENT") {
     redirect("/portal");
   }
 
@@ -45,10 +45,10 @@ export default async function ParentLayout({
       branding={{
         icon: (
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <span className="text-lg font-bold text-primary-foreground">K</span>
+            <span className="text-lg font-bold text-primary-foreground">D</span>
           </div>
         ),
-        text: "KinderCare",
+        text: "DocConnect",
         href: "/dashboard",
       }}
     >

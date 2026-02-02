@@ -12,7 +12,7 @@ import { AmenitiesManager } from "@/components/portal/amenities-manager";
 import { StaffManager } from "@/components/portal/staff-manager";
 
 export const metadata: Metadata = {
-  title: "My Daycare | KinderCare Portal",
+  title: "My Daycare | DocConnect Portal",
   description: "Manage your daycare profile",
 };
 
@@ -23,7 +23,7 @@ async function getAllAmenities() {
 }
 
 async function getDaycare(userId: string) {
-  const daycareStaff = await db.daycareStaff.findFirst({
+  const providerStaff = await db.providerStaff.findFirst({
     where: { userId, role: { in: ["owner", "manager"] } },
     include: {
       daycare: {
@@ -51,7 +51,7 @@ async function getDaycare(userId: string) {
     },
   });
 
-  return daycareStaff?.daycare;
+  return providerStaff?.daycare;
 }
 
 export default async function DaycarePage() {

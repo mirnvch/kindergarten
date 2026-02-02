@@ -38,13 +38,15 @@ import { toast } from "sonner";
 
 interface ReviewActionsProps {
   reviewId: string;
-  daycareSlug: string;
+  providerSlug?: string;
+  daycareSlug?: string; // Legacy support
   isApproved: boolean;
   isVerified: boolean;
 }
 
 export function ReviewActions({
   reviewId,
+  providerSlug,
   daycareSlug,
   isApproved,
   isVerified,
@@ -52,6 +54,9 @@ export function ReviewActions({
   const router = useRouter();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Support both providerSlug and daycareSlug (legacy)
+  const slug = providerSlug || daycareSlug;
 
   const handleApprove = async () => {
     setIsLoading(true);
@@ -133,9 +138,9 @@ export function ReviewActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem asChild>
-            <a href={`/daycare/${daycareSlug}`} target="_blank" rel="noopener noreferrer">
+            <a href={`/provider/${slug}`} target="_blank" rel="noopener noreferrer">
               <Eye className="mr-2 h-4 w-4" />
-              View Daycare
+              View Provider
             </a>
           </DropdownMenuItem>
           <DropdownMenuSeparator />

@@ -17,8 +17,8 @@ export default async function PortalLayout({
   }
 
   if (
-    session.user.role !== "DAYCARE_OWNER" &&
-    session.user.role !== "DAYCARE_STAFF"
+    session.user.role !== "PROVIDER" &&
+    session.user.role !== "CLINIC_STAFF"
   ) {
     redirect("/dashboard");
   }
@@ -48,10 +48,10 @@ export default async function PortalLayout({
       branding={{
         icon: (
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <span className="text-lg font-bold text-primary-foreground">K</span>
+            <span className="text-lg font-bold text-primary-foreground">D</span>
           </div>
         ),
-        text: "KinderCare Portal",
+        text: "DocConnect Portal",
         href: "/portal",
       }}
     >

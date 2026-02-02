@@ -18,38 +18,38 @@ export async function generateMetadata({
   const session = await auth();
 
   if (!session?.user?.id) {
-    return { title: "Messages | KinderCare Portal" };
+    return { title: "Messages | DocConnect Portal" };
   }
 
   const thread = await getPortalThread(threadId, session.user.id);
 
   if (!thread) {
-    return { title: "Messages | KinderCare Portal" };
+    return { title: "Messages | DocConnect Portal" };
   }
 
   return {
-    title: `Chat with ${thread.parentName} | KinderCare Portal`,
+    title: `Chat with ${thread.parentName} | DocConnect Portal`,
     description: `Conversation with ${thread.parentName}`,
   };
 }
 
 async function getPortalThread(threadId: string, userId: string) {
   // Get user's daycare
-  const daycareStaff = await db.daycareStaff.findFirst({
+  const providerStaff = await db.providerStaff.findFirst({
     where: {
       userId,
       role: { in: ["owner", "manager"] },
     },
-    select: { daycareId: true },
+    select: { providerId: true },
   });
 
-  if (!daycareStaff) return null;
+  if (!providerStaff) return null;
 
   // Get thread
   const thread = await db.messageThread.findFirst({
     where: {
       id: threadId,
-      daycareId: daycareStaff.daycareId,
+      providerId: providerStaff.providerId,
     },
     include: {
       daycare: {

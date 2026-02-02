@@ -13,7 +13,7 @@ async function requireDaycareOwner() {
     throw new Error("Unauthorized");
   }
 
-  const daycareStaff = await db.daycareStaff.findFirst({
+  const providerStaff = await db.providerStaff.findFirst({
     where: {
       userId: session.user.id,
       role: { in: ["owner", "manager"] },
@@ -21,17 +21,17 @@ async function requireDaycareOwner() {
     include: { daycare: true },
   });
 
-  if (!daycareStaff) {
+  if (!providerStaff) {
     throw new Error("No daycare found");
   }
 
-  return { user: session.user, daycare: daycareStaff.daycare };
+  return { user: session.user, daycare: providerStaff.daycare };
 }
 
 export async function getDaycare() {
   const { daycare } = await requireDaycareOwner();
 
-  const fullDaycare = await db.daycare.findUnique({
+  const fullDaycare = await db.provider.findUnique({
     where: { id: daycare.id },
     include: {
       photos: { orderBy: { order: "asc" } },
@@ -83,7 +83,7 @@ export async function createDaycare(data: z.infer<typeof createDaycareSchema>) {
   }
 
   // Check if user already has a daycare
-  const existingStaff = await db.daycareStaff.findFirst({
+  const existingStaff = await db.providerStaff.findFirst({
     where: { userId: session.user.id },
   });
 
@@ -100,7 +100,7 @@ export async function createDaycare(data: z.infer<typeof createDaycareSchema>) {
     let counter = 1;
     const maxAttempts = 100;
 
-    while (await db.daycare.findUnique({ where: { slug } })) {
+    while (await db.provider.findUnique({ where: { slug } })) {
       if (counter > maxAttempts) {
         return { success: false, error: "Unable to generate unique name. Please try a different daycare name." };
       }
@@ -137,9 +137,9 @@ export async function createDaycare(data: z.infer<typeof createDaycareSchema>) {
         },
       });
 
-      await tx.daycareStaff.create({
+      await tx.providerStaff.create({
         data: {
-          daycareId: daycare.id,
+          providerId: daycare.id,
           userId: session.user.id,
           role: "owner",
         },
@@ -175,7 +175,7 @@ export async function updateDaycareProfile(data: z.infer<typeof profileSchema>) 
 
     const validated = profileSchema.parse(data);
 
-    await db.daycare.update({
+    await db.provider.update({
       where: { id: daycare.id },
       data: {
         name: validated.name,
@@ -209,8 +209,8 @@ export async function addDaycarePhoto(url: string, caption?: string) {
     const { daycare } = await requireDaycareOwner();
 
     // Get max order
-    const maxOrderPhoto = await db.daycarePhoto.findFirst({
-      where: { daycareId: daycare.id },
+    const maxOrderPhoto = await db.providerPhoto.findFirst({
+      where: { providerId: daycare.id },
       orderBy: { order: "desc" },
     });
 
@@ -219,9 +219,9 @@ export async function addDaycarePhoto(url: string, caption?: string) {
     // If this is the first photo, make it primary
     const isPrimary = order === 0;
 
-    await db.daycarePhoto.create({
+    await db.providerPhoto.create({
       data: {
-        daycareId: daycare.id,
+        providerId: daycare.id,
         url,
         caption,
         order,
@@ -245,8 +245,8 @@ export async function updateDaycarePhoto(
     const { daycare } = await requireDaycareOwner();
 
     // Verify photo belongs to this daycare
-    const photo = await db.daycarePhoto.findFirst({
-      where: { id: photoId, daycareId: daycare.id },
+    const photo = await db.providerPhoto.findFirst({
+      where: { id: photoId, providerId: daycare.id },
     });
 
     if (!photo) {
@@ -255,13 +255,13 @@ export async function updateDaycarePhoto(
 
     // If setting as primary, unset other primaries
     if (data.isPrimary) {
-      await db.daycarePhoto.updateMany({
-        where: { daycareId: daycare.id, isPrimary: true },
+      await db.providerPhoto.updateMany({
+        where: { providerId: daycare.id, isPrimary: true },
         data: { isPrimary: false },
       });
     }
 
-    await db.daycarePhoto.update({
+    await db.providerPhoto.update({
       where: { id: photoId },
       data: {
         caption: data.caption,
@@ -282,27 +282,27 @@ export async function deleteDaycarePhoto(photoId: string) {
     const { daycare } = await requireDaycareOwner();
 
     // Verify photo belongs to this daycare
-    const photo = await db.daycarePhoto.findFirst({
-      where: { id: photoId, daycareId: daycare.id },
+    const photo = await db.providerPhoto.findFirst({
+      where: { id: photoId, providerId: daycare.id },
     });
 
     if (!photo) {
       return { success: false, error: "Photo not found" };
     }
 
-    await db.daycarePhoto.delete({
+    await db.providerPhoto.delete({
       where: { id: photoId },
     });
 
     // If deleted photo was primary, set first remaining as primary
     if (photo.isPrimary) {
-      const firstPhoto = await db.daycarePhoto.findFirst({
-        where: { daycareId: daycare.id },
+      const firstPhoto = await db.providerPhoto.findFirst({
+        where: { providerId: daycare.id },
         orderBy: { order: "asc" },
       });
 
       if (firstPhoto) {
-        await db.daycarePhoto.update({
+        await db.providerPhoto.update({
           where: { id: firstPhoto.id },
           data: { isPrimary: true },
         });
@@ -324,8 +324,8 @@ export async function reorderDaycarePhotos(photoIds: string[]) {
     // Update order for each photo
     await db.$transaction(
       photoIds.map((id, index) =>
-        db.daycarePhoto.update({
-          where: { id, daycareId: daycare.id },
+        db.providerPhoto.update({
+          where: { id, providerId: daycare.id },
           data: { order: index },
         })
       )

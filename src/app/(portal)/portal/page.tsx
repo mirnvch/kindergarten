@@ -18,22 +18,22 @@ import { Badge } from "@/components/ui/badge";
 import type { PortalDashboardBooking } from "@/types";
 
 export const metadata: Metadata = {
-  title: "Dashboard | KinderCare Portal",
+  title: "Dashboard | DocConnect Portal",
   description: "Manage your daycare center",
 };
 
 async function getDaycareStats(userId: string) {
   // Find the daycare owned by this user
-  const daycareStaff = await db.daycareStaff.findFirst({
+  const providerStaff = await db.providerStaff.findFirst({
     where: { userId, role: "owner" },
     include: { daycare: true },
   });
 
-  if (!daycareStaff) {
+  if (!providerStaff) {
     return null;
   }
 
-  const daycareId = daycareStaff.daycare.id;
+  const providerId = providerStaff.daycare.id;
 
   // Get stats
   const [
@@ -42,22 +42,22 @@ async function getDaycareStats(userId: string) {
     totalEnrollments,
     recentPayments,
   ] = await Promise.all([
-    db.booking.count({
-      where: { daycareId, status: "PENDING" },
+    db.appointment.count({
+      where: { providerId, status: "PENDING" },
     }),
     db.message.count({
       where: {
-        thread: { daycareId },
+        thread: { providerId },
         status: "SENT",
         senderId: { not: userId },
       },
     }),
-    db.enrollment.count({
-      where: { daycareId, status: "ACTIVE" },
+    db.appointment.count({
+      where: { providerId, status: "ACTIVE" },
     }),
     db.payment.aggregate({
       where: {
-        daycareId,
+        providerId,
         status: "SUCCEEDED",
         createdAt: { gte: new Date(new Date().setDate(1)) }, // This month
       },
@@ -66,9 +66,9 @@ async function getDaycareStats(userId: string) {
   ]);
 
   // Get upcoming bookings
-  const upcomingBookings = await db.booking.findMany({
+  const upcomingBookings = await db.appointment.findMany({
     where: {
-      daycareId,
+      providerId,
       status: { in: ["PENDING", "CONFIRMED"] },
       scheduledAt: { gte: new Date() },
     },
@@ -81,7 +81,7 @@ async function getDaycareStats(userId: string) {
   });
 
   return {
-    daycare: daycareStaff.daycare,
+    daycare: providerStaff.daycare,
     stats: {
       pendingBookings,
       unreadMessages,

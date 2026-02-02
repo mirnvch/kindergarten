@@ -16,27 +16,27 @@ async function getOwnerDaycareId(): Promise<string | null> {
     return null;
   }
 
-  const staff = await db.daycareStaff.findFirst({
+  const staff = await db.providerStaff.findFirst({
     where: { userId: session.user.id },
-    select: { daycareId: true },
+    select: { providerId: true },
   });
 
-  return staff?.daycareId || null;
+  return staff?.providerId || null;
 }
 
 export async function getPortalBookings(
   filter: PortalBookingFilter = "pending"
 ): Promise<PortalBooking[]> {
-  const daycareId = await getOwnerDaycareId();
-  if (!daycareId) {
+  const providerId = await getOwnerDaycareId();
+  if (!providerId) {
     throw new Error("Unauthorized");
   }
 
   const now = new Date();
 
-  const bookings = await db.booking.findMany({
+  const bookings = await db.appointment.findMany({
     where: {
-      daycareId,
+      providerId,
       ...(filter === "pending"
         ? {
             status: BookingStatus.PENDING,
@@ -85,30 +85,30 @@ export async function getPortalBookings(
 }
 
 export async function getPortalBookingStats() {
-  const daycareId = await getOwnerDaycareId();
-  if (!daycareId) {
+  const providerId = await getOwnerDaycareId();
+  if (!providerId) {
     throw new Error("Unauthorized");
   }
 
   const now = new Date();
 
   const [pending, confirmed, todayBookings] = await Promise.all([
-    db.booking.count({
+    db.appointment.count({
       where: {
-        daycareId,
+        providerId,
         status: BookingStatus.PENDING,
       },
     }),
-    db.booking.count({
+    db.appointment.count({
       where: {
-        daycareId,
+        providerId,
         status: BookingStatus.CONFIRMED,
         scheduledAt: { gte: now },
       },
     }),
-    db.booking.count({
+    db.appointment.count({
       where: {
-        daycareId,
+        providerId,
         status: BookingStatus.CONFIRMED,
         scheduledAt: {
           gte: new Date(now.toDateString()),
@@ -122,16 +122,16 @@ export async function getPortalBookingStats() {
 }
 
 export async function confirmBooking(bookingId: string) {
-  const daycareId = await getOwnerDaycareId();
-  if (!daycareId) {
+  const providerId = await getOwnerDaycareId();
+  if (!providerId) {
     throw new Error("Unauthorized");
   }
 
   // Verify booking belongs to this daycare
-  const booking = await db.booking.findFirst({
+  const booking = await db.appointment.findFirst({
     where: {
       id: bookingId,
-      daycareId,
+      providerId,
       status: BookingStatus.PENDING,
     },
   });
@@ -140,7 +140,7 @@ export async function confirmBooking(bookingId: string) {
     throw new Error("Booking not found or already processed");
   }
 
-  await db.booking.update({
+  await db.appointment.update({
     where: { id: bookingId },
     data: {
       status: BookingStatus.CONFIRMED,
@@ -153,16 +153,16 @@ export async function confirmBooking(bookingId: string) {
 }
 
 export async function declineBooking(bookingId: string, reason?: string) {
-  const daycareId = await getOwnerDaycareId();
-  if (!daycareId) {
+  const providerId = await getOwnerDaycareId();
+  if (!providerId) {
     throw new Error("Unauthorized");
   }
 
   // Verify booking belongs to this daycare
-  const booking = await db.booking.findFirst({
+  const booking = await db.appointment.findFirst({
     where: {
       id: bookingId,
-      daycareId,
+      providerId,
       status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
     },
   });
@@ -171,7 +171,7 @@ export async function declineBooking(bookingId: string, reason?: string) {
     throw new Error("Booking not found or already processed");
   }
 
-  await db.booking.update({
+  await db.appointment.update({
     where: { id: bookingId },
     data: {
       status: BookingStatus.CANCELLED,
@@ -185,16 +185,16 @@ export async function declineBooking(bookingId: string, reason?: string) {
 }
 
 export async function markBookingCompleted(bookingId: string) {
-  const daycareId = await getOwnerDaycareId();
-  if (!daycareId) {
+  const providerId = await getOwnerDaycareId();
+  if (!providerId) {
     throw new Error("Unauthorized");
   }
 
   // Verify booking belongs to this daycare
-  const booking = await db.booking.findFirst({
+  const booking = await db.appointment.findFirst({
     where: {
       id: bookingId,
-      daycareId,
+      providerId,
       status: BookingStatus.CONFIRMED,
     },
   });
@@ -203,7 +203,7 @@ export async function markBookingCompleted(bookingId: string) {
     throw new Error("Booking not found or cannot be marked as completed");
   }
 
-  await db.booking.update({
+  await db.appointment.update({
     where: { id: bookingId },
     data: {
       status: BookingStatus.COMPLETED,
@@ -215,16 +215,16 @@ export async function markBookingCompleted(bookingId: string) {
 }
 
 export async function markBookingNoShow(bookingId: string) {
-  const daycareId = await getOwnerDaycareId();
-  if (!daycareId) {
+  const providerId = await getOwnerDaycareId();
+  if (!providerId) {
     throw new Error("Unauthorized");
   }
 
   // Verify booking belongs to this daycare
-  const booking = await db.booking.findFirst({
+  const booking = await db.appointment.findFirst({
     where: {
       id: bookingId,
-      daycareId,
+      providerId,
       status: BookingStatus.CONFIRMED,
     },
   });
@@ -233,7 +233,7 @@ export async function markBookingNoShow(bookingId: string) {
     throw new Error("Booking not found or cannot be marked as no-show");
   }
 
-  await db.booking.update({
+  await db.appointment.update({
     where: { id: bookingId },
     data: {
       status: BookingStatus.NO_SHOW,

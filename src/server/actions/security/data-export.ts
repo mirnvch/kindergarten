@@ -221,8 +221,8 @@ async function gatherUserData(userId: string) {
     },
   });
 
-  const children = await db.child.findMany({
-    where: { parentId: userId },
+  const children = await db.familyMember.findMany({
+    where: { patientId: userId },
     select: {
       id: true,
       firstName: true,
@@ -236,8 +236,8 @@ async function gatherUserData(userId: string) {
     },
   });
 
-  const bookings = await db.booking.findMany({
-    where: { parentId: userId },
+  const bookings = await db.appointment.findMany({
+    where: { patientId: userId },
     include: {
       daycare: {
         select: { name: true, address: true },

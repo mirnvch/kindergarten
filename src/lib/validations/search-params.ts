@@ -11,10 +11,10 @@ const searchSchema = {
 };
 
 // User roles enum
-const userRoleSchema = z.enum(["PARENT", "DAYCARE_OWNER", "DAYCARE_STAFF", "ADMIN"]);
+const userRoleSchema = z.enum(["PATIENT", "PROVIDER", "CLINIC_STAFF", "ADMIN"]);
 
-// Daycare status enum
-const daycareStatusSchema = z.enum(["PENDING", "APPROVED", "REJECTED", "SUSPENDED"]);
+// Provider status enum
+const providerStatusSchema = z.enum(["PENDING", "APPROVED", "REJECTED", "SUSPENDED"]);
 
 // Verification status enum
 const verificationStatusSchema = z.enum(["PENDING", "IN_REVIEW", "APPROVED", "REJECTED"]);
@@ -36,11 +36,14 @@ export const adminUsersSearchSchema = z.object({
   status: z.enum(["active", "suspended"]).optional(),
 });
 
-export const adminDaycaresSearchSchema = z.object({
+export const adminProvidersSearchSchema = z.object({
   ...paginationSchema,
   ...searchSchema,
-  status: daycareStatusSchema.optional(),
+  status: providerStatusSchema.optional(),
 });
+
+// Legacy alias
+export const adminDaycaresSearchSchema = adminProvidersSearchSchema;
 
 export const adminReviewsSearchSchema = z.object({
   ...paginationSchema,
@@ -63,10 +66,13 @@ export const adminMessagesSearchSchema = z.object({
 // Portal SearchParams Schemas
 // ============================================
 
-export const portalBookingsSearchSchema = z.object({
+export const portalAppointmentsSearchSchema = z.object({
   ...paginationSchema,
   filter: z.enum(["pending", "confirmed", "past"]).default("pending"),
 });
+
+// Legacy alias
+export const portalBookingsSearchSchema = portalAppointmentsSearchSchema;
 
 export const portalReviewsSearchSchema = z.object({
   ...paginationSchema,
@@ -85,7 +91,7 @@ export const portalWaitlistSearchSchema = z.object({
 });
 
 // ============================================
-// Public Search Params (already uses some validation)
+// Public Search Params
 // ============================================
 
 export const publicSearchSchema = z.object({
@@ -93,10 +99,11 @@ export const publicSearchSchema = z.object({
   query: z.string().max(200).optional(),
   state: z.string().length(2).optional(),
   city: z.string().max(100).optional(),
-  minPrice: z.coerce.number().min(0).optional(),
-  maxPrice: z.coerce.number().min(0).optional(),
-  minAge: z.coerce.number().min(0).max(144).optional(), // 0-12 years in months
-  maxAge: z.coerce.number().min(0).max(144).optional(),
+  specialty: z.string().max(100).optional(),
+  insurance: z.string().max(100).optional(),
+  telemedicine: z.coerce.boolean().optional(),
+  acceptingNewPatients: z.coerce.boolean().optional(),
+  language: z.string().max(50).optional(),
   minRating: z.coerce.number().min(1).max(5).optional(),
   lat: z.coerce.number().min(-90).max(90).optional(),
   lng: z.coerce.number().min(-180).max(180).optional(),
@@ -140,12 +147,14 @@ export function parseSearchParams<T extends z.ZodTypeAny>(
 // ============================================
 
 export type AdminUsersSearch = z.infer<typeof adminUsersSearchSchema>;
-export type AdminDaycaresSearch = z.infer<typeof adminDaycaresSearchSchema>;
+export type AdminProvidersSearch = z.infer<typeof adminProvidersSearchSchema>;
+export type AdminDaycaresSearch = AdminProvidersSearch; // Legacy alias
 export type AdminReviewsSearch = z.infer<typeof adminReviewsSearchSchema>;
 export type AdminVerificationsSearch = z.infer<typeof adminVerificationsSearchSchema>;
 export type AdminMessagesSearch = z.infer<typeof adminMessagesSearchSchema>;
 
-export type PortalBookingsSearch = z.infer<typeof portalBookingsSearchSchema>;
+export type PortalAppointmentsSearch = z.infer<typeof portalAppointmentsSearchSchema>;
+export type PortalBookingsSearch = PortalAppointmentsSearch; // Legacy alias
 export type PortalReviewsSearch = z.infer<typeof portalReviewsSearchSchema>;
 export type PortalMessagesSearch = z.infer<typeof portalMessagesSearchSchema>;
 export type PortalWaitlistSearch = z.infer<typeof portalWaitlistSearchSchema>;

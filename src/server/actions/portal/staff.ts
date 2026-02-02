@@ -11,7 +11,7 @@ async function requireDaycareOwner() {
     throw new Error("Unauthorized");
   }
 
-  const daycareStaff = await db.daycareStaff.findFirst({
+  const providerStaff = await db.providerStaff.findFirst({
     where: {
       userId: session.user.id,
       role: "owner",
@@ -19,18 +19,18 @@ async function requireDaycareOwner() {
     include: { daycare: true },
   });
 
-  if (!daycareStaff) {
+  if (!providerStaff) {
     throw new Error("Only owners can manage staff");
   }
 
-  return { user: session.user, daycare: daycareStaff.daycare };
+  return { user: session.user, daycare: providerStaff.daycare };
 }
 
 export async function getStaff() {
   const { daycare } = await requireDaycareOwner();
 
-  return db.daycareStaff.findMany({
-    where: { daycareId: daycare.id },
+  return db.providerStaff.findMany({
+    where: { providerId: daycare.id },
     include: {
       user: {
         select: {
@@ -74,10 +74,10 @@ export async function addStaff(data: AddStaffInput) {
     }
 
     // Check if already staff
-    const existing = await db.daycareStaff.findUnique({
+    const existing = await db.providerStaff.findUnique({
       where: {
-        daycareId_userId: {
-          daycareId: daycare.id,
+        providerId_userId: {
+          providerId: daycare.id,
           userId: user.id,
         },
       },
@@ -88,9 +88,9 @@ export async function addStaff(data: AddStaffInput) {
     }
 
     // Add staff
-    await db.daycareStaff.create({
+    await db.providerStaff.create({
       data: {
-        daycareId: daycare.id,
+        providerId: daycare.id,
         userId: user.id,
         role: validated.role,
       },
@@ -120,8 +120,8 @@ export async function updateStaffRole(staffId: string, role: "manager" | "staff"
     const { daycare } = await requireDaycareOwner();
 
     // Verify staff belongs to this daycare and is not owner
-    const staff = await db.daycareStaff.findFirst({
-      where: { id: staffId, daycareId: daycare.id },
+    const staff = await db.providerStaff.findFirst({
+      where: { id: staffId, providerId: daycare.id },
     });
 
     if (!staff) {
@@ -132,7 +132,7 @@ export async function updateStaffRole(staffId: string, role: "manager" | "staff"
       return { success: false, error: "Cannot change owner role" };
     }
 
-    await db.daycareStaff.update({
+    await db.providerStaff.update({
       where: { id: staffId },
       data: { role },
     });
@@ -150,8 +150,8 @@ export async function removeStaff(staffId: string) {
     const { daycare } = await requireDaycareOwner();
 
     // Verify staff belongs to this daycare and is not owner
-    const staff = await db.daycareStaff.findFirst({
-      where: { id: staffId, daycareId: daycare.id },
+    const staff = await db.providerStaff.findFirst({
+      where: { id: staffId, providerId: daycare.id },
       include: { user: true },
     });
 
@@ -163,12 +163,12 @@ export async function removeStaff(staffId: string) {
       return { success: false, error: "Cannot remove owner" };
     }
 
-    await db.daycareStaff.delete({
+    await db.providerStaff.delete({
       where: { id: staffId },
     });
 
     // Check if user is staff at any other daycare
-    const otherStaffRoles = await db.daycareStaff.findFirst({
+    const otherStaffRoles = await db.providerStaff.findFirst({
       where: { userId: staff.userId },
     });
 
@@ -192,8 +192,8 @@ export async function toggleStaffActive(staffId: string) {
   try {
     const { daycare } = await requireDaycareOwner();
 
-    const staff = await db.daycareStaff.findFirst({
-      where: { id: staffId, daycareId: daycare.id },
+    const staff = await db.providerStaff.findFirst({
+      where: { id: staffId, providerId: daycare.id },
     });
 
     if (!staff) {
@@ -204,7 +204,7 @@ export async function toggleStaffActive(staffId: string) {
       return { success: false, error: "Cannot deactivate owner" };
     }
 
-    await db.daycareStaff.update({
+    await db.providerStaff.update({
       where: { id: staffId },
       data: { isActive: !staff.isActive },
     });

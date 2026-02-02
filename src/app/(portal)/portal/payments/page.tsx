@@ -18,7 +18,7 @@ import { ConnectAccountButton } from "@/components/billing/connect-account-butto
 import { getConnectAccountStatus } from "@/server/actions/stripe";
 
 export const metadata: Metadata = {
-  title: "Payments | KinderCare Portal",
+  title: "Payments | DocConnect Portal",
   description: "Manage your payment settings and receive payments",
 };
 
@@ -30,7 +30,7 @@ export default async function PaymentsPage() {
   }
 
   // Get daycare
-  const daycareStaff = await db.daycareStaff.findFirst({
+  const providerStaff = await db.providerStaff.findFirst({
     where: {
       userId: session.user.id,
       role: "owner",
@@ -40,18 +40,18 @@ export default async function PaymentsPage() {
     },
   });
 
-  if (!daycareStaff) {
+  if (!providerStaff) {
     redirect("/portal");
   }
 
-  const daycare = daycareStaff.daycare;
+  const daycare = providerStaff.daycare;
   const accountStatus = await getConnectAccountStatus();
 
   // Get payment stats
   const [totalReceived, pendingPayments, thisMonthRevenue] = await Promise.all([
     db.payment.aggregate({
       where: {
-        daycareId: daycare.id,
+        providerId: daycare.id,
         status: "SUCCEEDED",
         type: { not: "subscription" },
       },
@@ -59,13 +59,13 @@ export default async function PaymentsPage() {
     }),
     db.payment.count({
       where: {
-        daycareId: daycare.id,
+        providerId: daycare.id,
         status: "PENDING",
       },
     }),
     db.payment.aggregate({
       where: {
-        daycareId: daycare.id,
+        providerId: daycare.id,
         status: "SUCCEEDED",
         type: { not: "subscription" },
         createdAt: {

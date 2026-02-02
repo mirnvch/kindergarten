@@ -24,7 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { createChild, updateChild, type ChildFormData } from "@/server/actions/children";
+import { createFamilyMember, updateFamilyMember, type FamilyMemberFormData } from "@/server/actions/children";
 import { toast } from "sonner";
 
 const formSchema = z.object({
@@ -32,11 +32,14 @@ const formSchema = z.object({
   lastName: z.string().min(1, "Last name is required").max(50),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
   gender: z.string().optional(),
+  relationship: z.string().default("child"),
   allergies: z.string().optional(),
-  specialNeeds: z.string().optional(),
+  medications: z.string().optional(),
+  conditions: z.string().optional(),
   notes: z.string().optional(),
 });
 
+// Support both old and new prop names
 interface ChildFormProps {
   child?: {
     id: string;
@@ -44,8 +47,12 @@ interface ChildFormProps {
     lastName: string;
     dateOfBirth: Date;
     gender: string | null;
+    relationship?: string;
     allergies: string | null;
-    specialNeeds: string | null;
+    medications?: string | null;
+    conditions?: string | null;
+    // Legacy fields
+    specialNeeds?: string | null;
     notes: string | null;
   };
 }
@@ -54,7 +61,7 @@ export function ChildForm({ child }: ChildFormProps) {
   const [isPending, startTransition] = useTransition();
   const isEditing = !!child;
 
-  const form = useForm<ChildFormData>({
+  const form = useForm<FamilyMemberFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       firstName: child?.firstName || "",
@@ -63,21 +70,24 @@ export function ChildForm({ child }: ChildFormProps) {
         ? new Date(child.dateOfBirth).toISOString().split("T")[0]
         : "",
       gender: child?.gender || "",
+      relationship: child?.relationship || "child",
       allergies: child?.allergies || "",
-      specialNeeds: child?.specialNeeds || "",
+      medications: child?.medications || "",
+      // Support legacy specialNeeds field by mapping to conditions
+      conditions: child?.conditions || child?.specialNeeds || "",
       notes: child?.notes || "",
     },
   });
 
-  function onSubmit(data: ChildFormData) {
+  function onSubmit(data: FamilyMemberFormData) {
     startTransition(async () => {
       try {
         if (isEditing && child) {
-          await updateChild(child.id, data);
-          toast.success("Child profile updated");
+          await updateFamilyMember(child.id, data);
+          toast.success("Family member profile updated");
         } else {
-          await createChild(data);
-          toast.success("Child profile created");
+          await createFamilyMember(data);
+          toast.success("Family member profile created");
         }
       } catch (error) {
         toast.error(
@@ -167,6 +177,37 @@ export function ChildForm({ child }: ChildFormProps) {
 
         <FormField
           control={form.control}
+          name="relationship"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Relationship</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value || "child"}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select relationship" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="child">Child</SelectItem>
+                  <SelectItem value="spouse">Spouse</SelectItem>
+                  <SelectItem value="parent">Parent</SelectItem>
+                  <SelectItem value="self">Self</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Who is this family member in relation to you?
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="allergies"
           render={({ field }) => (
             <FormItem>
@@ -189,20 +230,41 @@ export function ChildForm({ child }: ChildFormProps) {
 
         <FormField
           control={form.control}
-          name="specialNeeds"
+          name="medications"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Special Needs</FormLabel>
+              <FormLabel>Current Medications</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Describe any special needs or requirements"
+                  placeholder="List any current medications and dosages"
                   className="resize-none"
                   {...field}
                 />
               </FormControl>
               <FormDescription>
-                Include any medical conditions, developmental needs, or special
-                accommodations
+                Include prescription and over-the-counter medications
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="conditions"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Medical Conditions</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Describe any medical conditions or special needs"
+                  className="resize-none"
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>
+                Include any chronic conditions, developmental needs, or special
+                accommodations required
               </FormDescription>
               <FormMessage />
             </FormItem>

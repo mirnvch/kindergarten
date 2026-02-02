@@ -3,13 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { DaycareStatus } from "@prisma/client";
+import { ProviderStatus } from "@prisma/client";
 import {
-  approveDaycareSchema,
-  rejectDaycareSchema,
-  suspendDaycareSchema,
-  reactivateDaycareSchema,
-  deleteDaycareSchema,
+  approveProviderSchema,
+  rejectProviderSchema,
+  suspendProviderSchema,
+  reactivateProviderSchema,
+  deleteProviderSchema,
   toggleFeaturedSchema,
 } from "@/lib/validations";
 import { rateLimit } from "@/lib/rate-limit";
@@ -22,93 +22,99 @@ async function requireAdmin() {
   return session.user;
 }
 
-export async function approveDaycare(daycareId: string) {
+export async function approveProvider(providerId: string) {
   try {
     const admin = await requireAdmin();
 
     // Validate input
-    const result = approveDaycareSchema.safeParse({ daycareId });
+    const result = approveProviderSchema.safeParse({ providerId });
     if (!result.success) {
-      return { success: false, error: "Invalid daycare ID" };
+      return { success: false, error: "Invalid provider ID" };
     }
 
-    const daycare = await db.daycare.findUnique({
-      where: { id: result.data.daycareId },
+    const provider = await db.provider.findUnique({
+      where: { id: result.data.providerId },
     });
 
-    if (!daycare) {
-      return { success: false, error: "Daycare not found" };
+    if (!provider) {
+      return { success: false, error: "Provider not found" };
     }
 
-    if (daycare.status === DaycareStatus.APPROVED) {
-      return { success: false, error: "Daycare is already approved" };
+    if (provider.status === ProviderStatus.APPROVED) {
+      return { success: false, error: "Provider is already approved" };
     }
 
-    await db.daycare.update({
-      where: { id: result.data.daycareId },
-      data: { status: DaycareStatus.APPROVED },
+    await db.provider.update({
+      where: { id: result.data.providerId },
+      data: { status: ProviderStatus.APPROVED },
     });
 
     await db.auditLog.create({
       data: {
         userId: admin.id,
-        action: "DAYCARE_APPROVED",
-        entityType: "Daycare",
-        entityId: result.data.daycareId,
-        newData: { status: DaycareStatus.APPROVED },
+        action: "PROVIDER_APPROVED",
+        entityType: "Provider",
+        entityId: result.data.providerId,
+        newData: { status: ProviderStatus.APPROVED },
       },
     });
 
-    revalidatePath("/admin/daycares");
+    revalidatePath("/admin/providers");
     return { success: true };
   } catch (error) {
-    console.error("Error approving daycare:", error);
-    return { success: false, error: "Failed to approve daycare" };
+    console.error("Error approving provider:", error);
+    return { success: false, error: "Failed to approve provider" };
   }
 }
 
-export async function rejectDaycare(daycareId: string, reason?: string) {
+// Legacy alias
+export const approveDaycare = approveProvider;
+
+export async function rejectProvider(providerId: string, reason?: string) {
   try {
     const admin = await requireAdmin();
 
     // Validate input
-    const result = rejectDaycareSchema.safeParse({ daycareId, reason });
+    const result = rejectProviderSchema.safeParse({ providerId, reason });
     if (!result.success) {
       return { success: false, error: "Invalid input" };
     }
 
-    const daycare = await db.daycare.findUnique({
-      where: { id: result.data.daycareId },
+    const provider = await db.provider.findUnique({
+      where: { id: result.data.providerId },
     });
 
-    if (!daycare) {
-      return { success: false, error: "Daycare not found" };
+    if (!provider) {
+      return { success: false, error: "Provider not found" };
     }
 
-    await db.daycare.update({
-      where: { id: result.data.daycareId },
-      data: { status: DaycareStatus.REJECTED },
+    await db.provider.update({
+      where: { id: result.data.providerId },
+      data: { status: ProviderStatus.REJECTED },
     });
 
     await db.auditLog.create({
       data: {
         userId: admin.id,
-        action: "DAYCARE_REJECTED",
-        entityType: "Daycare",
-        entityId: result.data.daycareId,
-        newData: { status: DaycareStatus.REJECTED, reason: result.data.reason },
+        action: "PROVIDER_REJECTED",
+        entityType: "Provider",
+        entityId: result.data.providerId,
+        newData: { status: ProviderStatus.REJECTED, reason: result.data.reason },
       },
     });
 
-    revalidatePath("/admin/daycares");
+    revalidatePath("/admin/providers");
     return { success: true };
   } catch (error) {
-    console.error("Error rejecting daycare:", error);
-    return { success: false, error: "Failed to reject daycare" };
+    console.error("Error rejecting provider:", error);
+    return { success: false, error: "Failed to reject provider" };
   }
 }
 
-export async function suspendDaycare(daycareId: string, reason?: string) {
+// Legacy alias
+export const rejectDaycare = rejectProvider;
+
+export async function suspendProvider(providerId: string, reason?: string) {
   try {
     const admin = await requireAdmin();
 
@@ -120,182 +126,191 @@ export async function suspendDaycare(daycareId: string, reason?: string) {
     }
 
     // Validate input
-    const result = suspendDaycareSchema.safeParse({ daycareId, reason });
+    const result = suspendProviderSchema.safeParse({ providerId, reason });
     if (!result.success) {
       return { success: false, error: "Invalid input" };
     }
 
-    const daycare = await db.daycare.findUnique({
-      where: { id: result.data.daycareId },
+    const provider = await db.provider.findUnique({
+      where: { id: result.data.providerId },
     });
 
-    if (!daycare) {
-      return { success: false, error: "Daycare not found" };
+    if (!provider) {
+      return { success: false, error: "Provider not found" };
     }
 
-    if (daycare.status === DaycareStatus.SUSPENDED) {
-      return { success: false, error: "Daycare is already suspended" };
+    if (provider.status === ProviderStatus.SUSPENDED) {
+      return { success: false, error: "Provider is already suspended" };
     }
 
-    const oldStatus = daycare.status;
+    const oldStatus = provider.status;
 
-    await db.daycare.update({
-      where: { id: result.data.daycareId },
-      data: { status: DaycareStatus.SUSPENDED },
+    await db.provider.update({
+      where: { id: result.data.providerId },
+      data: { status: ProviderStatus.SUSPENDED },
     });
 
     await db.auditLog.create({
       data: {
         userId: admin.id,
-        action: "DAYCARE_SUSPENDED",
-        entityType: "Daycare",
-        entityId: result.data.daycareId,
+        action: "PROVIDER_SUSPENDED",
+        entityType: "Provider",
+        entityId: result.data.providerId,
         oldData: { status: oldStatus },
-        newData: { status: DaycareStatus.SUSPENDED, reason: result.data.reason },
+        newData: { status: ProviderStatus.SUSPENDED, reason: result.data.reason },
       },
     });
 
-    revalidatePath("/admin/daycares");
+    revalidatePath("/admin/providers");
     return { success: true };
   } catch (error) {
-    console.error("Error suspending daycare:", error);
-    return { success: false, error: "Failed to suspend daycare" };
+    console.error("Error suspending provider:", error);
+    return { success: false, error: "Failed to suspend provider" };
   }
 }
 
-export async function reactivateDaycare(daycareId: string) {
+// Legacy alias
+export const suspendDaycare = suspendProvider;
+
+export async function reactivateProvider(providerId: string) {
   try {
     const admin = await requireAdmin();
 
     // Validate input
-    const result = reactivateDaycareSchema.safeParse({ daycareId });
+    const result = reactivateProviderSchema.safeParse({ providerId });
     if (!result.success) {
-      return { success: false, error: "Invalid daycare ID" };
+      return { success: false, error: "Invalid provider ID" };
     }
 
-    const daycare = await db.daycare.findUnique({
-      where: { id: result.data.daycareId },
+    const provider = await db.provider.findUnique({
+      where: { id: result.data.providerId },
     });
 
-    if (!daycare) {
-      return { success: false, error: "Daycare not found" };
+    if (!provider) {
+      return { success: false, error: "Provider not found" };
     }
 
-    if (daycare.status !== DaycareStatus.SUSPENDED && daycare.status !== DaycareStatus.REJECTED) {
-      return { success: false, error: "Daycare is not suspended or rejected" };
+    if (provider.status !== ProviderStatus.SUSPENDED && provider.status !== ProviderStatus.REJECTED) {
+      return { success: false, error: "Provider is not suspended or rejected" };
     }
 
-    const oldStatus = daycare.status;
+    const oldStatus = provider.status;
 
-    await db.daycare.update({
-      where: { id: result.data.daycareId },
-      data: { status: DaycareStatus.APPROVED },
+    await db.provider.update({
+      where: { id: result.data.providerId },
+      data: { status: ProviderStatus.APPROVED },
     });
 
     await db.auditLog.create({
       data: {
         userId: admin.id,
-        action: "DAYCARE_REACTIVATED",
-        entityType: "Daycare",
-        entityId: result.data.daycareId,
+        action: "PROVIDER_REACTIVATED",
+        entityType: "Provider",
+        entityId: result.data.providerId,
         oldData: { status: oldStatus },
-        newData: { status: DaycareStatus.APPROVED },
+        newData: { status: ProviderStatus.APPROVED },
       },
     });
 
-    revalidatePath("/admin/daycares");
+    revalidatePath("/admin/providers");
     return { success: true };
   } catch (error) {
-    console.error("Error reactivating daycare:", error);
-    return { success: false, error: "Failed to reactivate daycare" };
+    console.error("Error reactivating provider:", error);
+    return { success: false, error: "Failed to reactivate provider" };
   }
 }
 
-export async function deleteDaycare(daycareId: string) {
+// Legacy alias
+export const reactivateDaycare = reactivateProvider;
+
+export async function deleteProvider(providerId: string) {
   try {
     const admin = await requireAdmin();
 
     // Rate limit check
-    const rateLimitResult = await rateLimit(admin.id, "admin-delete-daycare");
+    const rateLimitResult = await rateLimit(admin.id, "admin-delete-provider");
     if (!rateLimitResult.success) {
       const retryAfter = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
       return { success: false, error: `Rate limit exceeded. Try again in ${retryAfter} seconds.` };
     }
 
     // Validate input
-    const result = deleteDaycareSchema.safeParse({ daycareId });
+    const result = deleteProviderSchema.safeParse({ providerId });
     if (!result.success) {
-      return { success: false, error: "Invalid daycare ID" };
+      return { success: false, error: "Invalid provider ID" };
     }
 
-    const daycare = await db.daycare.findUnique({
-      where: { id: result.data.daycareId },
+    const provider = await db.provider.findUnique({
+      where: { id: result.data.providerId },
       select: { id: true, name: true, email: true },
     });
 
-    if (!daycare) {
-      return { success: false, error: "Daycare not found" };
+    if (!provider) {
+      return { success: false, error: "Provider not found" };
     }
 
-    await db.daycare.delete({
-      where: { id: result.data.daycareId },
+    await db.provider.delete({
+      where: { id: result.data.providerId },
     });
 
     await db.auditLog.create({
       data: {
         userId: admin.id,
-        action: "DAYCARE_DELETED",
-        entityType: "Daycare",
-        entityId: result.data.daycareId,
-        oldData: { name: daycare.name, email: daycare.email },
+        action: "PROVIDER_DELETED",
+        entityType: "Provider",
+        entityId: result.data.providerId,
+        oldData: { name: provider.name, email: provider.email },
       },
     });
 
-    revalidatePath("/admin/daycares");
+    revalidatePath("/admin/providers");
     return { success: true };
   } catch (error) {
-    console.error("Error deleting daycare:", error);
-    return { success: false, error: "Failed to delete daycare" };
+    console.error("Error deleting provider:", error);
+    return { success: false, error: "Failed to delete provider" };
   }
 }
 
-export async function toggleFeatured(daycareId: string) {
+// Legacy alias
+export const deleteDaycare = deleteProvider;
+
+export async function toggleFeatured(providerId: string) {
   try {
     const admin = await requireAdmin();
 
     // Validate input
-    const result = toggleFeaturedSchema.safeParse({ daycareId });
+    const result = toggleFeaturedSchema.safeParse({ providerId });
     if (!result.success) {
-      return { success: false, error: "Invalid daycare ID" };
+      return { success: false, error: "Invalid provider ID" };
     }
 
-    const daycare = await db.daycare.findUnique({
-      where: { id: result.data.daycareId },
+    const provider = await db.provider.findUnique({
+      where: { id: result.data.providerId },
       select: { id: true, isFeatured: true },
     });
 
-    if (!daycare) {
-      return { success: false, error: "Daycare not found" };
+    if (!provider) {
+      return { success: false, error: "Provider not found" };
     }
 
-    const newFeatured = !daycare.isFeatured;
+    const newFeatured = !provider.isFeatured;
 
-    await db.daycare.update({
-      where: { id: result.data.daycareId },
+    await db.provider.update({
+      where: { id: result.data.providerId },
       data: { isFeatured: newFeatured },
     });
 
     await db.auditLog.create({
       data: {
         userId: admin.id,
-        action: newFeatured ? "DAYCARE_FEATURED" : "DAYCARE_UNFEATURED",
-        entityType: "Daycare",
-        entityId: result.data.daycareId,
+        action: newFeatured ? "PROVIDER_FEATURED" : "PROVIDER_UNFEATURED",
+        entityType: "Provider",
+        entityId: result.data.providerId,
         newData: { isFeatured: newFeatured },
       },
     });
 
-    revalidatePath("/admin/daycares");
+    revalidatePath("/admin/providers");
     return { success: true, isFeatured: newFeatured };
   } catch (error) {
     console.error("Error toggling featured:", error);

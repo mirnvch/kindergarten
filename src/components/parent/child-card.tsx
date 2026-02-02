@@ -22,11 +22,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { deleteChild } from "@/server/actions/children";
+import { deleteFamilyMember } from "@/server/actions/children";
 import { calculateAge } from "@/lib/utils";
 import { toast } from "sonner";
 import { useState } from "react";
 
+// Support both old (child) and new (familyMember) terminology
 interface ChildCardProps {
   child: {
     id: string;
@@ -34,8 +35,12 @@ interface ChildCardProps {
     lastName: string;
     dateOfBirth: Date;
     gender: string | null;
+    relationship?: string;
     allergies: string | null;
-    specialNeeds: string | null;
+    medications?: string | null;
+    conditions?: string | null;
+    // Legacy field
+    specialNeeds?: string | null;
   };
 }
 
@@ -44,11 +49,14 @@ export function ChildCard({ child }: ChildCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const age = calculateAge(new Date(child.dateOfBirth));
 
+  // Get medical conditions from new or legacy field
+  const medicalConditions = child.conditions || child.specialNeeds;
+
   function handleDelete() {
     startTransition(async () => {
       try {
-        await deleteChild(child.id);
-        toast.success("Child profile deleted");
+        await deleteFamilyMember(child.id);
+        toast.success("Family member profile deleted");
         setShowDeleteDialog(false);
       } catch (error) {
         toast.error(
@@ -160,12 +168,21 @@ export function ChildCard({ child }: ChildCardProps) {
             </div>
           )}
 
-          {child.specialNeeds && (
+          {child.medications && (
             <div>
               <span className="text-sm text-muted-foreground">
-                Special Needs:
+                Medications:
               </span>
-              <p className="mt-1 text-sm">{child.specialNeeds}</p>
+              <p className="mt-1 text-sm">{child.medications}</p>
+            </div>
+          )}
+
+          {medicalConditions && (
+            <div>
+              <span className="text-sm text-muted-foreground">
+                Medical Conditions:
+              </span>
+              <p className="mt-1 text-sm">{medicalConditions}</p>
             </div>
           )}
         </div>

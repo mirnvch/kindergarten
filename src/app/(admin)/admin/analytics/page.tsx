@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { ExportAnalyticsButton } from "@/components/analytics/export-button";
 
 export const metadata: Metadata = {
@@ -77,6 +76,29 @@ function StatCard({
   );
 }
 
+interface TopProvider {
+  id: string;
+  name: string;
+  slug: string;
+  location: string;
+  bookings: number;
+}
+
+interface RoleDistribution {
+  role: string;
+  count: number;
+}
+
+interface PlanDistribution {
+  plan: string;
+  count: number;
+}
+
+interface StateDistribution {
+  state: string;
+  count: number;
+}
+
 async function AnalyticsContent() {
   const data = await getPlatformAnalytics(30);
 
@@ -93,19 +115,19 @@ async function AnalyticsContent() {
           icon={Users}
         />
         <StatCard
-          title="Active Daycares"
-          value={data.overview.totalDaycares.toLocaleString()}
-          description={`+${data.currentPeriod.newDaycares} this month`}
-          change={data.currentPeriod.changes.daycares}
-          trend={data.currentPeriod.changes.daycares > 0 ? "up" : data.currentPeriod.changes.daycares < 0 ? "down" : "neutral"}
+          title="Active Providers"
+          value={data.overview.totalProviders.toLocaleString()}
+          description={`+${data.currentPeriod.newProviders} this month`}
+          change={data.currentPeriod.changes.providers}
+          trend={data.currentPeriod.changes.providers > 0 ? "up" : data.currentPeriod.changes.providers < 0 ? "down" : "neutral"}
           icon={Building2}
         />
         <StatCard
-          title="Total Bookings"
-          value={data.overview.totalBookings.toLocaleString()}
-          description={`+${data.currentPeriod.newBookings} this month`}
-          change={data.currentPeriod.changes.bookings}
-          trend={data.currentPeriod.changes.bookings > 0 ? "up" : data.currentPeriod.changes.bookings < 0 ? "down" : "neutral"}
+          title="Total Appointments"
+          value={data.overview.totalAppointments.toLocaleString()}
+          description={`+${data.currentPeriod.newAppointments} this month`}
+          change={data.currentPeriod.changes.appointments}
+          trend={data.currentPeriod.changes.appointments > 0 ? "up" : data.currentPeriod.changes.appointments < 0 ? "down" : "neutral"}
           icon={Calendar}
         />
         <StatCard
@@ -126,15 +148,15 @@ async function AnalyticsContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.overview.activeSubscriptions}</div>
-            <p className="text-xs text-muted-foreground">Paid daycare plans</p>
+            <p className="text-xs text-muted-foreground">Paid provider plans</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">New Enrollments</CardTitle>
+            <CardTitle className="text-sm font-medium">Completed Appointments</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.currentPeriod.enrollments}</div>
+            <div className="text-2xl font-bold">{data.currentPeriod.completedAppointments}</div>
             <p className="text-xs text-muted-foreground">This month</p>
           </CardContent>
         </Card>
@@ -154,7 +176,7 @@ async function AnalyticsContent() {
       {/* Booking Funnel */}
       <Card>
         <CardHeader>
-          <CardTitle>Booking Funnel</CardTitle>
+          <CardTitle>Appointment Funnel</CardTitle>
           <CardDescription>Conversion rates through the booking journey (last 30 days)</CardDescription>
         </CardHeader>
         <CardContent>
@@ -165,7 +187,7 @@ async function AnalyticsContent() {
                 <span className="font-medium">Page Views</span>
               </div>
               <div className="text-3xl font-bold">{data.funnel.pageViews.toLocaleString()}</div>
-              <div className="text-sm text-muted-foreground">Daycare profile visits</div>
+              <div className="text-sm text-muted-foreground">Provider profile visits</div>
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
@@ -202,37 +224,37 @@ async function AnalyticsContent() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Top Daycares */}
+        {/* Top Providers */}
         <Card>
           <CardHeader>
-            <CardTitle>Top Performing Daycares</CardTitle>
-            <CardDescription>By booking volume this month</CardDescription>
+            <CardTitle>Top Performing Providers</CardTitle>
+            <CardDescription>By appointment volume this month</CardDescription>
           </CardHeader>
           <CardContent>
-            {data.topDaycares.length === 0 ? (
+            {data.topProviders.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">No data yet</p>
             ) : (
               <div className="space-y-4">
-                {data.topDaycares.map((daycare, i) => (
-                  <div key={daycare.id} className="flex items-center justify-between">
+                {data.topProviders.map((provider: TopProvider, i: number) => (
+                  <div key={provider.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-medium text-muted-foreground w-5">
                         #{i + 1}
                       </span>
                       <div>
                         <Link
-                          href={`/daycare/${daycare.slug}`}
+                          href={`/provider/${provider.slug}`}
                           className="font-medium hover:underline"
                         >
-                          {daycare.name}
+                          {provider.name}
                         </Link>
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
-                          {daycare.location}
+                          {provider.location}
                         </p>
                       </div>
                     </div>
-                    <Badge variant="secondary">{daycare.bookings} bookings</Badge>
+                    <Badge variant="secondary">{provider.bookings} appointments</Badge>
                   </div>
                 ))}
               </div>
@@ -254,7 +276,7 @@ async function AnalyticsContent() {
                 Users by Role
               </h4>
               <div className="space-y-2">
-                {data.distributions.usersByRole.map((r) => (
+                {data.distributions.usersByRole.map((r: RoleDistribution) => (
                   <div key={r.role} className="flex justify-between text-sm">
                     <span className="text-muted-foreground capitalize">
                       {r.role.toLowerCase().replace("_", " ")}
@@ -275,7 +297,7 @@ async function AnalyticsContent() {
                 {data.distributions.subscriptionsByPlan.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No active subscriptions</p>
                 ) : (
-                  data.distributions.subscriptionsByPlan.map((s) => (
+                  data.distributions.subscriptionsByPlan.map((s: PlanDistribution) => (
                     <div key={s.plan} className="flex justify-between text-sm">
                       <span className="text-muted-foreground capitalize">
                         {s.plan.toLowerCase()}
@@ -294,10 +316,10 @@ async function AnalyticsContent() {
                 Top States
               </h4>
               <div className="space-y-2">
-                {data.distributions.daycaresByState.slice(0, 5).map((s) => (
+                {data.distributions.providersByState.slice(0, 5).map((s: StateDistribution) => (
                   <div key={s.state} className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{s.state}</span>
-                    <span className="font-medium">{s.count} daycares</span>
+                    <span className="font-medium">{s.count} providers</span>
                   </div>
                 ))}
               </div>

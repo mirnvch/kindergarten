@@ -10,7 +10,7 @@ async function requireDaycareOwner() {
     throw new Error("Unauthorized");
   }
 
-  const daycareStaff = await db.daycareStaff.findFirst({
+  const providerStaff = await db.providerStaff.findFirst({
     where: {
       userId: session.user.id,
       role: { in: ["owner", "manager"] },
@@ -18,11 +18,11 @@ async function requireDaycareOwner() {
     include: { daycare: true },
   });
 
-  if (!daycareStaff) {
+  if (!providerStaff) {
     throw new Error("No daycare found");
   }
 
-  return { user: session.user, daycare: daycareStaff.daycare };
+  return { user: session.user, daycare: providerStaff.daycare };
 }
 
 export interface ScheduleDay {
@@ -36,7 +36,7 @@ export async function getSchedule() {
   const { daycare } = await requireDaycareOwner();
 
   return db.daycareSchedule.findMany({
-    where: { daycareId: daycare.id },
+    where: { providerId: daycare.id },
     orderBy: { dayOfWeek: "asc" },
   });
 }
@@ -49,8 +49,8 @@ export async function updateSchedule(schedules: ScheduleDay[]) {
     const updates = schedules.map((s) =>
       db.daycareSchedule.upsert({
         where: {
-          daycareId_dayOfWeek: {
-            daycareId: daycare.id,
+          providerId_dayOfWeek: {
+            providerId: daycare.id,
             dayOfWeek: s.dayOfWeek,
           },
         },
@@ -60,7 +60,7 @@ export async function updateSchedule(schedules: ScheduleDay[]) {
           isClosed: s.isClosed,
         },
         create: {
-          daycareId: daycare.id,
+          providerId: daycare.id,
           dayOfWeek: s.dayOfWeek,
           openTime: s.openTime,
           closeTime: s.closeTime,

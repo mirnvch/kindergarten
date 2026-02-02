@@ -3,7 +3,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
-  Baby,
+  Users,
   Calendar,
   Clock,
   MessageSquare,
@@ -12,73 +12,68 @@ import {
   Plus,
   ArrowRight,
   ClipboardList,
+  Video,
+  Stethoscope,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
-import type { DashboardBooking } from "@/types";
+import type { DashboardAppointment } from "@/types";
 import { WaitlistEntriesList } from "@/components/waitlist/waitlist-entries-list";
 
 export const metadata: Metadata = {
-  title: "Dashboard | KinderCare",
-  description: "Manage your children and bookings",
+  title: "Dashboard | DocConnect",
+  description: "Manage your appointments and family members",
 };
 
-async function getParentDashboardData(userId: string, userEmail: string) {
+async function getPatientDashboardData(userId: string, userEmail: string) {
   const [
-    childrenCount,
-    upcomingTours,
-    pendingEnrollments,
+    familyMembersCount,
+    upcomingAppointments,
     unreadMessages,
-    upcomingBookings,
+    upcomingAppointmentsList,
     waitlistEntries,
   ] = await Promise.all([
-    db.child.count({
-      where: { parentId: userId },
+    db.familyMember.count({
+      where: { patientId: userId },
     }),
-    db.booking.count({
+    db.appointment.count({
       where: {
-        parentId: userId,
-        type: "TOUR",
+        patientId: userId,
         status: { in: ["PENDING", "CONFIRMED"] },
         scheduledAt: { gte: new Date() },
-      },
-    }),
-    db.enrollment.count({
-      where: {
-        child: { parentId: userId },
-        status: "pending",
       },
     }),
     db.message.count({
       where: {
-        thread: { parentId: userId },
+        thread: { patientId: userId },
         status: "SENT",
         senderId: { not: userId },
       },
     }),
-    db.booking.findMany({
+    db.appointment.findMany({
       where: {
-        parentId: userId,
+        patientId: userId,
         status: { in: ["PENDING", "CONFIRMED"] },
         scheduledAt: { gte: new Date() },
       },
       include: {
-        daycare: { select: { name: true, slug: true } },
-        child: { select: { firstName: true } },
+        provider: { select: { name: true, slug: true, specialty: true } },
+        familyMember: { select: { firstName: true } },
+        service: { select: { name: true } },
       },
       orderBy: { scheduledAt: "asc" },
       take: 5,
     }),
     db.waitlistEntry.findMany({
       where: {
-        parentEmail: userEmail,
+        patientEmail: userEmail,
         notifiedAt: null,
       },
       include: {
-        daycare: {
-          select: { id: true, name: true, slug: true, city: true, state: true },
+        provider: {
+          select: { id: true, name: true, slug: true, city: true, state: true, specialty: true },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -87,23 +82,22 @@ async function getParentDashboardData(userId: string, userEmail: string) {
 
   return {
     stats: {
-      childrenCount,
-      upcomingTours,
-      pendingEnrollments,
+      familyMembersCount,
+      upcomingAppointments,
       unreadMessages,
       waitlistCount: waitlistEntries.length,
     },
-    upcomingBookings,
+    upcomingAppointmentsList,
     waitlistEntries,
   };
 }
 
-export default async function ParentDashboardPage() {
+export default async function PatientDashboardPage() {
   const session = await auth();
   if (!session?.user) return null;
 
-  const data = await getParentDashboardData(session.user.id, session.user.email || "");
-  const { stats, upcomingBookings, waitlistEntries } = data;
+  const data = await getPatientDashboardData(session.user.id, session.user.email || "");
+  const { stats, upcomingAppointmentsList, waitlistEntries } = data;
 
   return (
     <div className="space-y-6">
@@ -116,41 +110,28 @@ export default async function ParentDashboardPage() {
       </div>
 
       {/* Stats grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">My Children</CardTitle>
-            <Baby className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Family Members</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.childrenCount}</div>
+            <div className="text-2xl font-bold">{stats.familyMembersCount}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.childrenCount === 1 ? "Child profile" : "Child profiles"}
+              {stats.familyMembersCount === 1 ? "Profile" : "Profiles"}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Tours</CardTitle>
+            <CardTitle className="text-sm font-medium">Upcoming Appointments</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.upcomingTours}</div>
+            <div className="text-2xl font-bold">{stats.upcomingAppointments}</div>
             <p className="text-xs text-muted-foreground">Scheduled visits</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Pending Enrollments
-            </CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pendingEnrollments}</div>
-            <p className="text-xs text-muted-foreground">Awaiting response</p>
           </CardContent>
         </Card>
 
@@ -161,7 +142,7 @@ export default async function ParentDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.unreadMessages}</div>
-            <p className="text-xs text-muted-foreground">From daycares</p>
+            <p className="text-xs text-muted-foreground">From providers</p>
           </CardContent>
         </Card>
 
@@ -172,18 +153,18 @@ export default async function ParentDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.waitlistCount}</div>
-            <p className="text-xs text-muted-foreground">Daycares waiting</p>
+            <p className="text-xs text-muted-foreground">Providers waiting</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Content grid */}
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Upcoming bookings */}
+        {/* Upcoming appointments */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Upcoming Bookings</CardTitle>
+              <CardTitle>Upcoming Appointments</CardTitle>
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/dashboard/bookings">
                   View all
@@ -193,47 +174,62 @@ export default async function ParentDashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {upcomingBookings.length === 0 ? (
+            {upcomingAppointmentsList.length === 0 ? (
               <div className="text-center py-6">
                 <Calendar className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">
-                  No upcoming bookings
+                  No upcoming appointments
                 </p>
                 <Button variant="link" size="sm" asChild className="mt-2">
-                  <Link href="/search">Find daycares to schedule a tour</Link>
+                  <Link href="/search">Find providers to schedule an appointment</Link>
                 </Button>
               </div>
             ) : (
               <div className="space-y-4">
-                {upcomingBookings.map((booking: DashboardBooking) => (
+                {upcomingAppointmentsList.map((appointment: DashboardAppointment) => (
                   <div
-                    key={booking.id}
+                    key={appointment.id}
                     className="flex items-center justify-between"
                   >
                     <div>
                       <Link
-                        href={`/daycare/${booking.daycare.slug}`}
+                        href={`/provider/${appointment.provider.slug}`}
                         className="font-medium hover:underline"
                       >
-                        {booking.daycare.name}
+                        {appointment.provider.name}
                       </Link>
-                      <p className="text-sm text-muted-foreground">
-                        {booking.type === "TOUR" ? "Tour" : "Enrollment"}
-                        {booking.child && ` for ${booking.child.firstName}`}
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        {appointment.type === "TELEMEDICINE" ? (
+                          <>
+                            <Video className="h-3 w-3" />
+                            Telemedicine
+                          </>
+                        ) : (
+                          <>
+                            <Stethoscope className="h-3 w-3" />
+                            In-Person
+                          </>
+                        )}
+                        {appointment.familyMember && ` for ${appointment.familyMember.firstName}`}
                       </p>
+                      {appointment.provider.specialty && (
+                        <p className="text-xs text-muted-foreground">
+                          {appointment.provider.specialty}
+                        </p>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="text-sm">
-                        {booking.scheduledAt
-                          ? formatDate(booking.scheduledAt)
+                        {appointment.scheduledAt
+                          ? formatDate(appointment.scheduledAt)
                           : "TBD"}
                       </p>
                       <Badge
                         variant={
-                          booking.status === "CONFIRMED" ? "default" : "secondary"
+                          appointment.status === "CONFIRMED" ? "default" : "secondary"
                         }
                       >
-                        {booking.status.toLowerCase()}
+                        {appointment.status.toLowerCase()}
                       </Badge>
                     </div>
                   </div>
@@ -252,13 +248,13 @@ export default async function ParentDashboardPage() {
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link href="/search">
                 <Search className="mr-2 h-4 w-4" />
-                Find Daycares
+                Find Providers
               </Link>
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link href="/dashboard/children/new">
                 <Plus className="mr-2 h-4 w-4" />
-                Add Child Profile
+                Add Family Member
               </Link>
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>

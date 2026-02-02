@@ -125,28 +125,28 @@ async function runLoadTest(): Promise<TestResult> {
     });
 
     if (!testThread) {
-      const testDaycare = await db.daycare.findFirst({
+      const testProvider = await db.provider.findFirst({
         select: { id: true },
       });
 
-      if (!testDaycare) {
-        throw new Error("No daycare found. Run seed script first.");
+      if (!testProvider) {
+        throw new Error("No provider found. Run seed script first.");
       }
 
       // Use upsert to handle race conditions
       testThread = await db.messageThread.upsert({
         where: {
-          daycareId_parentId: {
-            daycareId: testDaycare.id,
-            parentId: testUsers[0].id,
+          providerId_patientId: {
+            providerId: testProvider.id,
+            patientId: testUsers[0].id,
           },
         },
         update: {
           subject: "LOAD_TEST_THREAD",
         },
         create: {
-          daycareId: testDaycare.id,
-          parentId: testUsers[0].id,
+          providerId: testProvider.id,
+          patientId: testUsers[0].id,
           subject: "LOAD_TEST_THREAD",
           lastMessageAt: new Date(),
         },

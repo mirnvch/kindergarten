@@ -10,10 +10,11 @@ interface MessageThread {
   id: string;
   subject: string | null;
   lastMessageAt: Date | null;
-  daycare: {
+  provider: {
     id: string;
     name: string;
     slug: string;
+    specialty?: string | null;
     photo: string | null;
   };
   lastMessage: {
@@ -41,22 +42,27 @@ export function MessageThreadList({ threads }: MessageThreadListProps) {
 }
 
 function ThreadCard({ thread }: { thread: MessageThread }) {
-  const { daycare, lastMessage, unreadCount } = thread;
+  const { provider, lastMessage, unreadCount } = thread;
 
   return (
     <Link href={`/dashboard/messages/${thread.id}`}>
       <Card className="p-4 hover:bg-muted/50 transition-colors cursor-pointer">
         <div className="flex items-start gap-4">
           <Avatar className="h-12 w-12">
-            <AvatarImage src={daycare.photo || undefined} alt={daycare.name} />
+            <AvatarImage src={provider.photo || undefined} alt={provider.name} />
             <AvatarFallback className="text-lg">
-              {daycare.name.charAt(0)}
+              {provider.name.charAt(0)}
             </AvatarFallback>
           </Avatar>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="font-semibold truncate">{daycare.name}</h3>
+              <div>
+                <h3 className="font-semibold truncate">{provider.name}</h3>
+                {provider.specialty && (
+                  <p className="text-xs text-muted-foreground">{provider.specialty}</p>
+                )}
+              </div>
               {lastMessage && (
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
                   {formatDistanceToNow(new Date(lastMessage.createdAt), {

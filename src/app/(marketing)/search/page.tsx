@@ -44,10 +44,10 @@ async function SearchContent({ searchParams }: SearchPageProps) {
   const { daycares, pagination } = await searchDaycares(filters);
 
   // Convert filters to serializable format for client component
-  const serializableFilters: Record<string, string | number | undefined> = {};
+  const serializableFilters: Record<string, string | number | boolean | undefined> = {};
   for (const [key, value] of Object.entries(filters)) {
     if (value !== undefined) {
-      serializableFilters[key] = value;
+      serializableFilters[key] = value as string | number | boolean;
     }
   }
 

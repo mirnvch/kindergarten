@@ -48,7 +48,7 @@ async function getVerificationRequests(params: AdminVerificationsSearch) {
       take: perPage,
       orderBy: { createdAt: "desc" },
       include: {
-        daycare: {
+        provider: {
           select: {
             id: true,
             name: true,
@@ -82,7 +82,7 @@ async function getVerificationRequests(params: AdminVerificationsSearch) {
     REJECTED: 0,
   };
 
-  statusCounts.forEach((item) => {
+  statusCounts.forEach((item: { status: VerificationStatus; _count: { status: number } }) => {
     counts[item.status] = item._count.status;
     counts.total += item._count.status;
   });
@@ -157,7 +157,7 @@ export default async function VerificationsPage({
         <div>
           <h1 className="text-3xl font-bold">Verifications</h1>
           <p className="text-muted-foreground">
-            Review and approve daycare verification requests
+            Review and approve provider verification requests
           </p>
         </div>
       </div>
@@ -285,7 +285,7 @@ export default async function VerificationsPage({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Daycare</TableHead>
+                <TableHead>Provider</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>License</TableHead>
                 <TableHead>Documents</TableHead>
@@ -314,14 +314,14 @@ export default async function VerificationsPage({
                           <div>
                             <div className="flex items-center gap-2">
                               <p className="font-medium">
-                                {request.daycare.name}
+                                {request.provider.name}
                               </p>
-                              {request.daycare.isVerified && (
+                              {request.provider.isVerified && (
                                 <ShieldCheck className="h-4 w-4 text-green-600" />
                               )}
                             </div>
                             <Link
-                              href={`/daycare/${request.daycare.slug}`}
+                              href={`/provider/${request.provider.slug}`}
                               target="_blank"
                               className="text-xs text-muted-foreground hover:underline flex items-center gap-1"
                             >
@@ -334,7 +334,7 @@ export default async function VerificationsPage({
                       <TableCell>
                         <div className="flex items-center gap-1 text-sm">
                           <MapPin className="h-3 w-3 text-muted-foreground" />
-                          {request.daycare.city}, {request.daycare.state}
+                          {request.provider.city}, {request.provider.state}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -368,7 +368,7 @@ export default async function VerificationsPage({
                         <VerificationActions
                           requestId={request.id}
                           status={request.status}
-                          daycareId={request.daycare.id}
+                          providerId={request.provider.id}
                         />
                       </TableCell>
                     </TableRow>

@@ -24,9 +24,12 @@ interface Review {
 }
 
 interface ReviewsSectionProps {
-  daycareId: string;
-  daycareName: string;
-  daycareSlug: string;
+  providerId?: string;
+  providerName?: string;
+  providerSlug?: string;
+  daycareId?: string;  // Legacy alias
+  daycareName?: string;  // Legacy alias
+  daycareSlug?: string;  // Legacy alias
   reviews: Review[];
   reviewCount: number;
   avgRating: number;
@@ -35,6 +38,9 @@ interface ReviewsSectionProps {
 }
 
 export function ReviewsSection({
+  providerId,
+  providerName,
+  providerSlug,
   daycareId,
   daycareName,
   daycareSlug,
@@ -44,6 +50,10 @@ export function ReviewsSection({
   canReview,
   canReviewReason,
 }: ReviewsSectionProps) {
+  // Support both new and legacy prop names
+  const entityId = providerId || daycareId || "";
+  const entityName = providerName || daycareName || "";
+  const entitySlug = providerSlug || daycareSlug || "";
   return (
     <div className="space-y-6">
       {/* Header with stats and write button */}
@@ -63,10 +73,10 @@ export function ReviewsSection({
         </div>
 
         {canReview ? (
-          <ReviewForm daycareId={daycareId} daycareName={daycareName} />
+          <ReviewForm daycareId={entityId} daycareName={entityName} />
         ) : canReviewReason === "not_logged_in" ? (
           <Button asChild>
-            <Link href={`/login?callbackUrl=/daycare/${daycareSlug}`}>
+            <Link href={`/login?callbackUrl=/provider/${entitySlug}`}>
               <Star className="mr-2 h-4 w-4" />
               Login to Review
             </Link>
@@ -129,7 +139,7 @@ export function ReviewsSection({
                   {review.response && (
                     <div className="mt-4 ml-4 pl-4 border-l-2 border-primary/30">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium">Response from {daycareName}</span>
+                        <span className="text-sm font-medium">Response from {entityName}</span>
                         {review.respondedAt && (
                           <span className="text-xs text-muted-foreground">
                             {new Date(review.respondedAt).toLocaleDateString()}

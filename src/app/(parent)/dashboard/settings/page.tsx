@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Shield, ChevronRight } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Settings | KinderCare",
+  title: "Settings | DocConnect",
   description: "Manage your account settings",
 };
 
@@ -62,7 +62,7 @@ export default async function SettingsPage() {
       {/* Notification preferences */}
       <NotificationPreferences
         initialPreferences={notificationPrefs || {
-          emailBookings: true,
+          emailAppointments: true,
           emailMessages: true,
           emailMarketing: false,
           pushEnabled: false,

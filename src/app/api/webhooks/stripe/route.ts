@@ -234,7 +234,7 @@ async function handleAccountUpdated(account: Stripe.Account) {
   const daycareId = account.metadata?.daycareId;
 
   if (daycareId) {
-    await db.daycare.update({
+    await db.provider.update({
       where: { id: daycareId },
       data: {
         stripeOnboarded: account.charges_enabled && account.payouts_enabled,

@@ -20,16 +20,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { db } from "@/lib/db";
-import { DaycareActions } from "@/components/admin/daycare-actions";
-import { DaycareStatus } from "@prisma/client";
+import { ProviderActions } from "@/components/admin/provider-actions";
+import { ProviderStatus } from "@prisma/client";
 import {
-  adminDaycaresSearchSchema,
+  adminProvidersSearchSchema,
   parseSearchParams,
-  type AdminDaycaresSearch,
+  type AdminProvidersSearch,
 } from "@/lib/validations";
 import { buildPaginationUrl } from "@/lib/url-helpers";
 
-async function getDaycares(params: AdminDaycaresSearch) {
+async function getProviders(params: AdminProvidersSearch) {
   const { page, perPage, search, status } = params;
   const skip = (page - 1) * perPage;
 
@@ -47,8 +47,8 @@ async function getDaycares(params: AdminDaycaresSearch) {
     where.status = status;
   }
 
-  const [daycares, total, statusCounts] = await Promise.all([
-    db.daycare.findMany({
+  const [providers, total, statusCounts] = await Promise.all([
+    db.provider.findMany({
       where,
       skip,
       take: perPage,
@@ -63,18 +63,18 @@ async function getDaycares(params: AdminDaycaresSearch) {
         status: true,
         isFeatured: true,
         isVerified: true,
-        capacity: true,
+        specialty: true,
         createdAt: true,
         _count: {
           select: {
-            bookings: true,
+            appointments: true,
             reviews: true,
           },
         },
       },
     }),
-    db.daycare.count({ where }),
-    db.daycare.groupBy({
+    db.provider.count({ where }),
+    db.provider.groupBy({
       by: ["status"],
       _count: { status: true },
     }),
@@ -88,13 +88,13 @@ async function getDaycares(params: AdminDaycaresSearch) {
     SUSPENDED: 0,
   };
 
-  statusCounts.forEach((item) => {
+  statusCounts.forEach((item: { status: ProviderStatus; _count: { status: number } }) => {
     counts[item.status] = item._count.status;
     counts.total += item._count.status;
   });
 
   return {
-    daycares,
+    providers,
     total,
     page,
     totalPages: Math.ceil(total / perPage),
@@ -102,7 +102,7 @@ async function getDaycares(params: AdminDaycaresSearch) {
   };
 }
 
-function getStatusBadgeVariant(status: DaycareStatus) {
+function getStatusBadgeVariant(status: ProviderStatus) {
   switch (status) {
     case "APPROVED":
       return "default";
@@ -117,7 +117,7 @@ function getStatusBadgeVariant(status: DaycareStatus) {
   }
 }
 
-function getStatusColor(status: DaycareStatus) {
+function getStatusColor(status: ProviderStatus) {
   switch (status) {
     case "APPROVED":
       return "text-green-600";
@@ -132,22 +132,22 @@ function getStatusColor(status: DaycareStatus) {
   }
 }
 
-export default async function DaycaresPage({
+export default async function ProvidersPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const rawParams = await searchParams;
-  const params = parseSearchParams(adminDaycaresSearchSchema, rawParams);
-  const { daycares, total, page, totalPages, counts } = await getDaycares(params);
+  const params = parseSearchParams(adminProvidersSearchSchema, rawParams);
+  const { providers, total, page, totalPages, counts } = await getProviders(params);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Daycares</h1>
+          <h1 className="text-3xl font-bold">Providers</h1>
           <p className="text-muted-foreground">
-            Manage and moderate daycare listings
+            Manage and moderate provider listings
           </p>
         </div>
       </div>
@@ -167,7 +167,7 @@ export default async function DaycaresPage({
         </Card>
         <Card className={params.status === "PENDING" ? "ring-2 ring-yellow-500" : ""}>
           <CardContent className="pt-6">
-            <Link href="/admin/daycares?status=PENDING" className="block">
+            <Link href="/admin/providers?status=PENDING" className="block">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Pending</p>
@@ -180,7 +180,7 @@ export default async function DaycaresPage({
         </Card>
         <Card className={params.status === "APPROVED" ? "ring-2 ring-green-500" : ""}>
           <CardContent className="pt-6">
-            <Link href="/admin/daycares?status=APPROVED" className="block">
+            <Link href="/admin/providers?status=APPROVED" className="block">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Approved</p>
@@ -193,7 +193,7 @@ export default async function DaycaresPage({
         </Card>
         <Card className={params.status === "REJECTED" ? "ring-2 ring-gray-500" : ""}>
           <CardContent className="pt-6">
-            <Link href="/admin/daycares?status=REJECTED" className="block">
+            <Link href="/admin/providers?status=REJECTED" className="block">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Rejected</p>
@@ -206,7 +206,7 @@ export default async function DaycaresPage({
         </Card>
         <Card className={params.status === "SUSPENDED" ? "ring-2 ring-red-500" : ""}>
           <CardContent className="pt-6">
-            <Link href="/admin/daycares?status=SUSPENDED" className="block">
+            <Link href="/admin/providers?status=SUSPENDED" className="block">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Suspended</p>
@@ -227,7 +227,7 @@ export default async function DaycaresPage({
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   name="search"
-                  placeholder="Search daycares..."
+                  placeholder="Search providers..."
                   defaultValue={params.search ?? ""}
                   className="pl-10"
                 />
@@ -249,7 +249,7 @@ export default async function DaycaresPage({
               </Button>
               {(params.search || params.status) && (
                 <Button variant="ghost" asChild>
-                  <Link href="/admin/daycares">Clear</Link>
+                  <Link href="/admin/providers">Clear</Link>
                 </Button>
               )}
             </form>
@@ -259,26 +259,26 @@ export default async function DaycaresPage({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Daycare</TableHead>
+                <TableHead>Provider</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Capacity</TableHead>
-                <TableHead>Bookings</TableHead>
+                <TableHead>Specialty</TableHead>
+                <TableHead>Appointments</TableHead>
                 <TableHead>Reviews</TableHead>
                 <TableHead>Submitted</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {daycares.length === 0 ? (
+              {providers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8">
-                    No daycares found
+                    No providers found
                   </TableCell>
                 </TableRow>
               ) : (
-                daycares.map((daycare) => (
-                  <TableRow key={daycare.id}>
+                providers.map((provider) => (
+                  <TableRow key={provider.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
@@ -286,18 +286,18 @@ export default async function DaycaresPage({
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="font-medium">{daycare.name}</p>
-                            {daycare.isFeatured && (
+                            <p className="font-medium">{provider.name}</p>
+                            {provider.isFeatured && (
                               <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                             )}
-                            {daycare.isVerified && (
+                            {provider.isVerified && (
                               <Badge variant="outline" className="text-xs text-blue-600">
                                 Verified
                               </Badge>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {daycare.email}
+                            {provider.email}
                           </p>
                         </div>
                       </div>
@@ -305,29 +305,29 @@ export default async function DaycaresPage({
                     <TableCell>
                       <div className="flex items-center gap-1 text-sm">
                         <MapPin className="h-3 w-3 text-muted-foreground" />
-                        {daycare.city}, {daycare.state}
+                        {provider.city}, {provider.state}
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant={getStatusBadgeVariant(daycare.status)}
-                        className={getStatusColor(daycare.status)}
+                        variant={getStatusBadgeVariant(provider.status)}
+                        className={getStatusColor(provider.status)}
                       >
-                        {daycare.status}
+                        {provider.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{daycare.capacity}</TableCell>
-                    <TableCell>{daycare._count.bookings}</TableCell>
-                    <TableCell>{daycare._count.reviews}</TableCell>
+                    <TableCell>{provider.specialty || "-"}</TableCell>
+                    <TableCell>{provider._count.appointments}</TableCell>
+                    <TableCell>{provider._count.reviews}</TableCell>
                     <TableCell>
-                      {new Date(daycare.createdAt).toLocaleDateString()}
+                      {new Date(provider.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      <DaycareActions
-                        daycareId={daycare.id}
-                        daycareSlug={daycare.slug}
-                        status={daycare.status}
-                        isFeatured={daycare.isFeatured}
+                      <ProviderActions
+                        providerId={provider.id}
+                        providerSlug={provider.slug}
+                        status={provider.status}
+                        isFeatured={provider.isFeatured}
                       />
                     </TableCell>
                   </TableRow>
@@ -350,7 +350,7 @@ export default async function DaycaresPage({
                   asChild
                 >
                   <Link
-                    href={buildPaginationUrl("/admin/daycares", page - 1, {
+                    href={buildPaginationUrl("/admin/providers", page - 1, {
                       search: params.search,
                       status: params.status,
                     })}
@@ -365,7 +365,7 @@ export default async function DaycaresPage({
                   asChild
                 >
                   <Link
-                    href={buildPaginationUrl("/admin/daycares", page + 1, {
+                    href={buildPaginationUrl("/admin/providers", page + 1, {
                       search: params.search,
                       status: params.status,
                     })}

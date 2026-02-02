@@ -17,7 +17,7 @@ type BulkMessageInput = z.infer<typeof bulkMessageSchema>;
 
 // Check if user has premium access for bulk messaging
 async function checkPremiumAccess(userId: string) {
-  const staff = await db.daycareStaff.findFirst({
+  const staff = await db.providerStaff.findFirst({
     where: { userId, role: { in: ["owner", "manager"] } },
     include: {
       daycare: {
@@ -77,27 +77,27 @@ export async function sendBulkMessage(data: BulkMessageInput) {
       case "all":
         // All parents who have interacted with the daycare
         const threads = await db.messageThread.findMany({
-          where: { daycareId: daycare.id },
-          select: { parentId: true },
-          distinct: ["parentId"],
+          where: { providerId: daycare.id },
+          select: { patientId: true },
+          distinct: ["patientId"],
         });
-        recipients = threads.map((t) => ({ id: t.parentId, userId: t.parentId }));
+        recipients = threads.map((t) => ({ id: t.patientId, userId: t.patientId }));
         break;
 
       case "enrolled":
         // Parents with active enrollments
-        const enrollments = await db.enrollment.findMany({
-          where: { daycareId: daycare.id, status: "ACTIVE" },
-          select: { child: { select: { parentId: true } } },
+        const enrollments = await db.appointment.findMany({
+          where: { providerId: daycare.id, status: "ACTIVE" },
+          select: { child: { select: { patientId: true } } },
         });
-        const enrolledParents = [...new Set(enrollments.map((e) => e.child.parentId))];
+        const enrolledParents = [...new Set(enrollments.map((e) => e.child.patientId))];
         recipients = enrolledParents.map((id) => ({ id, userId: id }));
         break;
 
       case "waitlisted":
         // Waitlist entries - find matching users by email
         const waitlist = await db.waitlistEntry.findMany({
-          where: { daycareId: daycare.id, notifiedAt: null },
+          where: { providerId: daycare.id, notifiedAt: null },
           select: { parentEmail: true },
         });
         const waitlistEmails = waitlist.map((w) => w.parentEmail);
@@ -110,12 +110,12 @@ export async function sendBulkMessage(data: BulkMessageInput) {
 
       case "toured":
         // Parents who completed tours
-        const tours = await db.booking.findMany({
-          where: { daycareId: daycare.id, type: "TOUR", status: "COMPLETED" },
-          select: { parentId: true },
-          distinct: ["parentId"],
+        const tours = await db.appointment.findMany({
+          where: { providerId: daycare.id, type: "TOUR", status: "COMPLETED" },
+          select: { patientId: true },
+          distinct: ["patientId"],
         });
-        recipients = tours.map((t) => ({ id: t.parentId, userId: t.parentId }));
+        recipients = tours.map((t) => ({ id: t.patientId, userId: t.patientId }));
         break;
     }
 
@@ -129,13 +129,13 @@ export async function sendBulkMessage(data: BulkMessageInput) {
     // 1. Pre-fetch ALL existing threads in one query
     const existingThreads = await db.messageThread.findMany({
       where: {
-        daycareId: daycare.id,
-        parentId: { in: recipientUserIds },
+        providerId: daycare.id,
+        patientId: { in: recipientUserIds },
       },
-      select: { id: true, parentId: true },
+      select: { id: true, patientId: true },
     });
 
-    const threadsByParent = new Map(existingThreads.map((t) => [t.parentId, t.id]));
+    const threadsByParent = new Map(existingThreads.map((t) => [t.patientId, t.id]));
 
     // 2. Find recipients without threads
     const recipientsWithoutThreads = recipientUserIds.filter(
@@ -151,9 +151,9 @@ export async function sendBulkMessage(data: BulkMessageInput) {
         // Create missing threads
         if (recipientsWithoutThreads.length > 0) {
           await tx.messageThread.createMany({
-            data: recipientsWithoutThreads.map((parentId) => ({
-              daycareId: daycare.id,
-              parentId,
+            data: recipientsWithoutThreads.map((patientId) => ({
+              providerId: daycare.id,
+              patientId,
               subject: validated.subject,
             })),
             skipDuplicates: true,
@@ -162,13 +162,13 @@ export async function sendBulkMessage(data: BulkMessageInput) {
           // Fetch newly created threads
           const newThreads = await tx.messageThread.findMany({
             where: {
-              daycareId: daycare.id,
-              parentId: { in: recipientsWithoutThreads },
+              providerId: daycare.id,
+              patientId: { in: recipientsWithoutThreads },
             },
-            select: { id: true, parentId: true },
+            select: { id: true, patientId: true },
           });
 
-          newThreads.forEach((t) => threadsByParent.set(t.parentId, t.id));
+          newThreads.forEach((t) => threadsByParent.set(t.patientId, t.id));
         }
 
         // 4. Create all messages in batch
@@ -197,7 +197,7 @@ export async function sendBulkMessage(data: BulkMessageInput) {
               type: "message_received",
               title: `Message from ${daycare.name}`,
               body: validated.subject,
-              data: { threadId, daycareId: daycare.id },
+              data: { threadId, providerId: daycare.id },
             };
           })
           .filter((n): n is NonNullable<typeof n> => n !== null);
@@ -242,20 +242,20 @@ export async function getBulkMessageStats() {
   // Get counts for each recipient type
   const [allCount, enrolledCount, touredCount] = await Promise.all([
     db.messageThread.count({
-      where: { daycareId: access.daycare.id },
+      where: { providerId: access.daycare.id },
     }),
-    db.enrollment.count({
-      where: { daycareId: access.daycare.id, status: "ACTIVE" },
+    db.appointment.count({
+      where: { providerId: access.daycare.id, status: "ACTIVE" },
     }),
-    db.booking.groupBy({
-      by: ["parentId"],
-      where: { daycareId: access.daycare.id, type: "TOUR", status: "COMPLETED" },
+    db.appointment.groupBy({
+      by: ["patientId"],
+      where: { providerId: access.daycare.id, type: "TOUR", status: "COMPLETED" },
     }).then((r) => r.length),
   ]);
 
   // Count waitlist entries that have matching user accounts
   const waitlistEntries = await db.waitlistEntry.findMany({
-    where: { daycareId: access.daycare.id, notifiedAt: null },
+    where: { providerId: access.daycare.id, notifiedAt: null },
     select: { parentEmail: true },
   });
   const waitlistEmails = waitlistEntries.map((w) => w.parentEmail);

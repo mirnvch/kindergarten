@@ -15,6 +15,7 @@ import {
   ArrowDown,
   Lock,
   Sparkles,
+  Video,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,15 +23,15 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
 export const metadata: Metadata = {
-  title: "Analytics | KinderCare Portal",
-  description: "View your daycare analytics",
+  title: "Analytics | DocConnect Portal",
+  description: "View your practice analytics",
 };
 
 async function getAnalytics(userId: string) {
-  const daycareStaff = await db.daycareStaff.findFirst({
+  const providerStaff = await db.providerStaff.findFirst({
     where: { userId, role: { in: ["owner", "manager"] } },
     include: {
-      daycare: {
+      provider: {
         include: {
           subscription: true,
         },
@@ -38,24 +39,23 @@ async function getAnalytics(userId: string) {
     },
   });
 
-  if (!daycareStaff) {
+  if (!providerStaff) {
     return null;
   }
 
-  const daycareId = daycareStaff.daycare.id;
-  const subscription = daycareStaff.daycare.subscription;
+  const providerId = providerStaff.provider.id;
+  const subscription = providerStaff.provider.subscription;
   const isPremium = subscription?.status === "ACTIVE" && subscription.plan !== "FREE";
   const now = new Date();
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
 
   // Get all stats in parallel
   const [
-    thisMonthBookings,
-    lastMonthBookings,
-    thisMonthEnrollments,
-    activeEnrollments,
+    thisMonthAppointments,
+    lastMonthAppointments,
+    thisMonthTelemedicine,
+    completedAppointments,
     avgRating,
     reviewCount,
     thisMonthMessages,
@@ -63,61 +63,62 @@ async function getAnalytics(userId: string) {
     thisMonthRevenue,
     lastMonthRevenue,
   ] = await Promise.all([
-    // This month bookings
-    db.booking.count({
+    // This month appointments
+    db.appointment.count({
       where: {
-        daycareId,
+        providerId,
         createdAt: { gte: thisMonthStart },
       },
     }),
-    // Last month bookings
-    db.booking.count({
+    // Last month appointments
+    db.appointment.count({
       where: {
-        daycareId,
+        providerId,
         createdAt: { gte: lastMonthStart, lt: thisMonthStart },
       },
     }),
-    // This month new enrollments
-    db.enrollment.count({
+    // This month telemedicine
+    db.appointment.count({
       where: {
-        daycareId,
+        providerId,
+        type: "TELEMEDICINE",
         createdAt: { gte: thisMonthStart },
       },
     }),
-    // Active enrollments
-    db.enrollment.count({
+    // Completed appointments
+    db.appointment.count({
       where: {
-        daycareId,
-        status: "ACTIVE",
+        providerId,
+        status: "COMPLETED",
       },
     }),
     // Average rating
     db.review.aggregate({
-      where: { daycareId, isApproved: true },
+      where: { providerId, isApproved: true },
       _avg: { rating: true },
     }),
     // Review count
     db.review.count({
-      where: { daycareId, isApproved: true },
+      where: { providerId, isApproved: true },
     }),
     // This month messages
     db.message.count({
       where: {
-        thread: { daycareId },
+        thread: { providerId },
         createdAt: { gte: thisMonthStart },
       },
     }),
     // Last month messages
     db.message.count({
       where: {
-        thread: { daycareId },
+        thread: { providerId },
         createdAt: { gte: lastMonthStart, lt: thisMonthStart },
       },
     }),
     // This month revenue
     db.payment.aggregate({
       where: {
-        daycareId,
+        providerId,
         status: "SUCCEEDED",
         createdAt: { gte: thisMonthStart },
       },
@@ -126,7 +127,7 @@ async function getAnalytics(userId: string) {
     // Last month revenue
     db.payment.aggregate({
       where: {
-        daycareId,
+        providerId,
         status: "SUCCEEDED",
         createdAt: { gte: lastMonthStart, lt: thisMonthStart },
       },
@@ -134,24 +135,24 @@ async function getAnalytics(userId: string) {
     }),
   ]);
 
-  // Calculate booking conversion (confirmed / total)
-  const confirmedBookings = await db.booking.count({
+  // Calculate conversion (confirmed / total)
+  const confirmedAppointments = await db.appointment.count({
     where: {
-      daycareId,
+      providerId,
       status: "CONFIRMED",
       createdAt: { gte: thisMonthStart },
     },
   });
-  const conversionRate = thisMonthBookings > 0
-    ? Math.round((confirmedBookings / thisMonthBookings) * 100)
+  const conversionRate = thisMonthAppointments > 0
+    ? Math.round((confirmedAppointments / thisMonthAppointments) * 100)
     : 0;
 
-  // Recent bookings for activity feed
-  const recentBookings = await db.booking.findMany({
-    where: { daycareId },
+  // Recent appointments for activity feed
+  const recentAppointments = await db.appointment.findMany({
+    where: { providerId },
     include: {
-      parent: { select: { firstName: true, lastName: true } },
-      child: { select: { firstName: true } },
+      patient: { select: { firstName: true, lastName: true } },
+      familyMember: { select: { firstName: true } },
     },
     orderBy: { createdAt: "desc" },
     take: 5,
@@ -174,21 +175,21 @@ async function getAnalytics(userId: string) {
 
     weeklyTrends = await Promise.all(
       weeks.map(async ({ start, end }) => {
-        const [bookings, messages, revenue] = await Promise.all([
-          db.booking.count({
-            where: { daycareId, createdAt: { gte: start, lt: end } },
+        const [appointments, messages, revenue] = await Promise.all([
+          db.appointment.count({
+            where: { providerId, createdAt: { gte: start, lt: end } },
           }),
           db.message.count({
-            where: { thread: { daycareId }, createdAt: { gte: start, lt: end } },
+            where: { thread: { providerId }, createdAt: { gte: start, lt: end } },
           }),
           db.payment.aggregate({
-            where: { daycareId, status: "SUCCEEDED", createdAt: { gte: start, lt: end } },
+            where: { providerId, status: "SUCCEEDED", createdAt: { gte: start, lt: end } },
             _sum: { amount: true },
           }),
         ]);
         return {
           week: start.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-          bookings,
+          appointments,
           messages,
           revenue: Number(revenue._sum.amount || 0),
         };
@@ -218,20 +219,20 @@ async function getAnalytics(userId: string) {
   }
 
   return {
-    daycare: daycareStaff.daycare,
+    provider: providerStaff.provider,
     isPremium,
     subscriptionPlan: subscription?.plan || "FREE",
     stats: {
-      bookings: {
-        current: thisMonthBookings,
-        previous: lastMonthBookings,
-        change: lastMonthBookings > 0
-          ? Math.round(((thisMonthBookings - lastMonthBookings) / lastMonthBookings) * 100)
+      appointments: {
+        current: thisMonthAppointments,
+        previous: lastMonthAppointments,
+        change: lastMonthAppointments > 0
+          ? Math.round(((thisMonthAppointments - lastMonthAppointments) / lastMonthAppointments) * 100)
           : 0,
       },
-      enrollments: {
-        new: thisMonthEnrollments,
-        active: activeEnrollments,
+      telemedicine: {
+        count: thisMonthTelemedicine,
+        completed: completedAppointments,
       },
       rating: {
         average: avgRating._avg.rating || 0,
@@ -253,7 +254,7 @@ async function getAnalytics(userId: string) {
       },
       conversionRate,
     },
-    recentBookings,
+    recentAppointments,
     premium: isPremium ? {
       weeklyTrends,
       peakHours,
@@ -322,7 +323,7 @@ export default async function AnalyticsPage() {
     redirect("/portal");
   }
 
-  const { daycare, stats, recentBookings, isPremium, subscriptionPlan, premium } = data;
+  const { provider, stats, recentAppointments, isPremium, subscriptionPlan, premium } = data;
 
   return (
     <div className="space-y-6">
@@ -330,7 +331,7 @@ export default async function AnalyticsPage() {
         <div>
           <h1 className="text-2xl font-bold">Analytics</h1>
           <p className="text-muted-foreground">
-            Performance overview for {daycare.name}
+            Performance overview for {provider.name}
           </p>
         </div>
         {isPremium && (
@@ -344,22 +345,22 @@ export default async function AnalyticsPage() {
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Tour Requests"
-          value={stats.bookings.current}
+          title="Appointments"
+          value={stats.appointments.current}
           description="vs last month"
-          change={stats.bookings.change}
+          change={stats.appointments.change}
           icon={Calendar}
         />
         <StatCard
-          title="Active Enrollments"
-          value={stats.enrollments.active}
-          description={`${stats.enrollments.new} new this month`}
-          icon={Users}
+          title="Telemedicine"
+          value={stats.telemedicine.count}
+          description={`${stats.telemedicine.completed} completed`}
+          icon={Video}
         />
         <StatCard
           title="Conversion Rate"
           value={`${stats.conversionRate}%`}
-          description="bookings confirmed"
+          description="appointments confirmed"
           icon={TrendingUp}
         />
         <StatCard
@@ -397,46 +398,46 @@ export default async function AnalyticsPage() {
       {/* Recent Activity */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Booking Activity</CardTitle>
-          <CardDescription>Latest tour and enrollment requests</CardDescription>
+          <CardTitle>Recent Appointment Activity</CardTitle>
+          <CardDescription>Latest appointment requests</CardDescription>
         </CardHeader>
         <CardContent>
-          {recentBookings.length === 0 ? (
+          {recentAppointments.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
-              No recent bookings
+              No recent appointments
             </p>
           ) : (
             <div className="space-y-4">
-              {recentBookings.map((booking) => (
+              {recentAppointments.map((appointment) => (
                 <div
-                  key={booking.id}
+                  key={appointment.id}
                   className="flex items-center justify-between py-2 border-b last:border-0"
                 >
                   <div>
                     <p className="font-medium">
-                      {booking.parent.firstName} {booking.parent.lastName}
+                      {appointment.patient.firstName} {appointment.patient.lastName}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {booking.type === "TOUR" ? "Tour request" : "Enrollment"}{" "}
-                      {booking.child && `for ${booking.child.firstName}`}
+                      {appointment.type === "TELEMEDICINE" ? "Telemedicine" : "In-Person"}{" "}
+                      {appointment.familyMember && `for ${appointment.familyMember.firstName}`}
                     </p>
                   </div>
                   <div className="text-right">
                     <p
                       className={`text-sm font-medium ${
-                        booking.status === "CONFIRMED"
+                        appointment.status === "CONFIRMED"
                           ? "text-green-600"
-                          : booking.status === "PENDING"
+                          : appointment.status === "PENDING"
                             ? "text-yellow-600"
-                            : booking.status === "CANCELLED"
+                            : appointment.status === "CANCELLED"
                               ? "text-red-600"
                               : ""
                       }`}
                     >
-                      {booking.status.toLowerCase()}
+                      {appointment.status.toLowerCase()}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(booking.createdAt).toLocaleDateString()}
+                      {new Date(appointment.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
@@ -461,8 +462,8 @@ export default async function AnalyticsPage() {
                   <div key={i} className="grid grid-cols-4 gap-4 items-center py-2 border-b last:border-0">
                     <div className="font-medium">{week.week}</div>
                     <div className="text-center">
-                      <p className="text-lg font-semibold">{week.bookings}</p>
-                      <p className="text-xs text-muted-foreground">bookings</p>
+                      <p className="text-lg font-semibold">{week.appointments}</p>
+                      <p className="text-xs text-muted-foreground">appointments</p>
                     </div>
                     <div className="text-center">
                       <p className="text-lg font-semibold">{week.messages}</p>
@@ -501,7 +502,7 @@ export default async function AnalyticsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Peak Hours</CardTitle>
-                <CardDescription>When parents browse your profile</CardDescription>
+                <CardDescription>When patients browse your profile</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {premium.peakHours?.map((hour, i) => (

@@ -52,7 +52,7 @@ export interface RescheduleBookingParams {
 }
 
 export interface CreateTourBookingParams {
-  parentId: string;
+  patientId: string;
   daycareId: string;
   childId: string;
   scheduledAt: Date;
@@ -100,10 +100,10 @@ export async function cancelBookingService({
   reason,
 }: CancelBookingParams): Promise<{ success: true } | { success: false; error: string }> {
   // Verify ownership and status
-  const booking = await db.booking.findFirst({
+  const booking = await db.appointment.findFirst({
     where: {
       id: bookingId,
-      parentId: userId,
+      patientId: userId,
       status: { in: ["PENDING", "CONFIRMED"] },
     },
   });
@@ -122,7 +122,7 @@ export async function cancelBookingService({
   }
 
   // Perform cancellation
-  await db.booking.update({
+  await db.appointment.update({
     where: { id: bookingId },
     data: {
       status: BookingStatus.CANCELLED,
@@ -143,10 +143,10 @@ export async function cancelBookingSeriesService({
   reason,
 }: CancelSeriesParams): Promise<{ success: true; cancelledCount: number } | { success: false; error: string }> {
   // Get all bookings in series
-  const bookings = await db.booking.findMany({
+  const bookings = await db.appointment.findMany({
     where: {
       seriesId,
-      parentId: userId,
+      patientId: userId,
       status: { in: ["PENDING", "CONFIRMED"] },
     },
   });
@@ -172,10 +172,10 @@ export async function cancelBookingSeriesService({
   }
 
   // Cancel all future bookings
-  await db.booking.updateMany({
+  await db.appointment.updateMany({
     where: {
       seriesId,
-      parentId: userId,
+      patientId: userId,
       status: { in: ["PENDING", "CONFIRMED"] },
       scheduledAt: { gt: new Date() },
     },
@@ -198,10 +198,10 @@ export async function rescheduleBookingService({
   newScheduledAt,
 }: RescheduleBookingParams): Promise<{ success: true } | { success: false; error: string }> {
   // Verify ownership and status
-  const booking = await db.booking.findFirst({
+  const booking = await db.appointment.findFirst({
     where: {
       id: bookingId,
-      parentId: userId,
+      patientId: userId,
       status: { in: ["PENDING", "CONFIRMED"] },
     },
   });
@@ -230,7 +230,7 @@ export async function rescheduleBookingService({
   }
 
   // Update booking
-  await db.booking.update({
+  await db.appointment.update({
     where: { id: bookingId },
     data: {
       scheduledAt: newScheduledAt,
@@ -252,7 +252,7 @@ export async function checkTimeSlotConflict(
   scheduledAt: Date,
   excludeBookingId?: string
 ): Promise<boolean> {
-  const conflictingBooking = await db.booking.findFirst({
+  const conflictingBooking = await db.appointment.findFirst({
     where: {
       daycareId,
       type: BookingType.TOUR,
@@ -272,7 +272,7 @@ export async function checkTimeSlotConflict(
  * Create a tour booking (single or recurring).
  */
 export async function createTourBookingService({
-  parentId,
+  patientId,
   daycareId,
   childId,
   scheduledAt,
@@ -283,8 +283,8 @@ export async function createTourBookingService({
   { success: true; bookingIds: string[]; seriesId?: string } | { success: false; error: string }
 > {
   // Verify child belongs to parent
-  const child = await db.child.findFirst({
-    where: { id: childId, parentId },
+  const child = await db.familyMember.findFirst({
+    where: { id: childId, patientId },
   });
 
   if (!child) {
@@ -292,7 +292,7 @@ export async function createTourBookingService({
   }
 
   // Verify daycare is approved
-  const daycare = await db.daycare.findUnique({
+  const daycare = await db.provider.findUnique({
     where: {
       id: daycareId,
       status: DaycareStatus.APPROVED,
@@ -343,9 +343,9 @@ export async function createTourBookingService({
   // Create all bookings in transaction
   const bookings = await db.$transaction(
     bookingDates.map((date) =>
-      db.booking.create({
+      db.appointment.create({
         data: {
-          parentId,
+          patientId,
           daycareId,
           childId,
           type: BookingType.TOUR,
@@ -375,7 +375,7 @@ export async function getAvailableSlotsService(
   daycareId: string,
   options?: { startDate?: Date; endDate?: Date; daysAhead?: number }
 ): Promise<DayAvailability[]> {
-  const daycare = await db.daycare.findUnique({
+  const daycare = await db.provider.findUnique({
     where: { id: daycareId, status: DaycareStatus.APPROVED, deletedAt: null },
     select: {
       openingTime: true,
@@ -394,7 +394,7 @@ export async function getAvailableSlotsService(
   const end = options?.endDate || new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
 
   // Get existing bookings
-  const existingBookings = await db.booking.findMany({
+  const existingBookings = await db.appointment.findMany({
     where: {
       daycareId,
       type: BookingType.TOUR,

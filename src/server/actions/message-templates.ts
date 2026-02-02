@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 // Get templates for daycare
-export async function getMessageTemplates(daycareId: string) {
+export async function getMessageTemplates(providerId: string) {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -14,9 +14,9 @@ export async function getMessageTemplates(daycareId: string) {
   }
 
   // Verify user has access to this daycare
-  const hasAccess = await db.daycareStaff.findFirst({
+  const hasAccess = await db.providerStaff.findFirst({
     where: {
-      daycareId,
+      providerId,
       userId: session.user.id,
     },
   });
@@ -27,7 +27,7 @@ export async function getMessageTemplates(daycareId: string) {
 
   const templates = await db.messageTemplate.findMany({
     where: {
-      daycareId,
+      providerId,
       isActive: true,
     },
     orderBy: [{ category: "asc" }, { name: "asc" }],
@@ -38,7 +38,7 @@ export async function getMessageTemplates(daycareId: string) {
 
 // Create template
 const createTemplateSchema = z.object({
-  daycareId: z.string().min(1),
+  providerId: z.string().min(1),
   name: z.string().min(1, "Template name is required").max(100),
   content: z.string().min(1, "Content is required").max(2000),
   category: z.string().optional(),
@@ -54,9 +54,9 @@ export async function createMessageTemplate(input: z.infer<typeof createTemplate
   const validated = createTemplateSchema.parse(input);
 
   // Verify user has access
-  const hasAccess = await db.daycareStaff.findFirst({
+  const hasAccess = await db.providerStaff.findFirst({
     where: {
-      daycareId: validated.daycareId,
+      providerId: validated.providerId,
       userId: session.user.id,
       role: { in: ["owner", "manager"] },
     },
@@ -68,7 +68,7 @@ export async function createMessageTemplate(input: z.infer<typeof createTemplate
 
   const template = await db.messageTemplate.create({
     data: {
-      daycareId: validated.daycareId,
+      providerId: validated.providerId,
       name: validated.name,
       content: validated.content,
       category: validated.category || "general",
@@ -240,7 +240,7 @@ Please schedule a tour to discuss pricing options that work best for your family
 ];
 
 // Initialize default templates for a daycare
-export async function initializeDefaultTemplates(daycareId: string) {
+export async function initializeDefaultTemplates(providerId: string) {
   const session = await auth();
 
   if (!session?.user?.id) {
@@ -249,7 +249,7 @@ export async function initializeDefaultTemplates(daycareId: string) {
 
   // Check if templates already exist
   const existingCount = await db.messageTemplate.count({
-    where: { daycareId },
+    where: { providerId },
   });
 
   if (existingCount > 0) {
@@ -259,7 +259,7 @@ export async function initializeDefaultTemplates(daycareId: string) {
   // Create default templates
   await db.messageTemplate.createMany({
     data: DEFAULT_TEMPLATES.map((t) => ({
-      daycareId,
+      providerId,
       ...t,
     })),
   });

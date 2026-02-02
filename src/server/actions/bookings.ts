@@ -29,9 +29,9 @@ export async function getParentBookings(
 
   const now = new Date();
 
-  const bookings = await db.booking.findMany({
+  const bookings = await db.appointment.findMany({
     where: {
-      parentId: session.user.id,
+      patientId: session.user.id,
       ...(filter === "upcoming"
         ? {
             OR: [
@@ -81,10 +81,10 @@ export async function cancelBooking(id: string, reason?: string) {
   }
 
   // Verify ownership and status
-  const booking = await db.booking.findFirst({
+  const booking = await db.appointment.findFirst({
     where: {
       id,
-      parentId: session.user.id,
+      patientId: session.user.id,
       status: { in: ["PENDING", "CONFIRMED"] },
     },
     include: {
@@ -104,7 +104,7 @@ export async function cancelBooking(id: string, reason?: string) {
     }
   }
 
-  await db.booking.update({
+  await db.appointment.update({
     where: { id },
     data: {
       status: BookingStatus.CANCELLED,
@@ -126,10 +126,10 @@ export async function cancelBookingSeries(seriesId: string, reason?: string) {
   }
 
   // Verify ownership and get all bookings in series
-  const bookings = await db.booking.findMany({
+  const bookings = await db.appointment.findMany({
     where: {
       seriesId,
-      parentId: session.user.id,
+      patientId: session.user.id,
       status: { in: ["PENDING", "CONFIRMED"] },
     },
   });
@@ -156,10 +156,10 @@ export async function cancelBookingSeries(seriesId: string, reason?: string) {
   }
 
   // Cancel all future bookings in the series
-  await db.booking.updateMany({
+  await db.appointment.updateMany({
     where: {
       seriesId,
-      parentId: session.user.id,
+      patientId: session.user.id,
       status: { in: ["PENDING", "CONFIRMED"] },
       scheduledAt: { gt: new Date() },
     },
@@ -184,11 +184,11 @@ export async function getSeriesBookings(seriesId: string) {
     throw new Error("Unauthorized");
   }
 
-  const bookings = await db.booking.findMany({
+  const bookings = await db.appointment.findMany({
     where: {
       seriesId,
       OR: [
-        { parentId: session.user.id },
+        { patientId: session.user.id },
         {
           daycare: {
             staff: { some: { userId: session.user.id } },
@@ -234,10 +234,10 @@ export async function rescheduleBooking(input: RescheduleInput) {
   const validated = rescheduleSchema.parse(input);
 
   // Verify ownership and status
-  const booking = await db.booking.findFirst({
+  const booking = await db.appointment.findFirst({
     where: {
       id: validated.bookingId,
-      parentId: session.user.id,
+      patientId: session.user.id,
       status: { in: ["PENDING", "CONFIRMED"] },
     },
     include: {
@@ -258,9 +258,9 @@ export async function rescheduleBooking(input: RescheduleInput) {
   }
 
   // Check for conflicts at new time
-  const conflictingBooking = await db.booking.findFirst({
+  const conflictingBooking = await db.appointment.findFirst({
     where: {
-      daycareId: booking.daycareId,
+      providerId: booking.providerId,
       type: BookingType.TOUR,
       status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
       id: { not: booking.id }, // Exclude current booking
@@ -276,7 +276,7 @@ export async function rescheduleBooking(input: RescheduleInput) {
   }
 
   // Update booking with new time
-  await db.booking.update({
+  await db.appointment.update({
     where: { id: booking.id },
     data: {
       scheduledAt: newScheduledAt,
@@ -297,12 +297,12 @@ export async function rescheduleBooking(input: RescheduleInput) {
 // ==================== SLOT AVAILABILITY ====================
 
 export async function getAvailableSlots(
-  daycareId: string,
+  providerId: string,
   startDate?: Date,
   endDate?: Date
 ): Promise<DayAvailability[]> {
-  const daycare = await db.daycare.findUnique({
-    where: { id: daycareId, status: DaycareStatus.APPROVED, deletedAt: null },
+  const daycare = await db.provider.findUnique({
+    where: { id: providerId, status: DaycareStatus.APPROVED, deletedAt: null },
     select: {
       openingTime: true,
       closingTime: true,
@@ -319,9 +319,9 @@ export async function getAvailableSlots(
   const start = startDate || now;
   const end = endDate || new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
 
-  const existingBookings = await db.booking.findMany({
+  const existingBookings = await db.appointment.findMany({
     where: {
-      daycareId,
+      providerId,
       type: BookingType.TOUR,
       status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
       scheduledAt: {
@@ -362,7 +362,7 @@ export async function getBookingById(id: string): Promise<BookingFull | null> {
     throw new Error("Unauthorized");
   }
 
-  const booking = await db.booking.findUnique({
+  const booking = await db.appointment.findUnique({
     where: { id },
     include: {
       daycare: {
@@ -402,11 +402,11 @@ export async function getBookingById(id: string): Promise<BookingFull | null> {
   }
 
   // Verify user has access to this booking
-  const isParent = booking.parentId === session.user.id;
+  const isParent = booking.patientId === session.user.id;
   const isDaycareOwner =
     session.user.role === "DAYCARE_OWNER" &&
-    (await db.daycareStaff.findFirst({
-      where: { daycareId: booking.daycareId, userId: session.user.id },
+    (await db.providerStaff.findFirst({
+      where: { providerId: booking.providerId, userId: session.user.id },
     }));
 
   if (!isParent && !isDaycareOwner && session.user.role !== "ADMIN") {
@@ -419,7 +419,7 @@ export async function getBookingById(id: string): Promise<BookingFull | null> {
 // ==================== TOUR BOOKING ====================
 
 const tourBookingSchema = z.object({
-  daycareId: z.string().min(1, "Daycare is required"),
+  providerId: z.string().min(1, "Daycare is required"),
   childId: z.string().min(1, "Please select a child"),
   scheduledAt: z.string().datetime("Invalid date/time"),
   notes: z.string().optional(),
@@ -445,10 +445,10 @@ export async function createTourBooking(input: TourBookingInput) {
   const validated = tourBookingSchema.parse(input);
 
   // Verify child belongs to parent
-  const child = await db.child.findFirst({
+  const child = await db.familyMember.findFirst({
     where: {
       id: validated.childId,
-      parentId: session.user.id,
+      patientId: session.user.id,
     },
   });
 
@@ -457,9 +457,9 @@ export async function createTourBooking(input: TourBookingInput) {
   }
 
   // Verify daycare is approved
-  const daycare = await db.daycare.findUnique({
+  const daycare = await db.provider.findUnique({
     where: {
-      id: validated.daycareId,
+      id: validated.providerId,
       status: DaycareStatus.APPROVED,
       deletedAt: null,
     },
@@ -500,9 +500,9 @@ export async function createTourBooking(input: TourBookingInput) {
 
   // Check for conflicts with ALL recurring dates
   for (const date of bookingDates) {
-    const conflictingBooking = await db.booking.findFirst({
+    const conflictingBooking = await db.appointment.findFirst({
       where: {
-        daycareId: validated.daycareId,
+        providerId: validated.providerId,
         type: BookingType.TOUR,
         status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
         scheduledAt: {
@@ -524,10 +524,10 @@ export async function createTourBooking(input: TourBookingInput) {
   // Create all bookings (single or recurring series)
   const bookings = await db.$transaction(
     bookingDates.map((date, index) =>
-      db.booking.create({
+      db.appointment.create({
         data: {
-          parentId: session.user.id,
-          daycareId: validated.daycareId,
+          patientId: session.user.id,
+          providerId: validated.providerId,
           childId: validated.childId,
           type: BookingType.TOUR,
           status: BookingStatus.PENDING,
@@ -554,7 +554,7 @@ export async function createTourBooking(input: TourBookingInput) {
 // ==================== ENROLLMENT REQUEST ====================
 
 const enrollmentSchema = z.object({
-  daycareId: z.string().min(1, "Daycare is required"),
+  providerId: z.string().min(1, "Daycare is required"),
   childId: z.string().min(1, "Please select a child"),
   programId: z.string().optional(),
   schedule: z.enum(["full-time", "part-time", "before-after"]),
@@ -579,10 +579,10 @@ export async function createEnrollmentRequest(input: EnrollmentInput) {
   const validated = enrollmentSchema.parse(input);
 
   // Verify child belongs to parent
-  const child = await db.child.findFirst({
+  const child = await db.familyMember.findFirst({
     where: {
       id: validated.childId,
-      parentId: session.user.id,
+      patientId: session.user.id,
     },
   });
 
@@ -591,9 +591,9 @@ export async function createEnrollmentRequest(input: EnrollmentInput) {
   }
 
   // Verify daycare is approved
-  const daycare = await db.daycare.findUnique({
+  const daycare = await db.provider.findUnique({
     where: {
-      id: validated.daycareId,
+      id: validated.providerId,
       status: DaycareStatus.APPROVED,
       deletedAt: null,
     },
@@ -614,10 +614,10 @@ export async function createEnrollmentRequest(input: EnrollmentInput) {
     .join("\n");
 
   // Create enrollment booking
-  const booking = await db.booking.create({
+  const booking = await db.appointment.create({
     data: {
-      parentId: session.user.id,
-      daycareId: validated.daycareId,
+      patientId: session.user.id,
+      providerId: validated.providerId,
       childId: validated.childId,
       type: BookingType.ENROLLMENT,
       status: BookingStatus.PENDING,

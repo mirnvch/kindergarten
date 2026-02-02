@@ -12,7 +12,7 @@ async function requireDaycareOwner() {
     throw new Error("Unauthorized");
   }
 
-  const daycareStaff = await db.daycareStaff.findFirst({
+  const providerStaff = await db.providerStaff.findFirst({
     where: {
       userId: session.user.id,
       role: { in: ["owner", "manager"] },
@@ -20,18 +20,18 @@ async function requireDaycareOwner() {
     include: { daycare: true },
   });
 
-  if (!daycareStaff) {
+  if (!providerStaff) {
     throw new Error("No daycare found");
   }
 
-  return { user: session.user, daycare: daycareStaff.daycare };
+  return { user: session.user, daycare: providerStaff.daycare };
 }
 
 export async function getPrograms() {
   const { daycare } = await requireDaycareOwner();
 
   return db.program.findMany({
-    where: { daycareId: daycare.id },
+    where: { providerId: daycare.id },
     orderBy: { ageMin: "asc" },
   });
 }
@@ -55,7 +55,7 @@ export async function createProgram(data: ProgramInput) {
 
     await db.program.create({
       data: {
-        daycareId: daycare.id,
+        providerId: daycare.id,
         name: validated.name,
         description: validated.description || null,
         ageMin: validated.ageMin,
@@ -82,7 +82,7 @@ export async function updateProgram(id: string, data: ProgramInput) {
 
     // Verify program belongs to this daycare
     const program = await db.program.findFirst({
-      where: { id, daycareId: daycare.id },
+      where: { id, providerId: daycare.id },
     });
 
     if (!program) {
@@ -120,7 +120,7 @@ export async function deleteProgram(id: string) {
 
     // Verify program belongs to this daycare
     const program = await db.program.findFirst({
-      where: { id, daycareId: daycare.id },
+      where: { id, providerId: daycare.id },
     });
 
     if (!program) {

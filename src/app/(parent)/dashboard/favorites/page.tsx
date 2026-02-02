@@ -1,17 +1,18 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, MapPin, Star, Search, DollarSign } from "lucide-react";
+import { Heart, MapPin, Star, Search, DollarSign, Video, Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getFavorites } from "@/server/actions/favorites";
-import { formatCurrency, formatAgeRange } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import { FavoriteButton } from "@/components/parent/favorite-button";
 import type { FavoriteItem } from "@/types";
 
 export const metadata: Metadata = {
-  title: "Favorites | KinderCare",
-  description: "Your saved daycare centers",
+  title: "Favorites | DocConnect",
+  description: "Your saved healthcare providers",
 };
 
 export default async function FavoritesPage() {
@@ -23,7 +24,7 @@ export default async function FavoritesPage() {
       <div>
         <h1 className="text-2xl font-bold">My Favorites</h1>
         <p className="text-muted-foreground">
-          Daycares you&apos;ve saved for later
+          Providers you&apos;ve saved for later
         </p>
       </div>
 
@@ -33,12 +34,12 @@ export default async function FavoritesPage() {
           <Heart className="h-12 w-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold">No favorites yet</h3>
           <p className="text-sm text-muted-foreground mt-1 mb-4 max-w-sm">
-            Save daycares you&apos;re interested in to easily find them later.
+            Save providers you&apos;re interested in to easily find them later.
           </p>
           <Button asChild>
             <Link href="/search">
               <Search className="mr-2 h-4 w-4" />
-              Find Daycares
+              Find Providers
             </Link>
           </Button>
         </div>
@@ -53,90 +54,90 @@ export default async function FavoritesPage() {
   );
 }
 
-interface FavoriteCardProps {
-  favorite: {
-    id: string;
-    daycare: {
-      id: string;
-      name: string;
-      slug: string;
-      address: string;
-      city: string;
-      state: string;
-      pricePerMonth: unknown;
-      minAge: number;
-      maxAge: number;
-      photo: string | null;
-      rating: number | null;
-      reviewCount: number;
-    };
-  };
-}
-
-function FavoriteCard({ favorite }: FavoriteCardProps) {
-  const { daycare } = favorite;
+function FavoriteCard({ favorite }: { favorite: FavoriteItem }) {
+  const { provider } = favorite;
 
   return (
     <Card className="overflow-hidden">
       <div className="relative aspect-[16/10]">
-        {daycare.photo ? (
+        {provider.photo ? (
           <Image
-            src={daycare.photo}
-            alt={daycare.name}
+            src={provider.photo}
+            alt={provider.name}
             fill
             className="object-cover"
           />
         ) : (
           <div className="flex h-full items-center justify-center bg-muted">
             <span className="text-4xl font-bold text-muted-foreground/30">
-              {daycare.name.charAt(0)}
+              {provider.name.charAt(0)}
             </span>
           </div>
         )}
         <div className="absolute top-2 right-2">
-          <FavoriteButton daycareId={daycare.id} initialFavorited={true} />
+          <FavoriteButton providerId={provider.id} initialFavorited={true} />
         </div>
       </div>
 
       <CardContent className="p-4">
-        <Link
-          href={`/daycare/${daycare.slug}`}
-          className="font-semibold hover:underline line-clamp-1"
-        >
-          {daycare.name}
-        </Link>
+        <div className="flex items-start justify-between">
+          <div>
+            <Link
+              href={`/provider/${provider.slug}`}
+              className="font-semibold hover:underline line-clamp-1"
+            >
+              {provider.name}
+              {provider.credentials && (
+                <span className="text-muted-foreground font-normal">
+                  , {provider.credentials}
+                </span>
+              )}
+            </Link>
+            {provider.specialty && (
+              <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                <Stethoscope className="h-3 w-3" />
+                {provider.specialty}
+              </p>
+            )}
+          </div>
+        </div>
 
-        <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+        <div className="mt-3 space-y-1.5 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <MapPin className="h-4 w-4 shrink-0" />
             <span className="truncate">
-              {daycare.city}, {daycare.state}
+              {provider.city}, {provider.state}
             </span>
           </div>
 
-          {daycare.rating && (
+          {provider.rating && (
             <div className="flex items-center gap-1">
               <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
               <span>
-                {daycare.rating.toFixed(1)} ({daycare.reviewCount}{" "}
-                {daycare.reviewCount === 1 ? "review" : "reviews"})
+                {provider.rating.toFixed(1)} ({provider.reviewCount}{" "}
+                {provider.reviewCount === 1 ? "review" : "reviews"})
               </span>
             </div>
           )}
 
-          <div className="flex items-center gap-1">
-            <DollarSign className="h-4 w-4 shrink-0" />
-            <span>{formatCurrency(Number(daycare.pricePerMonth))}/month</span>
-          </div>
+          {provider.consultationFee && (
+            <div className="flex items-center gap-1">
+              <DollarSign className="h-4 w-4 shrink-0" />
+              <span>{formatCurrency(Number(provider.consultationFee))} per visit</span>
+            </div>
+          )}
 
-          <div className="text-xs">
-            Ages: {formatAgeRange(daycare.minAge, daycare.maxAge)}
-          </div>
+          {provider.offersTelehealth && (
+            <Badge variant="secondary" className="text-xs">
+              <Video className="h-3 w-3 mr-1" />
+              Telehealth Available
+            </Badge>
+          )}
         </div>
 
         <div className="mt-4">
           <Button asChild size="sm" className="w-full">
-            <Link href={`/daycare/${daycare.slug}`}>View Details</Link>
+            <Link href={`/provider/${provider.slug}`}>View Profile</Link>
           </Button>
         </div>
       </CardContent>

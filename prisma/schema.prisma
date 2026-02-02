@@ -1,4 +1,4 @@
-// KinderCare Platform - Database Schema
+// DocConnect Platform - Database Schema
 
 generator client {
   provider        = "prisma-client-js"
@@ -12,22 +12,22 @@ datasource db {
 // ==================== ENUMS ====================
 
 enum UserRole {
-  PARENT
-  DAYCARE_OWNER
-  DAYCARE_STAFF
+  PATIENT // was PARENT
+  PROVIDER // was DAYCARE_OWNER
+  CLINIC_STAFF // was DAYCARE_STAFF
   ADMIN
 }
 
-enum DaycareStatus {
+enum ProviderStatus {
   PENDING
   APPROVED
   REJECTED
   SUSPENDED
 }
 
-enum BookingType {
-  TOUR
-  ENROLLMENT
+enum AppointmentType {
+  IN_PERSON // was TOUR
+  TELEMEDICINE // NEW
 }
 
 enum RecurrencePattern {
@@ -37,7 +37,7 @@ enum RecurrencePattern {
   MONTHLY
 }
 
-enum BookingStatus {
+enum AppointmentStatus {
   PENDING
   CONFIRMED
   CANCELLED
@@ -80,6 +80,12 @@ enum MessageStatus {
   READ
 }
 
+enum ProviderType {
+  DOCTOR
+  CLINIC
+  HOSPITAL
+}
+
 // ==================== AUTH & USERS ====================
 
 model User {
@@ -91,7 +97,7 @@ model User {
   lastName      String
   phone         String?
   avatarUrl     String?
-  role          UserRole  @default(PARENT)
+  role          UserRole  @default(PATIENT)
   isActive      Boolean   @default(true)
 
   createdAt DateTime  @default(now())
@@ -107,16 +113,16 @@ model User {
   accounts Account[]
   sessions Session[]
 
-  // Parent relations
-  children      Child[]
-  bookings      Booking[]
+  // Patient relations
+  familyMembers FamilyMember[]
+  appointments  Appointment[]
   reviews       Review[]
   sentMessages  Message[]      @relation("SentMessages")
   favorites     Favorite[]
   savedSearches SavedSearch[]
 
-  // Daycare staff relations
-  daycareStaff DaycareStaff[]
+  // Provider staff relations
+  providerStaff ProviderStaff[]
 
   // Notifications
   notifications          Notification[]
@@ -172,36 +178,55 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// ==================== PARENT-SPECIFIC ====================
+// ==================== PATIENT-SPECIFIC ====================
 
-model Child {
+model FamilyMember {
   id           String   @id @default(cuid())
-  parentId     String
+  patientId    String
   firstName    String
   lastName     String
   dateOfBirth  DateTime
   gender       String?
-  allergies    String?
-  specialNeeds String?
-  notes        String?  @db.Text
+  relationship String // "child", "spouse", "parent", "self"
+
+  // Medical info
+  allergies   String?
+  medications String?
+  conditions  String? @db.Text
+  bloodType   String?
+  notes       String? @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  parent      User         @relation(fields: [parentId], references: [id], onDelete: Cascade)
-  bookings    Booking[]
-  enrollments Enrollment[]
+  patient      User          @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
 
-  @@index([parentId])
+  @@index([patientId])
 }
 
-// ==================== DAYCARE ====================
+// ==================== PROVIDER (was DAYCARE) ====================
 
-model Daycare {
-  id          String  @id @default(cuid())
-  slug        String  @unique
+model Provider {
+  id          String       @id @default(cuid())
+  slug        String       @unique
   name        String
-  description String? @db.Text
+  type        ProviderType @default(DOCTOR)
+  description String?      @db.Text
+
+  // Professional data (NEW)
+  specialty      String? // "Cardiology", "Pediatrics", etc.
+  subspecialty   String?
+  credentials    String? // "MD", "DO", "NP", etc.
+  npi            String? // National Provider Identifier
+  education      String?  @db.Text
+  experience     Int? // Years of practice
+  languages      String[] // ["English", "Spanish"]
+  boardCertified Boolean  @default(false)
+
+  // Telemedicine (NEW)
+  offersTelehealth   Boolean @default(false)
+  teleHealthPlatform String? // "zoom", "doxy.me", etc.
 
   // Contact
   email   String
@@ -219,24 +244,30 @@ model Daycare {
   latitude  Float
   longitude Float
 
-  // Details
-  capacity      Int
-  minAge        Int // in months
-  maxAge        Int // in months
+  // Schedule
   openingTime   String // "07:00"
   closingTime   String // "18:00"
   operatingDays String[] // ["Mon", "Tue", ...]
 
-  // Pricing
-  pricePerMonth   Decimal  @db.Decimal(10, 2)
-  pricePerWeek    Decimal? @db.Decimal(10, 2)
-  pricePerDay     Decimal? @db.Decimal(10, 2)
-  registrationFee Decimal? @db.Decimal(10, 2)
+  // Insurance (NEW)
+  acceptedInsurance String[] // ["Aetna", "Blue Cross", "Medicare"]
+  acceptsMedicaid   Boolean  @default(false)
+  acceptsMedicare   Boolean  @default(false)
+
+  // Pricing (changed)
+  consultationFee     Decimal? @db.Decimal(10, 2) // In-person visit fee
+  telehealthFee       Decimal? @db.Decimal(10, 2) // Telemedicine fee
+  acceptsUninsured    Boolean  @default(false)
+  slidingScalePricing Boolean  @default(false)
+
+  // Availability
+  acceptingNewPatients Boolean @default(true)
+  averageWaitDays      Int? // Average days to get an appointment
 
   // Status
-  status     DaycareStatus @default(PENDING)
-  isVerified Boolean       @default(false)
-  isFeatured Boolean       @default(false)
+  status     ProviderStatus @default(PENDING)
+  isVerified Boolean        @default(false)
+  isFeatured Boolean        @default(false)
 
   // SEO
   metaTitle       String?
@@ -251,20 +282,19 @@ model Daycare {
   deletedAt DateTime?
 
   // Relations
-  staff        DaycareStaff[]
-  photos       DaycarePhoto[]
-  programs     Program[]
-  amenities    DaycareAmenity[]
-  schedule     DaycareSchedule[]
-  bookings     Booking[]
-  reviews      Review[]
-  messages         MessageThread[]
-  messageTemplates MessageTemplate[]
-  subscription     Subscription?
-  payments         Payment[]
-  enrollments      Enrollment[]
-  waitlist         WaitlistEntry[]
-  favorites        Favorite[]
+  staff                ProviderStaff[]
+  photos               ProviderPhoto[]
+  services             Service[]
+  facilities           ProviderFacility[]
+  schedule             ProviderSchedule[]
+  appointments         Appointment[]
+  reviews              Review[]
+  messages             MessageThread[]
+  messageTemplates     MessageTemplate[]
+  subscription         Subscription?
+  payments             Payment[]
+  waitlist             WaitlistEntry[]
+  favorites            Favorite[]
   verificationRequests VerificationRequest[]
 
   // Analytics relations
@@ -276,223 +306,217 @@ model Daycare {
   @@index([city, state])
   @@index([status])
   @@index([latitude, longitude])
+  @@index([specialty])
 }
 
-model DaycareStaff {
-  id        String  @id @default(cuid())
-  daycareId String
-  userId    String
-  role      String // "owner", "manager", "staff"
-  isActive  Boolean @default(true)
+model ProviderStaff {
+  id         String  @id @default(cuid())
+  providerId String
+  userId     String
+  role       String // "owner", "manager", "staff", "receptionist"
+  isActive   Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([daycareId, userId])
-  @@index([daycareId])
+  @@unique([providerId, userId])
+  @@index([providerId])
   @@index([userId])
 }
 
-model DaycarePhoto {
-  id        String  @id @default(cuid())
-  daycareId String
-  url       String
-  caption   String?
-  order     Int     @default(0)
-  isPrimary Boolean @default(false)
+model ProviderPhoto {
+  id         String  @id @default(cuid())
+  providerId String
+  url        String
+  caption    String?
+  order      Int     @default(0)
+  isPrimary  Boolean @default(false)
 
   createdAt DateTime @default(now())
 
-  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
-  @@index([daycareId])
+  @@index([providerId])
 }
 
-model Program {
-  id          String  @id @default(cuid())
-  daycareId   String
-  name        String
-  description String? @db.Text
-  ageMin      Int // months
-  ageMax      Int // months
-  price       Decimal @db.Decimal(10, 2)
-  schedule    String? // "Full-time", "Part-time", "Before/After school"
+model Service {
+  id           String  @id @default(cuid())
+  providerId   String
+  name         String // "Annual Physical", "Consultation", etc.
+  description  String? @db.Text
+  duration     Int // minutes
+  price        Decimal @db.Decimal(10, 2)
+  isTelehealth Boolean @default(false)
+  isActive     Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+  provider     Provider      @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
 
-  @@index([daycareId])
+  @@index([providerId])
 }
 
-model Amenity {
+model Facility {
   id       String  @id @default(cuid())
   name     String  @unique
   icon     String?
-  category String?
+  category String? // "accessibility", "amenities", "equipment"
 
-  daycares DaycareAmenity[]
+  providers ProviderFacility[]
 }
 
-model DaycareAmenity {
-  daycareId String
-  amenityId String
+model ProviderFacility {
+  providerId String
+  facilityId String
 
-  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
-  amenity Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  facility Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
 
-  @@id([daycareId, amenityId])
+  @@id([providerId, facilityId])
 }
 
-model DaycareSchedule {
-  id        String  @id @default(cuid())
-  daycareId String
-  dayOfWeek Int // 0-6 (Sunday-Saturday)
-  openTime  String
-  closeTime String
-  isClosed  Boolean @default(false)
+model ProviderSchedule {
+  id         String  @id @default(cuid())
+  providerId String
+  dayOfWeek  Int // 0-6 (Sunday-Saturday)
+  openTime   String
+  closeTime  String
+  isClosed   Boolean @default(false)
 
-  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+  // Telemedicine slots
+  telehealthOnly Boolean @default(false)
 
-  @@unique([daycareId, dayOfWeek])
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, dayOfWeek])
 }
 
-// ==================== BOOKINGS ====================
+// ==================== APPOINTMENTS (was BOOKINGS) ====================
 
-model Booking {
+model Appointment {
   id String @id @default(cuid())
 
-  parentId  String
-  daycareId String
-  childId   String?
+  patientId      String
+  providerId     String
+  familyMemberId String? // Optional: booking for a family member
+  serviceId      String? // Optional: specific service
 
-  type   BookingType
-  status BookingStatus @default(PENDING)
+  type   AppointmentType
+  status AppointmentStatus @default(PENDING)
 
-  // For tours
-  scheduledAt DateTime?
-  duration    Int? // minutes
-  notes       String?   @db.Text
+  // Appointment details
+  scheduledAt DateTime
+  duration    Int // minutes
+  notes       String?  @db.Text
+
+  // Telemedicine (NEW)
+  isTelemedicine Boolean @default(false)
+  meetingUrl     String? // Video call link
+
+  // Reason for visit (NEW)
+  reasonForVisit String?
+  symptoms       String? @db.Text
+  isNewPatient   Boolean @default(true)
 
   // Recurrence
   recurrence        RecurrencePattern @default(NONE)
   recurrenceEndDate DateTime?
-  seriesId          String? // Links bookings in a series (same seriesId = same recurring set)
+  seriesId          String?
 
   // Confirmation
   confirmedAt  DateTime?
   cancelledAt  DateTime?
   cancelReason String?
 
+  // Reminders
+  reminderSentAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  parent  User    @relation(fields: [parentId], references: [id])
-  daycare Daycare @relation(fields: [daycareId], references: [id])
-  child   Child?  @relation(fields: [childId], references: [id])
+  patient      User          @relation(fields: [patientId], references: [id])
+  provider     Provider      @relation(fields: [providerId], references: [id])
+  familyMember FamilyMember? @relation(fields: [familyMemberId], references: [id])
+  service      Service?      @relation(fields: [serviceId], references: [id])
 
-  @@index([parentId])
-  @@index([daycareId])
+  @@index([patientId])
+  @@index([providerId])
   @@index([status])
   @@index([scheduledAt])
   @@index([seriesId])
-  @@index([daycareId, status, scheduledAt]) // Compound for availability queries
-  @@index([createdAt]) // Sorting by creation time
-}
-
-model Enrollment {
-  id        String @id @default(cuid())
-  daycareId String
-  childId   String
-
-  startDate DateTime
-  endDate   DateTime?
-  status    String // "active", "pending", "completed", "cancelled"
-
-  schedule    String // "full-time", "part-time", etc.
-  monthlyRate Decimal @db.Decimal(10, 2)
-
-  notes String? @db.Text
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  daycare  Daycare   @relation(fields: [daycareId], references: [id])
-  child    Child     @relation(fields: [childId], references: [id])
-  payments Payment[]
-
-  @@index([daycareId])
-  @@index([childId])
+  @@index([providerId, status, scheduledAt])
+  @@index([createdAt])
 }
 
 model WaitlistEntry {
-  id           String   @id @default(cuid())
-  daycareId    String
-  parentEmail  String
-  parentName   String
-  parentPhone  String?
-  childAge     Int // months
-  desiredStart DateTime
-  notes        String?
-  position     Int
+  id             String   @id @default(cuid())
+  providerId     String
+  patientEmail   String
+  patientName    String
+  patientPhone   String?
+  desiredDate    DateTime
+  reasonForVisit String?
+  notes          String?
+  position       Int
 
   createdAt  DateTime  @default(now())
   notifiedAt DateTime?
 
-  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
-  @@index([daycareId])
-  @@index([daycareId, position]) // Position updates and ordering
+  @@index([providerId])
+  @@index([providerId, position])
 }
 
 // ==================== REVIEWS ====================
 
 model Review {
-  id        String @id @default(cuid())
-  daycareId String
-  userId    String
+  id         String @id @default(cuid())
+  providerId String
+  userId     String
 
   rating  Int // 1-5
   title   String?
   content String? @db.Text
 
-  // Detailed ratings
-  safetyRating      Int? // 1-5
-  cleanlinessRating Int?
-  staffRating       Int?
-  programRating     Int?
-  valueRating       Int?
+  // Detailed ratings (changed for medical context)
+  communicationRating Int? // 1-5 - How well the doctor explains
+  waitTimeRating      Int? // 1-5 - Wait time experience
+  staffRating         Int? // 1-5 - Office staff
+  facilityRating      Int? // 1-5 - Facility/office
+  overallCareRating   Int? // 1-5 - Overall quality of care
 
   isVerified Boolean @default(false)
   isApproved Boolean @default(true)
 
-  // Response from daycare
+  // Response from provider
   response    String?   @db.Text
   respondedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id])
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id])
 
-  @@unique([daycareId, userId])
-  @@index([daycareId])
+  @@unique([providerId, userId])
+  @@index([providerId])
   @@index([rating])
-  @@index([createdAt]) // Recent reviews sorting
+  @@index([createdAt])
 }
 
 // ==================== MESSAGING ====================
 
 model MessageThread {
-  id        String  @id @default(cuid())
-  daycareId String
-  parentId  String
-  subject   String?
+  id         String  @id @default(cuid())
+  providerId String
+  patientId  String
+  subject    String?
 
   lastMessageAt DateTime?
   isArchived    Boolean   @default(false)
@@ -500,13 +524,13 @@ model MessageThread {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  daycare  Daycare   @relation(fields: [daycareId], references: [id])
+  provider Provider  @relation(fields: [providerId], references: [id])
   messages Message[]
 
-  @@unique([daycareId, parentId])
-  @@index([daycareId])
-  @@index([parentId])
-  @@index([daycareId, updatedAt]) // Recent threads for portal
+  @@unique([providerId, patientId])
+  @@index([providerId])
+  @@index([patientId])
+  @@index([providerId, updatedAt])
 }
 
 model Message {
@@ -526,15 +550,15 @@ model Message {
 
   @@index([threadId])
   @@index([senderId])
-  @@index([threadId, createdAt]) // Pagination in chat
-  @@index([readAt]) // Unread messages queries
+  @@index([threadId, createdAt])
+  @@index([readAt])
 }
 
 model MessageAttachment {
   id        String   @id @default(cuid())
   messageId String
   url       String
-  type      String   // image, document, etc.
+  type      String // image, document, etc.
   name      String
   size      Int?
   createdAt DateTime @default(now())
@@ -545,26 +569,26 @@ model MessageAttachment {
 }
 
 model MessageTemplate {
-  id        String   @id @default(cuid())
-  daycareId String
-  name      String   // Template name for quick selection
-  content   String   @db.Text
-  category  String?  // welcome, faq, booking, etc.
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  providerId String
+  name       String
+  content    String   @db.Text
+  category   String? // appointment_reminder, follow_up, etc.
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
-  @@index([daycareId])
-  @@index([daycareId, category])
+  @@index([providerId])
+  @@index([providerId, category])
 }
 
 // ==================== PAYMENTS & SUBSCRIPTIONS ====================
 
 model Subscription {
-  id        String @id @default(cuid())
-  daycareId String @unique
+  id         String @id @default(cuid())
+  providerId String @unique
 
   plan   SubscriptionPlan   @default(FREE)
   status SubscriptionStatus @default(TRIALING)
@@ -583,22 +607,21 @@ model Subscription {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
   @@index([status])
 }
 
 model Payment {
-  id           String  @id @default(cuid())
-  daycareId    String
-  enrollmentId String?
+  id         String @id @default(cuid())
+  providerId String
 
   amount   Decimal       @db.Decimal(10, 2)
   currency String        @default("usd")
   status   PaymentStatus @default(PENDING)
 
   // Type
-  type        String // "tuition", "registration", "subscription"
+  type        String // "consultation", "subscription"
   description String?
 
   // Stripe
@@ -616,10 +639,9 @@ model Payment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  daycare    Daycare     @relation(fields: [daycareId], references: [id])
-  enrollment Enrollment? @relation(fields: [enrollmentId], references: [id])
+  provider Provider @relation(fields: [providerId], references: [id])
 
-  @@index([daycareId])
+  @@index([providerId])
   @@index([status])
   @@index([type])
 }
@@ -630,7 +652,7 @@ model Notification {
   id     String @id @default(cuid())
   userId String
 
-  type  String // "booking_confirmed", "message_received", etc.
+  type  String // "appointment_confirmed", "message_received", etc.
   title String
   body  String
   data  Json?
@@ -641,17 +663,22 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([userId, readAt]) // Compound for unread count queries
+  @@index([userId, readAt])
 }
 
 model NotificationPreference {
   id     String @id @default(cuid())
   userId String @unique
 
-  emailBookings  Boolean @default(true)
-  emailMessages  Boolean @default(true)
-  emailMarketing Boolean @default(false)
-  pushEnabled    Boolean @default(false)
+  emailAppointments Boolean @default(true)
+  emailMessages     Boolean @default(true)
+  emailMarketing    Boolean @default(false)
+  pushEnabled       Boolean @default(false)
+
+  // Appointment reminders
+  reminderEmail24h Boolean @default(true)
+  reminderSms24h   Boolean @default(false)
+  reminderEmail1h  Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -701,17 +728,17 @@ model WebhookEvent {
 // ==================== FAVORITES ====================
 
 model Favorite {
-  id        String   @id @default(cuid())
-  userId    String
-  daycareId String
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  userId     String
+  providerId String
+  createdAt  DateTime @default(now())
 
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, daycareId])
+  @@unique([userId, providerId])
   @@index([userId])
-  @@index([daycareId])
+  @@index([providerId])
 }
 
 // ==================== SAVED SEARCHES ====================
@@ -719,8 +746,8 @@ model Favorite {
 model SavedSearch {
   id        String   @id @default(cuid())
   userId    String
-  name      String   // User-defined name for the search
-  filters   Json     // Stored search filters (query, city, minPrice, etc.)
+  name      String
+  filters   Json // Stored search filters (specialty, insurance, etc.)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -733,28 +760,40 @@ model SavedSearch {
 // ==================== VERIFICATION ====================
 
 model VerificationRequest {
-  id        String             @id @default(cuid())
-  daycareId String
-  status    VerificationStatus @default(PENDING)
+  id         String             @id @default(cuid())
+  providerId String
+  status     VerificationStatus @default(PENDING)
 
-  // License information
+  // Medical license information
   licenseNumber String?
   licenseState  String?
   licenseExpiry DateTime?
+  licenseType   String? // "MD", "DO", "NP", "PA"
+
+  // NPI verification
+  npiNumber   String?
+  npiVerified Boolean @default(false)
+
+  // Board certification
+  boardName        String?
+  certificationExp DateTime?
+
+  // DEA (for prescriptions)
+  deaNumber String?
 
   // Admin review
-  reviewedBy   String?
-  reviewedAt   DateTime?
-  reviewNotes  String?   @db.Text
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  reviewNotes     String?   @db.Text
   rejectionReason String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  daycare   Daycare                      @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+  provider  Provider               @relation(fields: [providerId], references: [id], onDelete: Cascade)
   documents VerificationDocument[]
 
-  @@index([daycareId])
+  @@index([providerId])
   @@index([status])
   @@index([createdAt])
 }
@@ -763,7 +802,7 @@ model VerificationDocument {
   id                    String @id @default(cuid())
   verificationRequestId String
 
-  type     String  // "license", "insurance", "background_check", "other"
+  type     String // "medical_license", "board_certification", "malpractice_insurance", "dea", "photo_id"
   name     String
   url      String
   size     Int?
@@ -781,7 +820,7 @@ model VerificationDocument {
 model TwoFactorAuth {
   id         String    @id @default(cuid())
   userId     String    @unique
-  secret     String    // Encrypted TOTP secret
+  secret     String
   isEnabled  Boolean   @default(false)
   verifiedAt DateTime?
   createdAt  DateTime  @default(now())
@@ -794,7 +833,7 @@ model TwoFactorAuth {
 model TwoFactorBackupCode {
   id              String    @id @default(cuid())
   twoFactorAuthId String
-  code            String    // Hashed backup code
+  code            String
   usedAt          DateTime?
   createdAt       DateTime  @default(now())
 
@@ -806,8 +845,8 @@ model TwoFactorBackupCode {
 model TrustedDevice {
   id         String   @id @default(cuid())
   userId     String
-  deviceHash String   // Hash of user-agent + IP + accept-language
-  name       String?  // e.g. "Chrome on macOS"
+  deviceHash String
+  name       String?
   userAgent  String
   ipAddress  String
   lastUsedAt DateTime @default(now())
@@ -828,7 +867,7 @@ model LoginAttempt {
   ipAddress String
   userAgent String?
   success   Boolean
-  reason    String?  // Failure reason: "invalid_password", "user_not_found", "2fa_required", etc.
+  reason    String?
   createdAt DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -840,7 +879,7 @@ model LoginAttempt {
 model UserSession {
   id           String    @id @default(cuid())
   userId       String
-  tokenHash    String    @unique // Hash of JWT jti
+  tokenHash    String    @unique
   deviceName   String?
   browser      String?
   os           String?
@@ -859,7 +898,7 @@ model UserSession {
 model DataExportRequest {
   id          String    @id @default(cuid())
   userId      String
-  status      String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  status      String    @default("PENDING")
   fileUrl     String?
   expiresAt   DateTime?
   requestedAt DateTime  @default(now())
@@ -874,24 +913,24 @@ model DataExportRequest {
 
 model PageView {
   id         String   @id @default(cuid())
-  daycareId  String
-  userId     String?  // Null for anonymous visitors
-  sessionId  String   // Anonymous session tracking
-  path       String   // e.g. "/daycare/sunny-kids"
-  referrer   String?  // Where they came from
-  source     String?  // "search", "direct", "referral", "social", "email"
+  providerId String
+  userId     String?
+  sessionId  String
+  path       String
+  referrer   String?
+  source     String?
   userAgent  String?
   ipAddress  String?
   country    String?
   city       String?
-  deviceType String?  // "desktop", "mobile", "tablet"
-  duration   Int?     // Time on page in seconds
+  deviceType String?
+  duration   Int?
   createdAt  DateTime @default(now())
 
-  daycare Daycare @relation(fields: [daycareId], references: [id], onDelete: Cascade)
-  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  @@index([daycareId, createdAt])
+  @@index([providerId, createdAt])
   @@index([userId])
   @@index([sessionId])
   @@index([source])
@@ -900,41 +939,67 @@ model PageView {
 
 model AnalyticsEvent {
   id         String   @id @default(cuid())
-  daycareId  String?
+  providerId String?
   userId     String?
   sessionId  String
-  eventType  String   // "booking_started", "booking_completed", "message_sent", "contact_clicked", etc.
-  eventData  Json?    // Additional event data
+  eventType  String // "appointment_started", "appointment_completed", "message_sent", "contact_clicked", etc.
+  eventData  Json?
   path       String?
   createdAt  DateTime @default(now())
 
-  daycare Daycare? @relation(fields: [daycareId], references: [id], onDelete: Cascade)
-  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  provider Provider? @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  @@index([daycareId, eventType, createdAt])
+  @@index([providerId, eventType, createdAt])
   @@index([eventType, createdAt])
   @@index([userId])
   @@index([sessionId])
 }
 
-// Aggregated daily stats for faster dashboard queries
 model DailyAnalytics {
-  id          String   @id @default(cuid())
-  daycareId   String?  // Null for platform-wide stats
-  date        DateTime @db.Date
-  pageViews   Int      @default(0)
-  uniqueVisitors Int   @default(0)
-  bookingStarts  Int   @default(0)
-  bookingCompletes Int @default(0)
-  messagesSent   Int   @default(0)
-  contactClicks  Int   @default(0)
-  searchImpressions Int @default(0)
-  searchClicks   Int   @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  providerId           String?
+  date                 DateTime @db.Date
+  pageViews            Int      @default(0)
+  uniqueVisitors       Int      @default(0)
+  appointmentStarts    Int      @default(0)
+  appointmentCompletes Int      @default(0)
+  messagesSent         Int      @default(0)
+  contactClicks        Int      @default(0)
+  searchImpressions    Int      @default(0)
+  searchClicks         Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  daycare Daycare? @relation(fields: [daycareId], references: [id], onDelete: Cascade)
+  provider Provider? @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
-  @@unique([daycareId, date])
+  @@unique([providerId, date])
   @@index([date])
+}
+
+// ==================== REFERENCE DATA ====================
+
+model Specialty {
+  id          String  @id @default(cuid())
+  name        String  @unique // "Cardiology", "Pediatrics", etc.
+  description String?
+  category    String? // "Primary Care", "Specialist", "Surgery", etc.
+  icon        String?
+
+  createdAt DateTime @default(now())
+
+  @@index([category])
+}
+
+model Insurance {
+  id       String  @id @default(cuid())
+  name     String  @unique // "Aetna", "Blue Cross Blue Shield", etc.
+  type     String? // "national", "regional", "government"
+  website  String?
+  logoUrl  String?
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  @@index([type])
 }

@@ -30,7 +30,7 @@ export interface AuthContext {
 }
 
 export interface DaycareContext {
-  daycareId: string;
+  providerId: string;
   daycareName: string;
   staffRole: DaycareStaffRole;
 }
@@ -72,7 +72,7 @@ export async function requireAdmin(): Promise<AuthContext> {
 export async function requireDaycareAccess(): Promise<AuthContext & DaycareContext> {
   const context = await requireAuth();
 
-  const staff = await db.daycareStaff.findFirst({
+  const staff = await db.providerStaff.findFirst({
     where: {
       userId: context.userId,
       isActive: true,
@@ -90,7 +90,7 @@ export async function requireDaycareAccess(): Promise<AuthContext & DaycareConte
 
   return {
     ...context,
-    daycareId: staff.daycare.id,
+    providerId: staff.daycare.id,
     daycareName: staff.daycare.name,
     staffRole: staff.role as DaycareStaffRole,
   };
