@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { triggerNewMessage, triggerThreadUpdate } from "@/lib/pusher";
+import { triggerNewMessage, triggerMessageRead, triggerThreadUpdate } from "@/lib/pusher";
 import { rateLimit } from "@/lib/rate-limit";
 
 // Security constants
@@ -150,18 +150,35 @@ export async function getThreadMessages(
   // Reverse to show oldest first in UI (but we fetched newest first for cursor)
   const orderedMessages = messageSlice.reverse();
 
-  // Mark unread messages as read
-  await db.message.updateMany({
+  // Mark unread messages as read and notify via Pusher
+  const unreadMessages = await db.message.findMany({
     where: {
       threadId: thread.id,
       senderId: { not: session.user.id },
       status: { not: "READ" },
     },
-    data: {
-      status: "READ",
-      readAt: new Date(),
-    },
+    select: { id: true },
   });
+
+  if (unreadMessages.length > 0) {
+    const readAt = new Date();
+    await db.message.updateMany({
+      where: {
+        id: { in: unreadMessages.map((m) => m.id) },
+      },
+      data: {
+        status: "READ",
+        readAt,
+      },
+    });
+
+    // Notify other participants that messages were read (real-time)
+    await triggerMessageRead(thread.id, {
+      messageIds: unreadMessages.map((m) => m.id),
+      readBy: session.user.id,
+      readAt,
+    });
+  }
 
   return {
     id: thread.id,
