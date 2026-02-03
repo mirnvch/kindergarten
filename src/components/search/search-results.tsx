@@ -3,13 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { ChevronLeft, ChevronRight, MapPin, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 import { SearchFilters } from "./search-filters";
 import { SaveSearchButton } from "./save-search-button";
 import { DaycareCard } from "@/components/daycare/daycare-card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import type { DaycareSearchResult } from "@/server/actions/daycare";
 
 // Dynamic import for SearchMap (Mapbox GL is heavy ~200KB)

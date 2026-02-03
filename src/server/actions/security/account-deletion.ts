@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { auth, signOut } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { sendEmail } from "@/lib/email";
 import bcrypt from "bcryptjs";
@@ -263,7 +263,7 @@ async function anonymizeUser(userId: string) {
     await revokeAllUserSessions(userId);
 
     // Delete related data that should be removed
-    await tx.child.deleteMany({ where: { parentId: userId } });
+    await tx.familyMember.deleteMany({ where: { patientId: userId } });
     await tx.favorite.deleteMany({ where: { userId } });
     await tx.savedSearch.deleteMany({ where: { userId } });
     await tx.notification.deleteMany({ where: { userId } });

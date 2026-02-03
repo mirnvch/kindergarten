@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   Eye,
   Calendar,
-  Users,
   TrendingUp,
   Star,
   MessageSquare,

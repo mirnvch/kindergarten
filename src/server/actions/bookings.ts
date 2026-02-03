@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
-import { BookingStatus, BookingType, DaycareStatus } from "@prisma/client";
+import { AppointmentStatus, AppointmentType, ProviderStatus } from "@prisma/client";
 import { z } from "zod";
 import {
   generateAvailableSlots,
@@ -23,7 +23,7 @@ export async function getParentBookings(
   filter: BookingFilter = "upcoming"
 ): Promise<BookingWithRelations[]> {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PARENT") {
+  if (!session?.user || session.user.role !== "PATIENT") {
     throw new Error("Unauthorized");
   }
 
@@ -34,10 +34,7 @@ export async function getParentBookings(
       patientId: session.user.id,
       ...(filter === "upcoming"
         ? {
-            OR: [
-              { scheduledAt: { gte: now } },
-              { scheduledAt: null, status: "PENDING" },
-            ],
+            scheduledAt: { gte: now },
             status: { in: ["PENDING", "CONFIRMED"] },
           }
         : {
@@ -48,7 +45,7 @@ export async function getParentBookings(
           }),
     },
     include: {
-      daycare: {
+      provider: {
         select: {
           id: true,
           name: true,
@@ -56,13 +53,21 @@ export async function getParentBookings(
           address: true,
           city: true,
           state: true,
+          specialty: true,
         },
       },
-      child: {
+      familyMember: {
         select: {
           id: true,
           firstName: true,
           lastName: true,
+        },
+      },
+      service: {
+        select: {
+          id: true,
+          name: true,
+          duration: true,
         },
       },
     },
@@ -76,7 +81,7 @@ export async function getParentBookings(
 
 export async function cancelBooking(id: string, reason?: string) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PARENT") {
+  if (!session?.user || session.user.role !== "PATIENT") {
     throw new Error("Unauthorized");
   }
 
@@ -88,7 +93,7 @@ export async function cancelBooking(id: string, reason?: string) {
       status: { in: ["PENDING", "CONFIRMED"] },
     },
     include: {
-      daycare: { select: { slug: true } },
+      provider: { select: { slug: true } },
     },
   });
 
@@ -107,7 +112,7 @@ export async function cancelBooking(id: string, reason?: string) {
   await db.appointment.update({
     where: { id },
     data: {
-      status: BookingStatus.CANCELLED,
+      status: AppointmentStatus.CANCELLED,
       cancelledAt: new Date(),
       cancelReason: reason || "Cancelled by parent",
     },
@@ -121,7 +126,7 @@ export async function cancelBooking(id: string, reason?: string) {
 
 export async function cancelBookingSeries(seriesId: string, reason?: string) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PARENT") {
+  if (!session?.user || session.user.role !== "PATIENT") {
     throw new Error("Unauthorized");
   }
 
@@ -164,7 +169,7 @@ export async function cancelBookingSeries(seriesId: string, reason?: string) {
       scheduledAt: { gt: new Date() },
     },
     data: {
-      status: BookingStatus.CANCELLED,
+      status: AppointmentStatus.CANCELLED,
       cancelledAt: new Date(),
       cancelReason: reason || "Series cancelled by parent",
     },
@@ -190,20 +195,20 @@ export async function getSeriesBookings(seriesId: string) {
       OR: [
         { patientId: session.user.id },
         {
-          daycare: {
+          provider: {
             staff: { some: { userId: session.user.id } },
           },
         },
       ],
     },
     include: {
-      daycare: {
+      provider: {
         select: {
           name: true,
           slug: true,
         },
       },
-      child: {
+      familyMember: {
         select: {
           firstName: true,
           lastName: true,
@@ -227,7 +232,7 @@ export type RescheduleInput = z.infer<typeof rescheduleSchema>;
 
 export async function rescheduleBooking(input: RescheduleInput) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PARENT") {
+  if (!session?.user || session.user.role !== "PATIENT") {
     throw new Error("Unauthorized");
   }
 
@@ -241,7 +246,7 @@ export async function rescheduleBooking(input: RescheduleInput) {
       status: { in: ["PENDING", "CONFIRMED"] },
     },
     include: {
-      daycare: { select: { id: true, slug: true } },
+      provider: { select: { id: true, slug: true } },
     },
   });
 
@@ -261,8 +266,8 @@ export async function rescheduleBooking(input: RescheduleInput) {
   const conflictingBooking = await db.appointment.findFirst({
     where: {
       providerId: booking.providerId,
-      type: BookingType.TOUR,
-      status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+      type: AppointmentType.IN_PERSON,
+      status: { in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED] },
       id: { not: booking.id }, // Exclude current booking
       scheduledAt: {
         gte: new Date(newScheduledAt.getTime() - 30 * 60 * 1000),
@@ -280,7 +285,7 @@ export async function rescheduleBooking(input: RescheduleInput) {
     where: { id: booking.id },
     data: {
       scheduledAt: newScheduledAt,
-      status: BookingStatus.PENDING, // Reset to pending for reconfirmation
+      status: AppointmentStatus.PENDING, // Reset to pending for reconfirmation
       notes: booking.notes
         ? `${booking.notes}\n\nRescheduled from ${booking.scheduledAt?.toISOString()}`
         : `Rescheduled from ${booking.scheduledAt?.toISOString()}`,
@@ -289,7 +294,7 @@ export async function rescheduleBooking(input: RescheduleInput) {
 
   revalidatePath("/dashboard/bookings");
   revalidatePath("/dashboard");
-  revalidatePath(`/daycare/${booking.daycare.slug}`);
+  revalidatePath(`/provider/${booking.provider.slug}`);
 
   return { success: true };
 }
@@ -302,7 +307,7 @@ export async function getAvailableSlots(
   endDate?: Date
 ): Promise<DayAvailability[]> {
   const daycare = await db.provider.findUnique({
-    where: { id: providerId, status: DaycareStatus.APPROVED, deletedAt: null },
+    where: { id: providerId, status: ProviderStatus.APPROVED, deletedAt: null },
     select: {
       openingTime: true,
       closingTime: true,
@@ -322,8 +327,8 @@ export async function getAvailableSlots(
   const existingBookings = await db.appointment.findMany({
     where: {
       providerId,
-      type: BookingType.TOUR,
-      status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+      type: AppointmentType.IN_PERSON,
+      status: { in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED] },
       scheduledAt: {
         gte: start,
         lte: end,
@@ -365,11 +370,13 @@ export async function getBookingById(id: string): Promise<BookingFull | null> {
   const booking = await db.appointment.findUnique({
     where: { id },
     include: {
-      daycare: {
+      provider: {
         select: {
           id: true,
           name: true,
           slug: true,
+          specialty: true,
+          offersTelehealth: true,
           address: true,
           city: true,
           state: true,
@@ -378,15 +385,25 @@ export async function getBookingById(id: string): Promise<BookingFull | null> {
           email: true,
         },
       },
-      child: {
+      service: {
+        select: {
+          id: true,
+          name: true,
+          duration: true,
+          price: true,
+          isTelehealth: true,
+        },
+      },
+      familyMember: {
         select: {
           id: true,
           firstName: true,
           lastName: true,
           dateOfBirth: true,
+          relationship: true,
         },
       },
-      parent: {
+      patient: {
         select: {
           id: true,
           firstName: true,
@@ -404,7 +421,7 @@ export async function getBookingById(id: string): Promise<BookingFull | null> {
   // Verify user has access to this booking
   const isParent = booking.patientId === session.user.id;
   const isDaycareOwner =
-    session.user.role === "DAYCARE_OWNER" &&
+    session.user.role === "PROVIDER" &&
     (await db.providerStaff.findFirst({
       where: { providerId: booking.providerId, userId: session.user.id },
     }));
@@ -420,7 +437,7 @@ export async function getBookingById(id: string): Promise<BookingFull | null> {
 
 const tourBookingSchema = z.object({
   providerId: z.string().min(1, "Daycare is required"),
-  childId: z.string().min(1, "Please select a child"),
+  familyMemberId: z.string().min(1, "Please select a child"),
   scheduledAt: z.string().datetime("Invalid date/time"),
   notes: z.string().optional(),
   // Recurrence options
@@ -432,7 +449,7 @@ export type TourBookingInput = z.infer<typeof tourBookingSchema>;
 
 export async function createTourBooking(input: TourBookingInput) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PARENT") {
+  if (!session?.user || session.user.role !== "PATIENT") {
     throw new Error("Unauthorized");
   }
 
@@ -447,7 +464,7 @@ export async function createTourBooking(input: TourBookingInput) {
   // Verify child belongs to parent
   const child = await db.familyMember.findFirst({
     where: {
-      id: validated.childId,
+      id: validated.familyMemberId,
       patientId: session.user.id,
     },
   });
@@ -460,7 +477,7 @@ export async function createTourBooking(input: TourBookingInput) {
   const daycare = await db.provider.findUnique({
     where: {
       id: validated.providerId,
-      status: DaycareStatus.APPROVED,
+      status: ProviderStatus.APPROVED,
       deletedAt: null,
     },
   });
@@ -503,8 +520,8 @@ export async function createTourBooking(input: TourBookingInput) {
     const conflictingBooking = await db.appointment.findFirst({
       where: {
         providerId: validated.providerId,
-        type: BookingType.TOUR,
-        status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+        type: AppointmentType.IN_PERSON,
+        status: { in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED] },
         scheduledAt: {
           gte: new Date(date.getTime() - 30 * 60 * 1000),
           lt: new Date(date.getTime() + 30 * 60 * 1000),
@@ -523,14 +540,14 @@ export async function createTourBooking(input: TourBookingInput) {
 
   // Create all bookings (single or recurring series)
   const bookings = await db.$transaction(
-    bookingDates.map((date, index) =>
+    bookingDates.map((date) =>
       db.appointment.create({
         data: {
           patientId: session.user.id,
           providerId: validated.providerId,
-          childId: validated.childId,
-          type: BookingType.TOUR,
-          status: BookingStatus.PENDING,
+          familyMemberId: validated.familyMemberId,
+          type: AppointmentType.IN_PERSON,
+          status: AppointmentStatus.PENDING,
           scheduledAt: date,
           duration: 30,
           notes: validated.notes || null,
@@ -546,7 +563,7 @@ export async function createTourBooking(input: TourBookingInput) {
 
   revalidatePath("/dashboard/bookings");
   revalidatePath("/dashboard");
-  revalidatePath(`/daycare/${daycare.slug}`);
+  revalidatePath(`/provider/${daycare.slug}`);
 
   redirect(`/booking/${firstBooking.id}/confirmation${isRecurring ? `?series=${bookings.length}` : ""}`);
 }
@@ -555,7 +572,7 @@ export async function createTourBooking(input: TourBookingInput) {
 
 const enrollmentSchema = z.object({
   providerId: z.string().min(1, "Daycare is required"),
-  childId: z.string().min(1, "Please select a child"),
+  familyMemberId: z.string().min(1, "Please select a child"),
   programId: z.string().optional(),
   schedule: z.enum(["full-time", "part-time", "before-after"]),
   desiredStartDate: z.string().min(1, "Please select a start date"),
@@ -566,7 +583,7 @@ export type EnrollmentInput = z.infer<typeof enrollmentSchema>;
 
 export async function createEnrollmentRequest(input: EnrollmentInput) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PARENT") {
+  if (!session?.user || session.user.role !== "PATIENT") {
     throw new Error("Unauthorized");
   }
 
@@ -581,7 +598,7 @@ export async function createEnrollmentRequest(input: EnrollmentInput) {
   // Verify child belongs to parent
   const child = await db.familyMember.findFirst({
     where: {
-      id: validated.childId,
+      id: validated.familyMemberId,
       patientId: session.user.id,
     },
   });
@@ -594,7 +611,7 @@ export async function createEnrollmentRequest(input: EnrollmentInput) {
   const daycare = await db.provider.findUnique({
     where: {
       id: validated.providerId,
-      status: DaycareStatus.APPROVED,
+      status: ProviderStatus.APPROVED,
       deletedAt: null,
     },
   });
@@ -618,17 +635,18 @@ export async function createEnrollmentRequest(input: EnrollmentInput) {
     data: {
       patientId: session.user.id,
       providerId: validated.providerId,
-      childId: validated.childId,
-      type: BookingType.ENROLLMENT,
-      status: BookingStatus.PENDING,
+      familyMemberId: validated.familyMemberId,
+      type: AppointmentType.IN_PERSON,
+      status: AppointmentStatus.PENDING,
       scheduledAt: new Date(validated.desiredStartDate),
+      duration: 30, // Default 30 minute consultation
       notes: enrollmentNotes,
     },
   });
 
   revalidatePath("/dashboard/bookings");
   revalidatePath("/dashboard");
-  revalidatePath(`/daycare/${daycare.slug}`);
+  revalidatePath(`/provider/${daycare.slug}`);
 
   redirect(`/booking/${booking.id}/confirmation`);
 }

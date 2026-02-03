@@ -168,9 +168,11 @@ export function useTypingIndicator(threadId: string, currentUserId: string) {
     });
 
     return () => {
-      // Clear all timeouts
-      typingTimeouts.current.forEach((timeout) => clearTimeout(timeout));
-      typingTimeouts.current.clear();
+      // Clear all timeouts - copy ref to avoid stale reference in cleanup
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      const timeouts = typingTimeouts.current;
+      timeouts.forEach((timeout) => clearTimeout(timeout));
+      timeouts.clear();
       setTypingUsers([]);
     };
   }, [threadId, currentUserId]);

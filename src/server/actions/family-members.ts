@@ -31,7 +31,7 @@ export async function createFamilyMember(data: FamilyMemberFormData) {
 
   const validated = familyMemberSchema.parse(data);
 
-  const familyMember = await db.familyMember.create({
+  await db.familyMember.create({
     data: {
       patientId: session.user.id,
       firstName: validated.firstName,

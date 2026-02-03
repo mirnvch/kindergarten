@@ -12,7 +12,6 @@ import {
   Clock,
   DollarSign,
   TrendingUp,
-  ArrowUpRight,
 } from "lucide-react";
 import { ConnectAccountButton } from "@/components/billing/connect-account-button";
 import { getConnectAccountStatus } from "@/server/actions/stripe";
@@ -29,14 +28,14 @@ export default async function PaymentsPage() {
     redirect("/login");
   }
 
-  // Get daycare
+  // Get provider
   const providerStaff = await db.providerStaff.findFirst({
     where: {
       userId: session.user.id,
       role: "owner",
     },
     include: {
-      daycare: true,
+      provider: true,
     },
   });
 
@@ -44,7 +43,7 @@ export default async function PaymentsPage() {
     redirect("/portal");
   }
 
-  const daycare = providerStaff.daycare;
+  const daycare = providerStaff.provider;
   const accountStatus = await getConnectAccountStatus();
 
   // Get payment stats

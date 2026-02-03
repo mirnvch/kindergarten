@@ -274,7 +274,8 @@ export async function searchProviders(filters: SearchFilters) {
   const skip = (page - 1) * limit;
   const paginatedResults = results.slice(skip, skip + limit);
 
-  // Remove internal sorting field
+  // Remove internal sorting field (destructure to exclude _sortPriority)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const finalResults: ProviderSearchResult[] = paginatedResults.map(({ _sortPriority, ...rest }) => rest);
 
   return {

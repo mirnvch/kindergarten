@@ -44,7 +44,7 @@ export default {
   session: { strategy: "jwt" },
   trustHost: true,
   callbacks: {
-    authorized({ auth, request: { nextUrl, cookies } }) {
+    authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const userRole = auth?.user?.role as UserRole | undefined;
 

@@ -136,9 +136,9 @@ export function SearchFilters({ onViewChange, currentView = "list" }: SearchFilt
     [searchParams]
   );
 
-  const updateFilters = (params: Record<string, string | null>) => {
+  const updateFilters = useCallback((params: Record<string, string | null>) => {
     router.push(`/search?${createQueryString(params)}`);
-  };
+  }, [router, createQueryString]);
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -147,7 +147,7 @@ export function SearchFilters({ onViewChange, currentView = "list" }: SearchFilt
     updateFilters({ query: query || null });
   };
 
-  const handlePriceChange = (value: string) => {
+  const handlePriceChange = useCallback((value: string) => {
     if (value === "all") {
       updateFilters({ minPrice: null, maxPrice: null });
       return;
@@ -157,9 +157,9 @@ export function SearchFilters({ onViewChange, currentView = "list" }: SearchFilt
       minPrice: min || null,
       maxPrice: max || null,
     });
-  };
+  }, [updateFilters]);
 
-  const handleAgeChange = (value: string) => {
+  const handleAgeChange = useCallback((value: string) => {
     if (value === "all") {
       updateFilters({ minAge: null, maxAge: null });
       return;
@@ -169,11 +169,11 @@ export function SearchFilters({ onViewChange, currentView = "list" }: SearchFilt
       minAge: min || null,
       maxAge: max || null,
     });
-  };
+  }, [updateFilters]);
 
-  const handleRatingChange = (value: string) => {
+  const handleRatingChange = useCallback((value: string) => {
     updateFilters({ minRating: value === "all" ? null : value });
-  };
+  }, [updateFilters]);
 
   const handleGeolocation = () => {
     if (!navigator.geolocation) {
@@ -228,7 +228,8 @@ export function SearchFilters({ onViewChange, currentView = "list" }: SearchFilt
     currentMinAge ||
     currentMaxAge ||
     currentMinRating ||
-    currentLat;
+    currentLat ||
+    currentLng;
 
   const filterControls = useMemo(() => (
     <div className="space-y-4">

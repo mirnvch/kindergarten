@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { DaycareStatus, Prisma } from "@prisma/client";
+import { ProviderStatus, Prisma } from "@prisma/client";
 
 export type SearchFilters = {
   query?: string;
@@ -21,20 +21,19 @@ export type SearchFilters = {
   limit?: number;
 };
 
-export type DaycareSearchResult = {
+export type ProviderSearchResult = {
   id: string;
   slug: string;
   name: string;
   description: string | null;
+  specialty: string | null;
   city: string;
   state: string;
   address: string;
   latitude: number;
   longitude: number;
-  pricePerMonth: number;
-  minAge: number;
-  maxAge: number;
-  capacity: number;
+  consultationFee: number | null;
+  offersTelehealth: boolean;
   rating: number;
   reviewCount: number;
   primaryPhoto: string | null;
@@ -43,6 +42,9 @@ export type DaycareSearchResult = {
   subscriptionPlan: "FREE" | "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
   distance?: number; // in miles, only when geolocation search is used
 };
+
+/** @deprecated Use ProviderSearchResult */
+export type DaycareSearchResult = ProviderSearchResult;
 
 // Calculate distance between two points using Haversine formula
 function calculateDistance(
@@ -68,8 +70,8 @@ export async function searchDaycares(filters: SearchFilters) {
   const page = filters.page || 1;
   const limit = filters.limit || 12;
 
-  const where: Prisma.DaycareWhereInput = {
-    status: DaycareStatus.APPROVED,
+  const where: Prisma.ProviderWhereInput = {
+    status: ProviderStatus.APPROVED,
     deletedAt: null,
   };
 
@@ -85,22 +87,17 @@ export async function searchDaycares(filters: SearchFilters) {
 
   // Price filter
   if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
-    where.pricePerMonth = {};
+    where.consultationFee = {};
     if (filters.minPrice !== undefined) {
-      where.pricePerMonth.gte = filters.minPrice;
+      where.consultationFee.gte = filters.minPrice;
     }
     if (filters.maxPrice !== undefined) {
-      where.pricePerMonth.lte = filters.maxPrice;
+      where.consultationFee.lte = filters.maxPrice;
     }
   }
 
-  // Age filter (child age must be within daycare's range)
-  if (filters.minAge !== undefined) {
-    where.maxAge = { gte: filters.minAge };
-  }
-  if (filters.maxAge !== undefined) {
-    where.minAge = { lte: filters.maxAge };
-  }
+  // Age filters removed - not applicable for medical providers
+  // (Legacy: minAge/maxAge filters were for daycare age ranges)
 
   // Text search
   if (filters.query) {
@@ -111,16 +108,13 @@ export async function searchDaycares(filters: SearchFilters) {
     ];
   }
 
-  // Amenities filter
-  if (filters.amenities && filters.amenities.length > 0) {
-    where.amenities = {
-      some: {
-        amenity: {
-          name: { in: filters.amenities },
-        },
-      },
-    };
-  }
+  // Facilities filter (was: amenities)
+  // TODO: Implement facilities filter when ProviderFacility relation is set up
+  // if (filters.amenities && filters.amenities.length > 0) {
+  //   where.facilities = {
+  //     some: { facility: { name: { in: filters.amenities } } },
+  //   };
+  // }
 
   // For rating and geolocation filters, we need to fetch more and filter in-memory
   const needsPostFiltering = filters.minRating !== undefined || filters.lat !== undefined;
@@ -148,17 +142,17 @@ export async function searchDaycares(filters: SearchFilters) {
   ]);
 
   // Get avg ratings using SQL aggregation
-  const daycareIds = allDaycares.map((d) => d.id);
+  const providerIds = allDaycares.map((d) => d.id);
   const avgRatings =
-    daycareIds.length > 0
+    providerIds.length > 0
       ? await db.review.groupBy({
-          by: ["daycareId"],
-          where: { daycareId: { in: daycareIds } },
+          by: ["providerId"],
+          where: { providerId: { in: providerIds } },
           _avg: { rating: true },
         })
       : [];
 
-  const ratingMap = new Map(avgRatings.map((r) => [r.daycareId, r._avg.rating || 0]));
+  const ratingMap = new Map(avgRatings.map((r) => [r.providerId, r._avg.rating || 0]));
 
   // Build results with distance calculation
   let results: (DaycareSearchResult & { _sortPriority: number })[] = allDaycares.map((daycare) => {
@@ -186,15 +180,14 @@ export async function searchDaycares(filters: SearchFilters) {
       slug: daycare.slug,
       name: daycare.name,
       description: daycare.description,
+      specialty: daycare.specialty,
       city: daycare.city,
       state: daycare.state,
       address: daycare.address,
       latitude: daycare.latitude,
       longitude: daycare.longitude,
-      pricePerMonth: Number(daycare.pricePerMonth),
-      minAge: daycare.minAge,
-      maxAge: daycare.maxAge,
-      capacity: daycare.capacity,
+      consultationFee: daycare.consultationFee ? Number(daycare.consultationFee) : null,
+      offersTelehealth: daycare.offersTelehealth,
       rating: Math.round(avgRating * 10) / 10,
       reviewCount: daycare._count.reviews,
       primaryPhoto: daycare.photos[0]?.url || null,
@@ -240,7 +233,8 @@ export async function searchDaycares(filters: SearchFilters) {
   const skip = (page - 1) * limit;
   const paginatedResults = results.slice(skip, skip + limit);
 
-  // Remove internal sorting field
+  // Remove internal sorting field (destructure to exclude _sortPriority)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const finalResults: DaycareSearchResult[] = paginatedResults.map(({ _sortPriority, ...rest }) => rest);
 
   return {
@@ -256,12 +250,12 @@ export async function searchDaycares(filters: SearchFilters) {
 
 export async function getDaycareBySlug(slug: string) {
   const daycare = await db.provider.findUnique({
-    where: { slug, status: DaycareStatus.APPROVED, deletedAt: null },
+    where: { slug, status: ProviderStatus.APPROVED, deletedAt: null },
     include: {
       photos: { orderBy: { order: "asc" } },
-      programs: true,
-      amenities: {
-        include: { amenity: true },
+      services: true,
+      facilities: {
+        include: { facility: true },
       },
       reviews: {
         include: {
@@ -301,18 +295,14 @@ export async function getDaycareBySlug(slug: string) {
 
   return {
     ...daycare,
-    pricePerMonth: Number(daycare.pricePerMonth),
-    pricePerWeek: daycare.pricePerWeek ? Number(daycare.pricePerWeek) : null,
-    pricePerDay: daycare.pricePerDay ? Number(daycare.pricePerDay) : null,
-    registrationFee: daycare.registrationFee
-      ? Number(daycare.registrationFee)
-      : null,
+    consultationFee: daycare.consultationFee ? Number(daycare.consultationFee) : null,
+    telehealthFee: daycare.telehealthFee ? Number(daycare.telehealthFee) : null,
     rating: Math.round(avgRating * 10) / 10,
     reviewCount: daycare.reviews.length,
-    amenities: daycare.amenities.map((a) => a.amenity),
-    programs: daycare.programs.map((p) => ({
-      ...p,
-      price: Number(p.price),
+    facilities: daycare.facilities.map((f) => f.facility),
+    services: daycare.services.map((s) => ({
+      ...s,
+      price: Number(s.price),
     })),
     owner: daycare.staff[0]?.user || null,
   };
@@ -321,7 +311,7 @@ export async function getDaycareBySlug(slug: string) {
 export async function getFeaturedDaycares(limit = 6) {
   const daycares = await db.provider.findMany({
     where: {
-      status: DaycareStatus.APPROVED,
+      status: ProviderStatus.APPROVED,
       isFeatured: true,
       deletedAt: null,
     },
@@ -351,7 +341,7 @@ export async function getFeaturedDaycares(limit = 6) {
       name: daycare.name,
       city: daycare.city,
       state: daycare.state,
-      pricePerMonth: Number(daycare.pricePerMonth),
+      consultationFee: Number(daycare.consultationFee),
       rating: Math.round(avgRating * 10) / 10,
       reviewCount: daycare.reviews.length,
       primaryPhoto: daycare.photos[0]?.url || null,
@@ -363,7 +353,7 @@ export async function getFeaturedDaycares(limit = 6) {
 // Get unique cities and states for filter dropdowns
 export async function getLocations() {
   const locations = await db.provider.findMany({
-    where: { status: DaycareStatus.APPROVED, deletedAt: null },
+    where: { status: ProviderStatus.APPROVED, deletedAt: null },
     select: { city: true, state: true },
     distinct: ["city", "state"],
     orderBy: [{ state: "asc" }, { city: "asc" }],

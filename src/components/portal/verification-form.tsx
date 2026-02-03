@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Loader2, Upload, X, FileText, Image } from "lucide-react";
+import { Loader2, Upload, X, FileText, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ import {
 import { submitVerificationRequest } from "@/server/actions/verification";
 
 interface VerificationFormProps {
-  daycareId: string;
+  providerId: string;
 }
 
 interface Document {
@@ -44,13 +44,13 @@ const US_STATES = [
 ];
 
 const DOCUMENT_TYPES = [
-  { value: "license", label: "Daycare License" },
+  { value: "license", label: "Professional License" },
   { value: "insurance", label: "Insurance Certificate" },
   { value: "background_check", label: "Background Check" },
   { value: "other", label: "Other Document" },
 ];
 
-export function VerificationForm({ daycareId }: VerificationFormProps) {
+export function VerificationForm({ providerId }: VerificationFormProps) {
   const [isPending, startTransition] = useTransition();
   const [licenseNumber, setLicenseNumber] = useState("");
   const [licenseState, setLicenseState] = useState("");
@@ -147,13 +147,13 @@ export function VerificationForm({ daycareId }: VerificationFormProps) {
 
     const hasLicense = documents.some((doc) => doc.type === "license");
     if (!hasLicense) {
-      toast.error("Please upload your daycare license document");
+      toast.error("Please upload your professional license document");
       return;
     }
 
     startTransition(async () => {
       const result = await submitVerificationRequest({
-        daycareId,
+        providerId,
         licenseNumber: licenseNumber.trim(),
         licenseState,
         licenseExpiry: licenseExpiry
@@ -183,7 +183,7 @@ export function VerificationForm({ daycareId }: VerificationFormProps) {
 
   const getDocumentIcon = (mimeType?: string) => {
     if (mimeType?.startsWith("image/")) {
-      return <Image className="h-4 w-4" />;
+      return <ImageIcon className="h-4 w-4" />;
     }
     return <FileText className="h-4 w-4" />;
   };

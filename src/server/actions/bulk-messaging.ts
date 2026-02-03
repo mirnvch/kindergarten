@@ -5,7 +5,8 @@ import { db } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createNotification } from "./notifications";
+// TODO: Re-enable notifications when bulk messaging is fully implemented
+// import { createNotification } from "./notifications";
 
 const bulkMessageSchema = z.object({
   subject: z.string().min(1, "Subject is required").max(100),
@@ -20,7 +21,7 @@ async function checkPremiumAccess(userId: string) {
   const staff = await db.providerStaff.findFirst({
     where: { userId, role: { in: ["owner", "manager"] } },
     include: {
-      daycare: {
+      provider: {
         include: { subscription: true },
       },
     },
@@ -28,14 +29,14 @@ async function checkPremiumAccess(userId: string) {
 
   if (!staff) return null;
 
-  const plan = staff.daycare.subscription?.plan;
-  const isActive = staff.daycare.subscription?.status === "ACTIVE";
+  const plan = staff.provider.subscription?.plan;
+  const isActive = staff.provider.subscription?.status === "ACTIVE";
 
   // Bulk messaging available for PROFESSIONAL and ENTERPRISE
   const hasBulkMessaging = isActive && (plan === "PROFESSIONAL" || plan === "ENTERPRISE");
 
   return {
-    daycare: staff.daycare,
+    provider: staff.provider,
     hasBulkMessaging,
     plan,
   };
@@ -59,7 +60,7 @@ export async function sendBulkMessage(data: BulkMessageInput) {
 
   const access = await checkPremiumAccess(session.user.id);
   if (!access) {
-    return { success: false, error: "Daycare not found" };
+    return { success: false, error: "Provider not found" };
   }
 
   if (!access.hasBulkMessaging) {
@@ -68,7 +69,7 @@ export async function sendBulkMessage(data: BulkMessageInput) {
 
   try {
     const validated = bulkMessageSchema.parse(data);
-    const daycare = access.daycare;
+    const provider = access.provider;
 
     // Get recipients based on type
     let recipients: { id: string; userId: string }[] = [];
@@ -77,7 +78,7 @@ export async function sendBulkMessage(data: BulkMessageInput) {
       case "all":
         // All parents who have interacted with the daycare
         const threads = await db.messageThread.findMany({
-          where: { providerId: daycare.id },
+          where: { providerId: provider.id },
           select: { patientId: true },
           distinct: ["patientId"],
         });
@@ -85,22 +86,22 @@ export async function sendBulkMessage(data: BulkMessageInput) {
         break;
 
       case "enrolled":
-        // Parents with active enrollments
+        // Patients with confirmed appointments
         const enrollments = await db.appointment.findMany({
-          where: { providerId: daycare.id, status: "ACTIVE" },
-          select: { child: { select: { patientId: true } } },
+          where: { providerId: provider.id, status: "CONFIRMED" },
+          select: { patientId: true },
         });
-        const enrolledParents = [...new Set(enrollments.map((e) => e.child.patientId))];
-        recipients = enrolledParents.map((id) => ({ id, userId: id }));
+        const enrolledPatients = [...new Set(enrollments.map((e) => e.patientId))];
+        recipients = enrolledPatients.map((id) => ({ id, userId: id }));
         break;
 
       case "waitlisted":
         // Waitlist entries - find matching users by email
         const waitlist = await db.waitlistEntry.findMany({
-          where: { providerId: daycare.id, notifiedAt: null },
-          select: { parentEmail: true },
+          where: { providerId: provider.id, notifiedAt: null },
+          select: { patientEmail: true },
         });
-        const waitlistEmails = waitlist.map((w) => w.parentEmail);
+        const waitlistEmails = waitlist.map((w) => w.patientEmail);
         const waitlistUsers = await db.user.findMany({
           where: { email: { in: waitlistEmails } },
           select: { id: true },
@@ -109,13 +110,13 @@ export async function sendBulkMessage(data: BulkMessageInput) {
         break;
 
       case "toured":
-        // Parents who completed tours
-        const tours = await db.appointment.findMany({
-          where: { providerId: daycare.id, type: "TOUR", status: "COMPLETED" },
+        // Patients who completed in-person appointments
+        const visits = await db.appointment.findMany({
+          where: { providerId: provider.id, isTelemedicine: false, status: "COMPLETED" },
           select: { patientId: true },
           distinct: ["patientId"],
         });
-        recipients = tours.map((t) => ({ id: t.patientId, userId: t.patientId }));
+        recipients = visits.map((t) => ({ id: t.patientId, userId: t.patientId }));
         break;
     }
 
@@ -129,7 +130,7 @@ export async function sendBulkMessage(data: BulkMessageInput) {
     // 1. Pre-fetch ALL existing threads in one query
     const existingThreads = await db.messageThread.findMany({
       where: {
-        providerId: daycare.id,
+        providerId: provider.id,
         patientId: { in: recipientUserIds },
       },
       select: { id: true, patientId: true },
@@ -152,7 +153,7 @@ export async function sendBulkMessage(data: BulkMessageInput) {
         if (recipientsWithoutThreads.length > 0) {
           await tx.messageThread.createMany({
             data: recipientsWithoutThreads.map((patientId) => ({
-              providerId: daycare.id,
+              providerId: provider.id,
               patientId,
               subject: validated.subject,
             })),
@@ -162,7 +163,7 @@ export async function sendBulkMessage(data: BulkMessageInput) {
           // Fetch newly created threads
           const newThreads = await tx.messageThread.findMany({
             where: {
-              providerId: daycare.id,
+              providerId: provider.id,
               patientId: { in: recipientsWithoutThreads },
             },
             select: { id: true, patientId: true },
@@ -195,9 +196,9 @@ export async function sendBulkMessage(data: BulkMessageInput) {
             return {
               userId,
               type: "message_received",
-              title: `Message from ${daycare.name}`,
+              title: `Message from ${provider.name}`,
               body: validated.subject,
-              data: { threadId, providerId: daycare.id },
+              data: { threadId, providerId: provider.id },
             };
           })
           .filter((n): n is NonNullable<typeof n> => n !== null);
@@ -242,23 +243,23 @@ export async function getBulkMessageStats() {
   // Get counts for each recipient type
   const [allCount, enrolledCount, touredCount] = await Promise.all([
     db.messageThread.count({
-      where: { providerId: access.daycare.id },
+      where: { providerId: access.provider.id },
     }),
     db.appointment.count({
-      where: { providerId: access.daycare.id, status: "ACTIVE" },
+      where: { providerId: access.provider.id, status: "CONFIRMED" },
     }),
     db.appointment.groupBy({
       by: ["patientId"],
-      where: { providerId: access.daycare.id, type: "TOUR", status: "COMPLETED" },
+      where: { providerId: access.provider.id, isTelemedicine: false, status: "COMPLETED" },
     }).then((r) => r.length),
   ]);
 
   // Count waitlist entries that have matching user accounts
   const waitlistEntries = await db.waitlistEntry.findMany({
-    where: { providerId: access.daycare.id, notifiedAt: null },
-    select: { parentEmail: true },
+    where: { providerId: access.provider.id, notifiedAt: null },
+    select: { patientEmail: true },
   });
-  const waitlistEmails = waitlistEntries.map((w) => w.parentEmail);
+  const waitlistEmails = waitlistEntries.map((w) => w.patientEmail);
   const waitlistedCount = await db.user.count({
     where: { email: { in: waitlistEmails } },
   });

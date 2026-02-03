@@ -6,7 +6,6 @@ import { db } from "@/lib/db";
 import { UserRole } from "@prisma/client";
 import type { Adapter, AdapterUser } from "next-auth/adapters";
 import authConfig from "./auth.config";
-import { cookies } from "next/headers";
 
 // Custom adapter that handles firstName/lastName from OAuth and account linking
 function CustomPrismaAdapter(): Adapter {
@@ -143,7 +142,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     ...authConfig.callbacks,
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       // Handle OAuth sign-in (Google)
       if (account?.provider === "google" && user.email) {
         // Check if user with this email already exists
@@ -224,7 +223,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   events: {
-    async signIn({ user, account }) {
+    async signIn() {
       // Handle 2FA requirement for OAuth users
       // TODO: Re-enable after fixing TwoFactorAuth table migration
       // if (account?.provider === "google" && user.email) {

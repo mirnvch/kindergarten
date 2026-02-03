@@ -4,13 +4,8 @@ import { z } from "zod";
 // Common schemas for action inputs
 // ============================================
 
-// CUID validation (Prisma default ID format)
-const cuidSchema = z.string().cuid();
-
-// UUID validation (alternative ID format)
-const uuidSchema = z.string().uuid();
-
-// Flexible ID schema (accepts both CUID and UUID)
+// Flexible ID schema (accepts CUID, UUID, or other valid ID formats)
+// Note: Prisma uses CUID by default but we accept any reasonable ID string
 export const idSchema = z.string().min(1, "ID is required").max(50);
 
 // Optional reason/note text

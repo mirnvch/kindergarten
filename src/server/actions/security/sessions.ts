@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { parseUserAgent, getDeviceDescription } from "@/lib/user-agent";
+import { parseUserAgent } from "@/lib/user-agent";
 import crypto from "crypto";
 import type { ActionResult } from "@/types/action-result";
 

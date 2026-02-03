@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { triggerNewMessage, triggerMessageRead, triggerThreadUpdate } from "@/lib/pusher";
+import { triggerNewMessage, triggerThreadUpdate } from "@/lib/pusher";
 import { rateLimit } from "@/lib/rate-limit";
 
 // Security constants

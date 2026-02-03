@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import Link from "next/link";
 
 import { formatCurrency } from "@/lib/utils";
 import type { DaycareSearchResult } from "@/server/actions/daycare";
@@ -59,7 +58,7 @@ export function SearchMap({ daycares, center, zoom = 10 }: SearchMapProps) {
       // Defer setState to avoid synchronous update in effect
       queueMicrotask(() => setMapError("Failed to initialize map"));
     }
-  }, []);
+  }, [defaultCenter, token, zoom]);
 
   // Update markers when daycares change
   useEffect(() => {
@@ -75,20 +74,21 @@ export function SearchMap({ daycares, center, zoom = 10 }: SearchMapProps) {
       el.className = "daycare-marker";
       el.innerHTML = `
         <div class="bg-primary text-primary-foreground px-2 py-1 rounded-full text-sm font-medium shadow-lg cursor-pointer hover:scale-110 transition-transform">
-          ${formatCurrency(Number(daycare.pricePerMonth))}
+          ${daycare.consultationFee ? formatCurrency(Number(daycare.consultationFee)) : daycare.specialty || "Provider"}
         </div>
       `;
 
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
         <div class="p-2 min-w-[200px]">
           <h3 class="font-semibold text-sm">${daycare.name}</h3>
-          <p class="text-xs text-gray-600">${daycare.city}, ${daycare.state}</p>
+          <p class="text-xs text-gray-600">${daycare.specialty || "General Practice"}</p>
+          <p class="text-xs text-gray-500">${daycare.city}, ${daycare.state}</p>
           <div class="flex items-center gap-1 mt-1">
             <span class="text-yellow-500">★</span>
             <span class="text-xs">${daycare.rating?.toFixed(1) || "New"}</span>
             <span class="text-xs text-gray-400">(${daycare.reviewCount} reviews)</span>
           </div>
-          <a href="/daycare/${daycare.slug}" class="text-xs text-primary hover:underline mt-2 inline-block">
+          <a href="/provider/${daycare.slug}" class="text-xs text-primary hover:underline mt-2 inline-block">
             View details →
           </a>
         </div>

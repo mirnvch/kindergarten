@@ -56,7 +56,8 @@ export function VerificationActions({
   const [rejectionReason, setRejectionReason] = useState("");
 
   // Support both providerId and daycareId (legacy)
-  const _providerId = providerId || daycareId;
+  // Note: providerId/daycareId kept for future use in provider linking
+  void (providerId || daycareId);
 
   const handleStartReview = () => {
     startTransition(async () => {

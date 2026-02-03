@@ -20,7 +20,6 @@ import {
 import { cn } from "@/lib/utils";
 import {
   generateRecurringDates,
-  getRecurrenceLabel,
   getDefaultRecurrenceEndDate,
   type RecurrencePattern,
 } from "@/lib/booking-utils";
