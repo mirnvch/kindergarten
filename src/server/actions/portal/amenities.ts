@@ -15,18 +15,18 @@ async function requireDaycareOwner() {
       userId: session.user.id,
       role: { in: ["owner", "manager"] },
     },
-    include: { daycare: true },
+    include: { provider: true },
   });
 
   if (!providerStaff) {
     throw new Error("No daycare found");
   }
 
-  return { user: session.user, daycare: providerStaff.daycare };
+  return { user: session.user, daycare: providerStaff.provider };
 }
 
 export async function getAllAmenities() {
-  return db.amenity.findMany({
+  return db.facility.findMany({
     orderBy: [{ category: "asc" }, { name: "asc" }],
   });
 }
@@ -34,29 +34,29 @@ export async function getAllAmenities() {
 export async function getDaycareAmenities() {
   const { daycare } = await requireDaycareOwner();
 
-  const amenities = await db.providerAmenity.findMany({
+  const facilities = await db.providerFacility.findMany({
     where: { providerId: daycare.id },
-    select: { amenityId: true },
+    select: { facilityId: true },
   });
 
-  return amenities.map((a) => a.amenityId);
+  return facilities.map((f) => f.facilityId);
 }
 
-export async function updateDaycareAmenities(amenityIds: string[]) {
+export async function updateDaycareAmenities(facilityIds: string[]) {
   try {
     const { daycare } = await requireDaycareOwner();
 
-    // Delete existing amenities
-    await db.providerAmenity.deleteMany({
+    // Delete existing facilities
+    await db.providerFacility.deleteMany({
       where: { providerId: daycare.id },
     });
 
-    // Add new amenities
-    if (amenityIds.length > 0) {
-      await db.providerAmenity.createMany({
-        data: amenityIds.map((amenityId) => ({
+    // Add new facilities
+    if (facilityIds.length > 0) {
+      await db.providerFacility.createMany({
+        data: facilityIds.map((facilityId) => ({
           providerId: daycare.id,
-          amenityId,
+          facilityId,
         })),
       });
     }

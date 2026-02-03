@@ -26,9 +26,9 @@ export async function POST(request: NextRequest) {
       where: {
         id: threadId,
         OR: [
-          { parentId: session.user.id },
+          { patientId: session.user.id },
           {
-            daycare: {
+            provider: {
               staff: {
                 some: { userId: session.user.id },
               },

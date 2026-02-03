@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 
-async function requireDaycareOwner() {
+async function requireProviderOwner() {
   const session = await auth();
   if (!session?.user) {
     throw new Error("Unauthorized");
@@ -17,124 +17,136 @@ async function requireDaycareOwner() {
       userId: session.user.id,
       role: { in: ["owner", "manager"] },
     },
-    include: { daycare: true },
+    include: { provider: true },
   });
 
   if (!providerStaff) {
-    throw new Error("No daycare found");
+    throw new Error("No provider found");
   }
 
-  return { user: session.user, daycare: providerStaff.daycare };
+  return { user: session.user, provider: providerStaff.provider };
 }
 
-export async function getPrograms() {
-  const { daycare } = await requireDaycareOwner();
+export async function getServices() {
+  const { provider } = await requireProviderOwner();
 
-  return db.program.findMany({
-    where: { providerId: daycare.id },
-    orderBy: { ageMin: "asc" },
+  return db.service.findMany({
+    where: { providerId: provider.id },
+    orderBy: { name: "asc" },
   });
 }
 
-const programSchema = z.object({
+const serviceSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   description: z.string().optional(),
-  ageMin: z.number().min(0, "Minimum age must be at least 0"),
-  ageMax: z.number().min(1, "Maximum age must be at least 1"),
+  duration: z.number().min(5, "Duration must be at least 5 minutes"),
   price: z.number().min(0, "Price must be at least 0"),
-  schedule: z.string().optional(),
+  isTelehealth: z.boolean().default(false),
 });
 
-export type ProgramInput = z.infer<typeof programSchema>;
+export type ServiceInput = z.infer<typeof serviceSchema>;
 
-export async function createProgram(data: ProgramInput) {
+/** @deprecated Use ServiceInput */
+export type ProgramInput = ServiceInput;
+
+export async function createService(data: ServiceInput) {
   try {
-    const { daycare } = await requireDaycareOwner();
+    const { provider } = await requireProviderOwner();
 
-    const validated = programSchema.parse(data);
+    const validated = serviceSchema.parse(data);
 
-    await db.program.create({
+    await db.service.create({
       data: {
-        providerId: daycare.id,
+        providerId: provider.id,
         name: validated.name,
         description: validated.description || null,
-        ageMin: validated.ageMin,
-        ageMax: validated.ageMax,
+        duration: validated.duration,
         price: new Prisma.Decimal(validated.price),
-        schedule: validated.schedule || null,
+        isTelehealth: validated.isTelehealth,
       },
     });
 
-    revalidatePath("/portal/daycare");
+    revalidatePath("/portal/practice");
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return { success: false, error: error.issues[0].message };
     }
-    console.error("Error creating program:", error);
-    return { success: false, error: "Failed to create program" };
+    console.error("Error creating service:", error);
+    return { success: false, error: "Failed to create service" };
   }
 }
 
-export async function updateProgram(id: string, data: ProgramInput) {
-  try {
-    const { daycare } = await requireDaycareOwner();
+/** @deprecated Use createService */
+export const createProgram = createService;
 
-    // Verify program belongs to this daycare
-    const program = await db.program.findFirst({
-      where: { id, providerId: daycare.id },
+export async function updateService(id: string, data: ServiceInput) {
+  try {
+    const { provider } = await requireProviderOwner();
+
+    // Verify service belongs to this provider
+    const service = await db.service.findFirst({
+      where: { id, providerId: provider.id },
     });
 
-    if (!program) {
-      return { success: false, error: "Program not found" };
+    if (!service) {
+      return { success: false, error: "Service not found" };
     }
 
-    const validated = programSchema.parse(data);
+    const validated = serviceSchema.parse(data);
 
-    await db.program.update({
+    await db.service.update({
       where: { id },
       data: {
         name: validated.name,
         description: validated.description || null,
-        ageMin: validated.ageMin,
-        ageMax: validated.ageMax,
+        duration: validated.duration,
         price: new Prisma.Decimal(validated.price),
-        schedule: validated.schedule || null,
+        isTelehealth: validated.isTelehealth,
       },
     });
 
-    revalidatePath("/portal/daycare");
+    revalidatePath("/portal/practice");
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return { success: false, error: error.issues[0].message };
     }
-    console.error("Error updating program:", error);
-    return { success: false, error: "Failed to update program" };
+    console.error("Error updating service:", error);
+    return { success: false, error: "Failed to update service" };
   }
 }
 
-export async function deleteProgram(id: string) {
-  try {
-    const { daycare } = await requireDaycareOwner();
+/** @deprecated Use updateService */
+export const updateProgram = updateService;
 
-    // Verify program belongs to this daycare
-    const program = await db.program.findFirst({
-      where: { id, providerId: daycare.id },
+export async function deleteService(id: string) {
+  try {
+    const { provider } = await requireProviderOwner();
+
+    // Verify service belongs to this provider
+    const service = await db.service.findFirst({
+      where: { id, providerId: provider.id },
     });
 
-    if (!program) {
-      return { success: false, error: "Program not found" };
+    if (!service) {
+      return { success: false, error: "Service not found" };
     }
 
-    await db.program.delete({
+    await db.service.delete({
       where: { id },
     });
 
-    revalidatePath("/portal/daycare");
+    revalidatePath("/portal/practice");
     return { success: true };
   } catch (error) {
-    console.error("Error deleting program:", error);
-    return { success: false, error: "Failed to delete program" };
+    console.error("Error deleting service:", error);
+    return { success: false, error: "Failed to delete service" };
   }
 }
+
+/** @deprecated Use deleteService */
+export const deleteProgram = deleteService;
+
+/** @deprecated Use getServices */
+export const getPrograms = getServices;

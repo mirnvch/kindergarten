@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Bookmark, Search, Trash2, ExternalLink } from "lucide-react";
+import { Bookmark, Search, ExternalLink } from "lucide-react";
 
 import { auth } from "@/lib/auth";
 import { getSavedSearches } from "@/server/actions/saved-searches";

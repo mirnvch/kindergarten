@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 
-async function requireDaycareOwner() {
+async function requireProviderOwner() {
   const session = await auth();
   if (!session?.user) {
     throw new Error("Unauthorized");
@@ -17,48 +17,46 @@ async function requireDaycareOwner() {
       userId: session.user.id,
       role: { in: ["owner", "manager"] },
     },
-    include: { daycare: true },
+    include: { provider: true },
   });
 
   if (!providerStaff) {
-    throw new Error("No daycare found");
+    throw new Error("No provider found");
   }
 
-  return { user: session.user, daycare: providerStaff.daycare };
+  return { user: session.user, provider: providerStaff.provider };
 }
 
 const pricingSchema = z.object({
-  pricePerMonth: z.number().min(0, "Price must be at least 0"),
-  pricePerWeek: z.number().min(0).optional().nullable(),
-  pricePerDay: z.number().min(0).optional().nullable(),
-  registrationFee: z.number().min(0).optional().nullable(),
+  consultationFee: z.number().min(0, "Fee must be at least 0").optional().nullable(),
+  telehealthFee: z.number().min(0, "Fee must be at least 0").optional().nullable(),
+  acceptsUninsured: z.boolean().optional(),
+  slidingScalePricing: z.boolean().optional(),
 });
 
 export type PricingInput = z.infer<typeof pricingSchema>;
 
 export async function updatePricing(data: PricingInput) {
   try {
-    const { daycare } = await requireDaycareOwner();
+    const { provider } = await requireProviderOwner();
 
     const validated = pricingSchema.parse(data);
 
     await db.provider.update({
-      where: { id: daycare.id },
+      where: { id: provider.id },
       data: {
-        pricePerMonth: new Prisma.Decimal(validated.pricePerMonth),
-        pricePerWeek: validated.pricePerWeek
-          ? new Prisma.Decimal(validated.pricePerWeek)
+        consultationFee: validated.consultationFee != null
+          ? new Prisma.Decimal(validated.consultationFee)
           : null,
-        pricePerDay: validated.pricePerDay
-          ? new Prisma.Decimal(validated.pricePerDay)
+        telehealthFee: validated.telehealthFee != null
+          ? new Prisma.Decimal(validated.telehealthFee)
           : null,
-        registrationFee: validated.registrationFee
-          ? new Prisma.Decimal(validated.registrationFee)
-          : null,
+        acceptsUninsured: validated.acceptsUninsured,
+        slidingScalePricing: validated.slidingScalePricing,
       },
     });
 
-    revalidatePath("/portal/daycare");
+    revalidatePath("/portal/practice");
     return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError) {

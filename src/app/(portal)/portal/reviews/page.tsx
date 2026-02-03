@@ -19,14 +19,14 @@ const REVIEWS_PER_PAGE = 10;
 async function getReviews(userId: string, page: number = 1) {
   const providerStaff = await db.providerStaff.findFirst({
     where: { userId, role: { in: ["owner", "manager"] } },
-    include: { daycare: true },
+    include: { provider: true },
   });
 
   if (!providerStaff) {
     return null;
   }
 
-  const providerId = providerStaff.daycare.id;
+  const providerId = providerStaff.provider.id;
 
   // Get paginated reviews and stats in parallel
   const [reviews, totalCount, statsData] = await Promise.all([
@@ -63,7 +63,7 @@ async function getReviews(userId: string, page: number = 1) {
   const avgRating = statsData._avg.rating || 0;
 
   return {
-    daycare: providerStaff.daycare,
+    daycare: providerStaff.provider,
     reviews,
     pagination: {
       page,

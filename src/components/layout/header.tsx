@@ -13,7 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn, getInitials } from "@/lib/utils";
-import { Menu, Search, User, LogOut, Settings, LayoutDashboard } from "lucide-react";
+import { Menu, Search, LogOut, Settings, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { logout } from "@/server/actions/auth";
 

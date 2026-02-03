@@ -16,14 +16,14 @@ async function requireDaycareOwner() {
       userId: session.user.id,
       role: "owner",
     },
-    include: { daycare: true },
+    include: { provider: true },
   });
 
   if (!providerStaff) {
     throw new Error("Only owners can manage staff");
   }
 
-  return { user: session.user, daycare: providerStaff.daycare };
+  return { user: session.user, daycare: providerStaff.provider };
 }
 
 export async function getStaff() {
@@ -97,10 +97,10 @@ export async function addStaff(data: AddStaffInput) {
     });
 
     // Update user role if needed
-    if (user.role === "PARENT") {
+    if (user.role === "PATIENT") {
       await db.user.update({
         where: { id: user.id },
-        data: { role: "DAYCARE_STAFF" },
+        data: { role: "CLINIC_STAFF" },
       });
     }
 
@@ -172,11 +172,11 @@ export async function removeStaff(staffId: string) {
       where: { userId: staff.userId },
     });
 
-    // If not, revert to PARENT role
-    if (!otherStaffRoles && staff.user.role === "DAYCARE_STAFF") {
+    // If not, revert to PATIENT role
+    if (!otherStaffRoles && staff.user.role === "CLINIC_STAFF") {
       await db.user.update({
         where: { id: staff.userId },
-        data: { role: "PARENT" },
+        data: { role: "PATIENT" },
       });
     }
 

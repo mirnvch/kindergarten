@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Bell, Trash2, Mail, Phone, Calendar, Baby, Loader2 } from "lucide-react";
+import { Bell, Trash2, Mail, Phone, Calendar, Loader2, FileText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,11 +39,11 @@ import {
 
 interface WaitlistEntry {
   id: string;
-  parentName: string;
-  parentEmail: string;
-  parentPhone: string | null;
-  childAge: number;
-  desiredStart: Date;
+  patientName: string;
+  patientEmail: string;
+  patientPhone: string | null;
+  reasonForVisit: string | null;
+  desiredDate: Date;
   notes: string | null;
   position: number;
   createdAt: Date;
@@ -55,18 +55,6 @@ interface WaitlistTableProps {
   showNotified: boolean;
 }
 
-function formatAge(months: number): string {
-  if (months < 12) {
-    return `${months} mo`;
-  }
-  const years = Math.floor(months / 12);
-  const remainingMonths = months % 12;
-  if (remainingMonths === 0) {
-    return `${years} yr`;
-  }
-  return `${years} yr ${remainingMonths} mo`;
-}
-
 export function WaitlistTable({ entries, showNotified }: WaitlistTableProps) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -76,7 +64,7 @@ export function WaitlistTable({ entries, showNotified }: WaitlistTableProps) {
     setLoadingId(null);
 
     if (result.success) {
-      toast.success("Family notified successfully!");
+      toast.success("Patient notified successfully!");
     } else {
       toast.error(result.error || "Failed to notify");
     }
@@ -101,10 +89,10 @@ export function WaitlistTable({ entries, showNotified }: WaitlistTableProps) {
           <TableHeader>
             <TableRow>
               {!showNotified && <TableHead className="w-16">#</TableHead>}
-              <TableHead>Parent</TableHead>
+              <TableHead>Patient</TableHead>
               <TableHead>Contact</TableHead>
-              <TableHead>Child Age</TableHead>
-              <TableHead>Desired Start</TableHead>
+              <TableHead>Reason</TableHead>
+              <TableHead>Desired Date</TableHead>
               <TableHead>
                 {showNotified ? "Notified" : "Joined"}
               </TableHead>
@@ -122,7 +110,7 @@ export function WaitlistTable({ entries, showNotified }: WaitlistTableProps) {
                   </TableCell>
                 )}
                 <TableCell>
-                  <div className="font-medium">{entry.parentName}</div>
+                  <div className="font-medium">{entry.patientName}</div>
                   {entry.notes && (
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -139,33 +127,37 @@ export function WaitlistTable({ entries, showNotified }: WaitlistTableProps) {
                 <TableCell>
                   <div className="space-y-1">
                     <a
-                      href={`mailto:${entry.parentEmail}`}
+                      href={`mailto:${entry.patientEmail}`}
                       className="flex items-center gap-1 text-sm hover:text-primary"
                     >
                       <Mail className="h-3 w-3" />
-                      {entry.parentEmail}
+                      {entry.patientEmail}
                     </a>
-                    {entry.parentPhone && (
+                    {entry.patientPhone && (
                       <a
-                        href={`tel:${entry.parentPhone}`}
+                        href={`tel:${entry.patientPhone}`}
                         className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
                       >
                         <Phone className="h-3 w-3" />
-                        {entry.parentPhone}
+                        {entry.patientPhone}
                       </a>
                     )}
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-1">
-                    <Baby className="h-3 w-3 text-muted-foreground" />
-                    {formatAge(entry.childAge)}
-                  </div>
+                  {entry.reasonForVisit ? (
+                    <div className="flex items-center gap-1 text-sm">
+                      <FileText className="h-3 w-3 text-muted-foreground" />
+                      <span className="max-w-[150px] truncate">{entry.reasonForVisit}</span>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">-</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1 text-sm">
                     <Calendar className="h-3 w-3 text-muted-foreground" />
-                    {format(new Date(entry.desiredStart), "MMM d, yyyy")}
+                    {format(new Date(entry.desiredDate), "MMM d, yyyy")}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -209,7 +201,7 @@ export function WaitlistTable({ entries, showNotified }: WaitlistTableProps) {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Remove from waitlist?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This will remove {entry.parentName} from the waitlist.
+                            This will remove {entry.patientName} from the waitlist.
                             This action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>

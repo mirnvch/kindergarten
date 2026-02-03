@@ -6,6 +6,7 @@ import { Save, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -19,10 +20,10 @@ import { Prisma } from "@prisma/client";
 
 interface PricingManagerProps {
   pricing: {
-    pricePerMonth: Prisma.Decimal;
-    pricePerWeek: Prisma.Decimal | null;
-    pricePerDay: Prisma.Decimal | null;
-    registrationFee: Prisma.Decimal | null;
+    consultationFee?: Prisma.Decimal | null;
+    telehealthFee?: Prisma.Decimal | null;
+    acceptsUninsured?: boolean;
+    slidingScalePricing?: boolean;
   };
 }
 
@@ -30,12 +31,10 @@ export function PricingManager({ pricing }: PricingManagerProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<PricingInput>({
-    pricePerMonth: Number(pricing.pricePerMonth),
-    pricePerWeek: pricing.pricePerWeek ? Number(pricing.pricePerWeek) : null,
-    pricePerDay: pricing.pricePerDay ? Number(pricing.pricePerDay) : null,
-    registrationFee: pricing.registrationFee
-      ? Number(pricing.registrationFee)
-      : null,
+    consultationFee: pricing.consultationFee ? Number(pricing.consultationFee) : null,
+    telehealthFee: pricing.telehealthFee ? Number(pricing.telehealthFee) : null,
+    acceptsUninsured: pricing.acceptsUninsured ?? false,
+    slidingScalePricing: pricing.slidingScalePricing ?? false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,9 +56,13 @@ export function PricingManager({ pricing }: PricingManagerProps) {
     }
   };
 
-  const updateField = (field: keyof PricingInput, value: string) => {
-    const numValue = value === "" ? null : parseFloat(value);
-    setFormData((prev) => ({ ...prev, [field]: numValue }));
+  const updateField = (field: keyof PricingInput, value: string | boolean) => {
+    if (typeof value === "boolean") {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    } else {
+      const numValue = value === "" ? null : parseFloat(value);
+      setFormData((prev) => ({ ...prev, [field]: numValue }));
+    }
   };
 
   return (
@@ -70,99 +73,86 @@ export function PricingManager({ pricing }: PricingManagerProps) {
           Pricing
         </CardTitle>
         <CardDescription>
-          Set your daycare&apos;s pricing structure. Monthly rate is required,
-          other rates are optional.
+          Set your consultation fees and payment options.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="pricePerMonth">Monthly Rate *</Label>
+              <Label htmlFor="consultationFee">Consultation Fee</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   $
                 </span>
                 <Input
-                  id="pricePerMonth"
+                  id="consultationFee"
                   type="number"
                   min={0}
                   step={0.01}
-                  value={formData.pricePerMonth ?? ""}
-                  onChange={(e) => updateField("pricePerMonth", e.target.value)}
+                  value={formData.consultationFee ?? ""}
+                  onChange={(e) => updateField("consultationFee", e.target.value)}
                   className="pl-7"
-                  required
+                  placeholder="e.g., 150"
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                Standard monthly tuition rate
+                Standard in-person appointment fee
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="pricePerWeek">Weekly Rate</Label>
+              <Label htmlFor="telehealthFee">Telehealth Fee</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   $
                 </span>
                 <Input
-                  id="pricePerWeek"
+                  id="telehealthFee"
                   type="number"
                   min={0}
                   step={0.01}
-                  value={formData.pricePerWeek ?? ""}
-                  onChange={(e) => updateField("pricePerWeek", e.target.value)}
+                  value={formData.telehealthFee ?? ""}
+                  onChange={(e) => updateField("telehealthFee", e.target.value)}
                   className="pl-7"
-                  placeholder="Optional"
+                  placeholder="e.g., 100"
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                For part-time or weekly enrollment
+                Virtual appointment fee (if applicable)
               </p>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="pricePerDay">Daily Rate</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  $
-                </span>
-                <Input
-                  id="pricePerDay"
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  value={formData.pricePerDay ?? ""}
-                  onChange={(e) => updateField("pricePerDay", e.target.value)}
-                  className="pl-7"
-                  placeholder="Optional"
-                />
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="font-medium">Payment Options</h3>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="acceptsUninsured">Accept Uninsured Patients</Label>
+                <p className="text-xs text-muted-foreground">
+                  Offer self-pay options for patients without insurance
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                For drop-in or daily care
-              </p>
+              <Switch
+                id="acceptsUninsured"
+                checked={formData.acceptsUninsured ?? false}
+                onCheckedChange={(checked) => updateField("acceptsUninsured", checked)}
+              />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="registrationFee">Registration Fee</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  $
-                </span>
-                <Input
-                  id="registrationFee"
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  value={formData.registrationFee ?? ""}
-                  onChange={(e) => updateField("registrationFee", e.target.value)}
-                  className="pl-7"
-                  placeholder="Optional"
-                />
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="slidingScalePricing">Sliding Scale Pricing</Label>
+                <p className="text-xs text-muted-foreground">
+                  Offer reduced fees based on patient income
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                One-time enrollment fee
-              </p>
+              <Switch
+                id="slidingScalePricing"
+                checked={formData.slidingScalePricing ?? false}
+                onCheckedChange={(checked) => updateField("slidingScalePricing", checked)}
+              />
             </div>
           </div>
 

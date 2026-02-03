@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { BookingStatus } from "@prisma/client";
+import { AppointmentStatus } from "@prisma/client";
 import type { PortalBooking } from "@/types";
 
 export type PortalBookingFilter = "pending" | "confirmed" | "past";
@@ -12,7 +12,7 @@ async function getOwnerDaycareId(): Promise<string | null> {
   const session = await auth();
   if (!session?.user) return null;
 
-  if (session.user.role !== "DAYCARE_OWNER" && session.user.role !== "DAYCARE_STAFF") {
+  if (session.user.role !== "PROVIDER" && session.user.role !== "CLINIC_STAFF") {
     return null;
   }
 
@@ -39,25 +39,22 @@ export async function getPortalBookings(
       providerId,
       ...(filter === "pending"
         ? {
-            status: BookingStatus.PENDING,
+            status: AppointmentStatus.PENDING,
           }
         : filter === "confirmed"
           ? {
-              status: BookingStatus.CONFIRMED,
-              OR: [
-                { scheduledAt: { gte: now } },
-                { scheduledAt: null },
-              ],
+              status: AppointmentStatus.CONFIRMED,
+              scheduledAt: { gte: now },
             }
           : {
               OR: [
-                { status: { in: [BookingStatus.COMPLETED, BookingStatus.CANCELLED, BookingStatus.NO_SHOW] } },
-                { status: BookingStatus.CONFIRMED, scheduledAt: { lt: now } },
+                { status: { in: [AppointmentStatus.COMPLETED, AppointmentStatus.CANCELLED, AppointmentStatus.NO_SHOW] } },
+                { status: AppointmentStatus.CONFIRMED, scheduledAt: { lt: now } },
               ],
             }),
     },
     include: {
-      parent: {
+      patient: {
         select: {
           id: true,
           firstName: true,
@@ -66,12 +63,19 @@ export async function getPortalBookings(
           phone: true,
         },
       },
-      child: {
+      familyMember: {
         select: {
           id: true,
           firstName: true,
           lastName: true,
           dateOfBirth: true,
+        },
+      },
+      service: {
+        select: {
+          id: true,
+          name: true,
+          duration: true,
         },
       },
     },
@@ -96,20 +100,20 @@ export async function getPortalBookingStats() {
     db.appointment.count({
       where: {
         providerId,
-        status: BookingStatus.PENDING,
+        status: AppointmentStatus.PENDING,
       },
     }),
     db.appointment.count({
       where: {
         providerId,
-        status: BookingStatus.CONFIRMED,
+        status: AppointmentStatus.CONFIRMED,
         scheduledAt: { gte: now },
       },
     }),
     db.appointment.count({
       where: {
         providerId,
-        status: BookingStatus.CONFIRMED,
+        status: AppointmentStatus.CONFIRMED,
         scheduledAt: {
           gte: new Date(now.toDateString()),
           lt: new Date(new Date(now.toDateString()).getTime() + 24 * 60 * 60 * 1000),
@@ -132,7 +136,7 @@ export async function confirmBooking(bookingId: string) {
     where: {
       id: bookingId,
       providerId,
-      status: BookingStatus.PENDING,
+      status: AppointmentStatus.PENDING,
     },
   });
 
@@ -143,7 +147,7 @@ export async function confirmBooking(bookingId: string) {
   await db.appointment.update({
     where: { id: bookingId },
     data: {
-      status: BookingStatus.CONFIRMED,
+      status: AppointmentStatus.CONFIRMED,
       confirmedAt: new Date(),
     },
   });
@@ -163,7 +167,7 @@ export async function declineBooking(bookingId: string, reason?: string) {
     where: {
       id: bookingId,
       providerId,
-      status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+      status: { in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED] },
     },
   });
 
@@ -174,7 +178,7 @@ export async function declineBooking(bookingId: string, reason?: string) {
   await db.appointment.update({
     where: { id: bookingId },
     data: {
-      status: BookingStatus.CANCELLED,
+      status: AppointmentStatus.CANCELLED,
       cancelledAt: new Date(),
       cancelReason: reason || "Declined by daycare",
     },
@@ -195,7 +199,7 @@ export async function markBookingCompleted(bookingId: string) {
     where: {
       id: bookingId,
       providerId,
-      status: BookingStatus.CONFIRMED,
+      status: AppointmentStatus.CONFIRMED,
     },
   });
 
@@ -206,7 +210,7 @@ export async function markBookingCompleted(bookingId: string) {
   await db.appointment.update({
     where: { id: bookingId },
     data: {
-      status: BookingStatus.COMPLETED,
+      status: AppointmentStatus.COMPLETED,
     },
   });
 
@@ -225,7 +229,7 @@ export async function markBookingNoShow(bookingId: string) {
     where: {
       id: bookingId,
       providerId,
-      status: BookingStatus.CONFIRMED,
+      status: AppointmentStatus.CONFIRMED,
     },
   });
 
@@ -236,7 +240,7 @@ export async function markBookingNoShow(bookingId: string) {
   await db.appointment.update({
     where: { id: bookingId },
     data: {
-      status: BookingStatus.NO_SHOW,
+      status: AppointmentStatus.NO_SHOW,
     },
   });
 

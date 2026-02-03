@@ -3,6 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { AppointmentStatus } from "@prisma/client";
+
+// Map filter to AppointmentStatus
+const filterToStatus: Record<string, AppointmentStatus> = {
+  pending: AppointmentStatus.PENDING,
+  active: AppointmentStatus.CONFIRMED,
+  completed: AppointmentStatus.COMPLETED,
+  cancelled: AppointmentStatus.CANCELLED,
+};
 
 export type PortalEnrollmentFilter = "pending" | "active" | "completed" | "cancelled";
 
@@ -34,7 +43,7 @@ async function getOwnerDaycareId(): Promise<string | null> {
   const session = await auth();
   if (!session?.user) return null;
 
-  if (session.user.role !== "DAYCARE_OWNER" && session.user.role !== "DAYCARE_STAFF") {
+  if (session.user.role !== "PROVIDER" && session.user.role !== "CLINIC_STAFF") {
     return null;
   }
 
@@ -57,44 +66,57 @@ export async function getPortalEnrollments(
   const enrollments = await db.appointment.findMany({
     where: {
       providerId,
-      status: filter,
+      status: filterToStatus[filter] || AppointmentStatus.PENDING,
     },
     include: {
-      child: {
-        include: {
-          parent: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              phone: true,
-            },
-          },
+      familyMember: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          dateOfBirth: true,
+        },
+      },
+      patient: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          phone: true,
         },
       },
     },
     orderBy: [
-      { startDate: filter === "completed" || filter === "cancelled" ? "desc" : "asc" },
+      { scheduledAt: filter === "completed" || filter === "cancelled" ? "desc" : "asc" },
       { createdAt: "desc" },
     ],
   });
 
+  // Map Appointment model to legacy PortalEnrollment interface
+  // TODO: Refactor for medical platform (enrollments not applicable)
   return enrollments.map((e) => ({
     id: e.id,
-    startDate: e.startDate,
-    endDate: e.endDate,
+    startDate: e.scheduledAt, // Use scheduledAt as startDate
+    endDate: null, // Not applicable
     status: e.status,
-    schedule: e.schedule,
-    monthlyRate: Number(e.monthlyRate),
+    schedule: "appointment", // Placeholder
+    monthlyRate: 0, // Not applicable for appointments
     notes: e.notes,
     createdAt: e.createdAt,
-    child: {
-      id: e.child.id,
-      firstName: e.child.firstName,
-      lastName: e.child.lastName,
-      dateOfBirth: e.child.dateOfBirth,
-      parent: e.child.parent,
+    child: e.familyMember ? {
+      id: e.familyMember.id,
+      firstName: e.familyMember.firstName,
+      lastName: e.familyMember.lastName,
+      dateOfBirth: e.familyMember.dateOfBirth,
+      parent: e.patient,
+    } : {
+      // If no familyMember, use patient info
+      id: e.patient.id,
+      firstName: e.patient.firstName,
+      lastName: e.patient.lastName,
+      dateOfBirth: new Date(), // Placeholder
+      parent: e.patient,
     },
   }));
 }
@@ -107,16 +129,16 @@ export async function getPortalEnrollmentStats() {
 
   const [pending, active, completed, cancelled] = await Promise.all([
     db.appointment.count({
-      where: { providerId, status: "pending" },
+      where: { providerId, status: AppointmentStatus.PENDING },
     }),
     db.appointment.count({
-      where: { providerId, status: "active" },
+      where: { providerId, status: AppointmentStatus.CONFIRMED },
     }),
     db.appointment.count({
-      where: { providerId, status: "completed" },
+      where: { providerId, status: AppointmentStatus.COMPLETED },
     }),
     db.appointment.count({
-      where: { providerId, status: "cancelled" },
+      where: { providerId, status: AppointmentStatus.CANCELLED },
     }),
   ]);
 
@@ -133,7 +155,7 @@ export async function approveEnrollment(enrollmentId: string) {
     where: {
       id: enrollmentId,
       providerId,
-      status: "pending",
+      status: AppointmentStatus.PENDING,
     },
   });
 
@@ -143,7 +165,7 @@ export async function approveEnrollment(enrollmentId: string) {
 
   await db.appointment.update({
     where: { id: enrollmentId },
-    data: { status: "active" },
+    data: { status: AppointmentStatus.CONFIRMED },
   });
 
   revalidatePath("/portal/enrollments");
@@ -160,7 +182,7 @@ export async function declineEnrollment(enrollmentId: string, reason?: string) {
     where: {
       id: enrollmentId,
       providerId,
-      status: { in: ["pending", "active"] },
+      status: { in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED] },
     },
   });
 
@@ -171,7 +193,7 @@ export async function declineEnrollment(enrollmentId: string, reason?: string) {
   await db.appointment.update({
     where: { id: enrollmentId },
     data: {
-      status: "cancelled",
+      status: AppointmentStatus.CANCELLED,
       notes: reason ? `${enrollment.notes || ""}\n\nCancellation reason: ${reason}`.trim() : enrollment.notes,
     },
   });
@@ -190,7 +212,7 @@ export async function completeEnrollment(enrollmentId: string) {
     where: {
       id: enrollmentId,
       providerId,
-      status: "active",
+      status: AppointmentStatus.CONFIRMED,
     },
   });
 
@@ -201,8 +223,7 @@ export async function completeEnrollment(enrollmentId: string) {
   await db.appointment.update({
     where: { id: enrollmentId },
     data: {
-      status: "completed",
-      endDate: new Date(),
+      status: AppointmentStatus.COMPLETED,
     },
   });
 

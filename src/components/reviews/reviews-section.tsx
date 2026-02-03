@@ -73,7 +73,7 @@ export function ReviewsSection({
         </div>
 
         {canReview ? (
-          <ReviewForm daycareId={entityId} daycareName={entityName} />
+          <ReviewForm providerId={entityId} providerName={entityName} />
         ) : canReviewReason === "not_logged_in" ? (
           <Button asChild>
             <Link href={`/login?callbackUrl=/provider/${entitySlug}`}>

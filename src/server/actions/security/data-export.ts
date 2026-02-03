@@ -230,7 +230,7 @@ async function gatherUserData(userId: string) {
       dateOfBirth: true,
       gender: true,
       allergies: true,
-      specialNeeds: true,
+      conditions: true,
       notes: true,
       createdAt: true,
     },
@@ -239,10 +239,10 @@ async function gatherUserData(userId: string) {
   const bookings = await db.appointment.findMany({
     where: { patientId: userId },
     include: {
-      daycare: {
+      provider: {
         select: { name: true, address: true },
       },
-      child: {
+      familyMember: {
         select: { firstName: true, lastName: true },
       },
     },
@@ -251,7 +251,7 @@ async function gatherUserData(userId: string) {
   const reviews = await db.review.findMany({
     where: { userId },
     include: {
-      daycare: {
+      provider: {
         select: { name: true },
       },
     },
@@ -262,7 +262,7 @@ async function gatherUserData(userId: string) {
     include: {
       thread: {
         select: {
-          daycare: { select: { name: true } },
+          provider: { select: { name: true } },
         },
       },
     },
@@ -271,7 +271,7 @@ async function gatherUserData(userId: string) {
   const favorites = await db.favorite.findMany({
     where: { userId },
     include: {
-      daycare: {
+      provider: {
         select: { name: true, address: true },
       },
     },
@@ -309,11 +309,11 @@ async function gatherUserData(userId: string) {
       id: m.id,
       content: m.content,
       createdAt: m.createdAt,
-      daycareName: m.thread?.daycare?.name,
+      providerName: m.thread?.provider?.name,
     })),
     favorites: favorites.map((f) => ({
-      daycareName: f.daycare.name,
-      daycareAddress: f.daycare.address,
+      providerName: f.provider.name,
+      providerAddress: f.provider.address,
       addedAt: f.createdAt,
     })),
     savedSearches,

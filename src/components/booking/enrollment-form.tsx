@@ -33,15 +33,15 @@ interface Program {
 }
 
 interface EnrollmentFormProps {
-  daycareId: string;
-  daycareName: string;
+  providerId: string;
+  providerName: string;
   programs: Program[];
   childProfiles: Child[];
 }
 
 export function EnrollmentForm({
-  daycareId,
-  daycareName,
+  providerId,
+  providerName,
   programs,
   childProfiles,
 }: EnrollmentFormProps) {
@@ -69,8 +69,8 @@ export function EnrollmentForm({
     }
 
     const input: EnrollmentInput = {
-      daycareId,
-      childId: selectedChildId,
+      providerId,
+      familyMemberId: selectedChildId,
       programId: selectedProgramId || undefined,
       schedule: selectedSchedule,
       desiredStartDate,
@@ -212,8 +212,8 @@ export function EnrollmentForm({
         <h4 className="font-semibold">Enrollment Summary</h4>
         <div className="mt-2 space-y-1 text-sm">
           <p>
-            <span className="text-muted-foreground">Daycare:</span>{" "}
-            {daycareName}
+            <span className="text-muted-foreground">Provider:</span>{" "}
+            {providerName}
           </p>
           <p>
             <span className="text-muted-foreground">Child:</span>{" "}
@@ -266,7 +266,7 @@ export function EnrollmentForm({
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
-        Your enrollment request will be reviewed by {daycareName}. They will
+        Your enrollment request will be reviewed by {providerName}. They will
         contact you to discuss next steps and availability.
       </p>
     </form>

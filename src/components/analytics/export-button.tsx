@@ -7,14 +7,14 @@ import { exportAnalyticsCSV } from "@/server/actions/analytics";
 import { toast } from "sonner";
 
 interface ExportAnalyticsButtonProps {
-  type: "platform" | "daycare";
-  daycareId?: string;
+  type: "platform" | "provider";
+  providerId?: string;
   days?: number;
 }
 
 export function ExportAnalyticsButton({
   type,
-  daycareId,
+  providerId,
   days = 30,
 }: ExportAnalyticsButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +22,7 @@ export function ExportAnalyticsButton({
   async function handleExport() {
     setIsLoading(true);
     try {
-      const result = await exportAnalyticsCSV(type, daycareId, days);
+      const result = await exportAnalyticsCSV(type, providerId, days);
 
       if (result.success && result.csv) {
         // Create blob and download

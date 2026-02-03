@@ -18,14 +18,14 @@ async function requireDaycareOwner() {
       userId: session.user.id,
       role: { in: ["owner", "manager"] },
     },
-    include: { daycare: true },
+    include: { provider: true },
   });
 
   if (!providerStaff) {
     throw new Error("No daycare found");
   }
 
-  return { user: session.user, daycare: providerStaff.daycare };
+  return { user: session.user, daycare: providerStaff.provider };
 }
 
 export async function getDaycare() {
@@ -35,8 +35,8 @@ export async function getDaycare() {
     where: { id: daycare.id },
     include: {
       photos: { orderBy: { order: "asc" } },
-      programs: true,
-      amenities: { include: { amenity: true } },
+      services: true,
+      facilities: { include: { facility: true } },
       schedule: true,
     },
   });
@@ -47,6 +47,7 @@ export async function getDaycare() {
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   description: z.string().optional(),
+  specialty: z.string().optional(),
   email: z.string().email("Invalid email"),
   phone: z.string().min(10, "Invalid phone number"),
   website: z.string().url().optional().or(z.literal("")),
@@ -54,27 +55,25 @@ const profileSchema = z.object({
   city: z.string().min(2, "City is required"),
   state: z.string().min(2, "State is required"),
   zipCode: z.string().min(5, "Zip code is required"),
-  capacity: z.number().min(1, "Capacity must be at least 1"),
-  minAge: z.number().min(0, "Min age must be at least 0"),
-  maxAge: z.number().min(1, "Max age must be at least 1"),
 });
 
-const createDaycareSchema = z.object({
+const createProviderSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   description: z.string().optional(),
+  specialty: z.string().optional(),
   email: z.string().email("Invalid email"),
   phone: z.string().min(10, "Invalid phone number"),
   address: z.string().min(5, "Address is required"),
   city: z.string().min(2, "City is required"),
   state: z.string().min(2, "State is required"),
   zipCode: z.string().min(5, "Zip code is required"),
-  capacity: z.number().min(1, "Capacity must be at least 1"),
-  minAge: z.number().min(0, "Min age must be at least 0"),
-  maxAge: z.number().min(1, "Max age must be at least 1"),
-  openingTime: z.string().default("07:00"),
-  closingTime: z.string().default("18:00"),
-  pricePerMonth: z.number().min(0, "Price must be positive"),
+  openingTime: z.string().default("09:00"),
+  closingTime: z.string().default("17:00"),
+  consultationFee: z.number().min(0, "Fee must be positive").optional(),
 });
+
+/** @deprecated Use createProviderSchema */
+const createDaycareSchema = createProviderSchema;
 
 export async function createDaycare(data: z.infer<typeof createDaycareSchema>) {
   const session = await auth();
@@ -110,25 +109,23 @@ export async function createDaycare(data: z.infer<typeof createDaycareSchema>) {
 
     // Create daycare and staff record in transaction
     await db.$transaction(async (tx) => {
-      const daycare = await tx.daycare.create({
+      const daycare = await tx.provider.create({
         data: {
           name: validated.name,
           slug,
           description: validated.description || null,
+          specialty: validated.specialty || null,
           email: validated.email,
           phone: validated.phone,
           address: validated.address,
           city: validated.city,
           state: validated.state,
           zipCode: validated.zipCode,
-          capacity: validated.capacity,
-          minAge: validated.minAge,
-          maxAge: validated.maxAge,
           openingTime: validated.openingTime,
           closingTime: validated.closingTime,
-          pricePerMonth: validated.pricePerMonth,
+          consultationFee: validated.consultationFee || null,
           // TODO: Implement geocoding to convert address to coordinates
-          // Currently using placeholder (0,0) - daycares won't appear in location-based search
+          // Currently using placeholder (0,0) - providers won't appear in location-based search
           // until coordinates are updated via geocoding service (e.g., Mapbox, Google Geocoding API)
           latitude: 0,
           longitude: 0,
@@ -146,10 +143,10 @@ export async function createDaycare(data: z.infer<typeof createDaycareSchema>) {
       });
 
       // Update user role if needed
-      if (session.user.role !== "DAYCARE_OWNER") {
+      if (session.user.role !== "PROVIDER") {
         await tx.user.update({
           where: { id: session.user.id },
-          data: { role: "DAYCARE_OWNER" },
+          data: { role: "PROVIDER" },
         });
       }
     });
@@ -187,9 +184,6 @@ export async function updateDaycareProfile(data: z.infer<typeof profileSchema>) 
         city: validated.city,
         state: validated.state,
         zipCode: validated.zipCode,
-        capacity: validated.capacity,
-        minAge: validated.minAge,
-        maxAge: validated.maxAge,
       },
     });
 

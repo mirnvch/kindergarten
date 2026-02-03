@@ -23,14 +23,14 @@ export default async function BillingPage() {
     redirect("/login");
   }
 
-  // Get daycare with subscription
+  // Get provider with subscription
   const providerStaff = await db.providerStaff.findFirst({
     where: {
       userId: session.user.id,
       role: "owner",
     },
     include: {
-      daycare: {
+      provider: {
         include: {
           subscription: true,
         },
@@ -42,7 +42,7 @@ export default async function BillingPage() {
     redirect("/portal");
   }
 
-  const daycare = providerStaff.daycare;
+  const daycare = providerStaff.provider;
   const subscription = daycare.subscription;
   const currentPlan = subscription?.plan || "FREE";
   const planData = PRICING_PLANS[currentPlan];

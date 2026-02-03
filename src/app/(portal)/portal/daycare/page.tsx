@@ -16,8 +16,8 @@ export const metadata: Metadata = {
   description: "Manage your daycare profile",
 };
 
-async function getAllAmenities() {
-  return db.amenity.findMany({
+async function getAllFacilities() {
+  return db.facility.findMany({
     orderBy: [{ category: "asc" }, { name: "asc" }],
   });
 }
@@ -26,12 +26,12 @@ async function getDaycare(userId: string) {
   const providerStaff = await db.providerStaff.findFirst({
     where: { userId, role: { in: ["owner", "manager"] } },
     include: {
-      daycare: {
+      provider: {
         include: {
           photos: { orderBy: { order: "asc" } },
-          programs: { orderBy: { ageMin: "asc" } },
+          services: { orderBy: { name: "asc" } },
           schedule: { orderBy: { dayOfWeek: "asc" } },
-          amenities: { include: { amenity: true } },
+          facilities: { include: { facility: true } },
           staff: {
             include: {
               user: {
@@ -51,7 +51,7 @@ async function getDaycare(userId: string) {
     },
   });
 
-  return providerStaff?.daycare;
+  return providerStaff?.provider;
 }
 
 export default async function DaycarePage() {
@@ -60,9 +60,9 @@ export default async function DaycarePage() {
     redirect("/login");
   }
 
-  const [daycare, allAmenities] = await Promise.all([
+  const [daycare, allFacilities] = await Promise.all([
     getDaycare(session.user.id),
-    getAllAmenities(),
+    getAllFacilities(),
   ]);
 
   if (!daycare) {
@@ -98,7 +98,7 @@ export default async function DaycarePage() {
         </TabsContent>
 
         <TabsContent value="programs">
-          <ProgramsManager programs={daycare.programs} />
+          <ProgramsManager services={daycare.services} />
         </TabsContent>
 
         <TabsContent value="schedule">
@@ -108,18 +108,18 @@ export default async function DaycarePage() {
         <TabsContent value="pricing">
           <PricingManager
             pricing={{
-              pricePerMonth: daycare.pricePerMonth,
-              pricePerWeek: daycare.pricePerWeek,
-              pricePerDay: daycare.pricePerDay,
-              registrationFee: daycare.registrationFee,
+              consultationFee: daycare.consultationFee,
+              telehealthFee: daycare.telehealthFee,
+              acceptsUninsured: daycare.acceptsUninsured,
+              slidingScalePricing: daycare.slidingScalePricing,
             }}
           />
         </TabsContent>
 
         <TabsContent value="amenities">
           <AmenitiesManager
-            allAmenities={allAmenities}
-            selectedAmenityIds={daycare.amenities.map((a) => a.amenityId)}
+            allAmenities={allFacilities}
+            selectedAmenityIds={daycare.facilities.map((f) => f.facilityId)}
           />
         </TabsContent>
 

@@ -50,18 +50,23 @@ interface PortalBookingCardProps {
     duration: number | null;
     notes: string | null;
     createdAt: Date;
-    parent: {
+    patient: {
       id: string;
       firstName: string;
       lastName: string;
       email: string;
       phone: string | null;
     };
-    child: {
+    familyMember: {
       id: string;
       firstName: string;
       lastName: string;
       dateOfBirth: Date;
+    } | null;
+    service?: {
+      id: string;
+      name: string;
+      duration: number;
     } | null;
   };
   showActions?: boolean;
@@ -89,8 +94,8 @@ export function PortalBookingCard({
   const isTour = booking.type === "TOUR";
   const status = statusConfig[booking.status] || statusConfig.PENDING;
 
-  const childAge = booking.child
-    ? calculateAge(new Date(booking.child.dateOfBirth))
+  const childAge = booking.familyMember
+    ? calculateAge(new Date(booking.familyMember.dateOfBirth))
     : null;
 
   const childAgeText = childAge
@@ -170,34 +175,34 @@ export function PortalBookingCard({
               {/* Parent info */}
               <div>
                 <p className="font-semibold">
-                  {booking.parent.firstName} {booking.parent.lastName}
+                  {booking.patient.firstName} {booking.patient.lastName}
                 </p>
                 <div className="mt-1 flex flex-wrap gap-3 text-sm text-muted-foreground">
                   <a
-                    href={`mailto:${booking.parent.email}`}
+                    href={`mailto:${booking.patient.email}`}
                     className="flex items-center gap-1 hover:text-primary"
                   >
                     <Mail className="h-4 w-4" />
-                    {booking.parent.email}
+                    {booking.patient.email}
                   </a>
-                  {booking.parent.phone && (
+                  {booking.patient.phone && (
                     <a
-                      href={`tel:${booking.parent.phone}`}
+                      href={`tel:${booking.patient.phone}`}
                       className="flex items-center gap-1 hover:text-primary"
                     >
                       <Phone className="h-4 w-4" />
-                      {booking.parent.phone}
+                      {booking.patient.phone}
                     </a>
                   )}
                 </div>
               </div>
 
               {/* Child info */}
-              {booking.child && (
+              {booking.familyMember && (
                 <div className="flex items-center gap-2 text-sm">
                   <Baby className="h-4 w-4 text-muted-foreground" />
                   <span>
-                    {booking.child.firstName} {booking.child.lastName}
+                    {booking.familyMember.firstName} {booking.familyMember.lastName}
                     {childAgeText && (
                       <span className="text-muted-foreground">
                         {" "}

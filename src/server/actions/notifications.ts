@@ -171,9 +171,9 @@ export async function sendBookingConfirmation(bookingId: string) {
   const booking = await db.appointment.findUnique({
     where: { id: bookingId },
     include: {
-      parent: true,
-      daycare: true,
-      child: true,
+      patient: true,
+      provider: true,
+      familyMember: true,
     },
   });
 
@@ -198,23 +198,23 @@ export async function sendBookingConfirmation(bookingId: string) {
     userId: booking.patientId,
     type: "booking_confirmed",
     title: "Booking Confirmed",
-    body: `Your tour at ${booking.daycare.name} on ${dateStr} has been confirmed.`,
-    data: { bookingId: booking.id, daycareId: booking.daycareId },
+    body: `Your tour at ${booking.provider.name} on ${dateStr} has been confirmed.`,
+    data: { bookingId: booking.id, daycareId: booking.providerId },
   });
 
   // Send email
   const html = bookingConfirmationEmail({
-    parentName: booking.parent.firstName || "Parent",
-    daycareName: booking.daycare.name,
+    parentName: booking.patient.firstName || "Parent",
+    daycareName: booking.provider.name,
     date: dateStr,
     time: timeStr,
-    childName: booking.child?.firstName || "your child",
-    address: booking.daycare.address,
+    childName: booking.familyMember?.firstName || "your child",
+    address: booking.provider.address,
   });
 
   return sendEmail({
-    to: booking.parent.email,
-    subject: `Booking Confirmed - ${booking.daycare.name}`,
+    to: booking.patient.email,
+    subject: `Booking Confirmed - ${booking.provider.name}`,
     html,
   });
 }
@@ -223,9 +223,9 @@ export async function sendBookingReminder(bookingId: string) {
   const booking = await db.appointment.findUnique({
     where: { id: bookingId },
     include: {
-      parent: true,
-      daycare: true,
-      child: true,
+      patient: true,
+      provider: true,
+      familyMember: true,
     },
   });
 
@@ -250,23 +250,23 @@ export async function sendBookingReminder(bookingId: string) {
     userId: booking.patientId,
     type: "booking_reminder",
     title: "Tour Tomorrow",
-    body: `Reminder: Your tour at ${booking.daycare.name} is tomorrow at ${timeStr}.`,
-    data: { bookingId: booking.id, daycareId: booking.daycareId },
+    body: `Reminder: Your tour at ${booking.provider.name} is tomorrow at ${timeStr}.`,
+    data: { bookingId: booking.id, daycareId: booking.providerId },
   });
 
   // Send email
   const html = bookingReminderEmail({
-    parentName: booking.parent.firstName || "Parent",
-    daycareName: booking.daycare.name,
+    parentName: booking.patient.firstName || "Parent",
+    daycareName: booking.provider.name,
     date: dateStr,
     time: timeStr,
-    childName: booking.child?.firstName || "your child",
-    address: booking.daycare.address,
+    childName: booking.familyMember?.firstName || "your child",
+    address: booking.provider.address,
   });
 
   return sendEmail({
-    to: booking.parent.email,
-    subject: `Reminder: Tour Tomorrow at ${booking.daycare.name}`,
+    to: booking.patient.email,
+    subject: `Reminder: Tour Tomorrow at ${booking.provider.name}`,
     html,
   });
 }
@@ -369,7 +369,7 @@ export async function sendReviewResponseNotification(reviewId: string) {
     where: { id: reviewId },
     include: {
       user: true,
-      daycare: true,
+      provider: true,
     },
   });
 
@@ -382,8 +382,8 @@ export async function sendReviewResponseNotification(reviewId: string) {
     userId: review.userId,
     type: "review_response",
     title: "Response to Your Review",
-    body: `${review.daycare.name} responded to your review.`,
-    data: { reviewId: review.id, daycareId: review.daycareId },
+    body: `${review.provider.name} responded to your review.`,
+    data: { reviewId: review.id, daycareId: review.providerId },
   });
 
   // Send email
@@ -394,14 +394,14 @@ export async function sendReviewResponseNotification(reviewId: string) {
 
   const html = reviewResponseEmail({
     parentName: review.user.firstName || "Parent",
-    daycareName: review.daycare.name,
+    daycareName: review.provider.name,
     responsePreview: preview,
     reviewId: review.id,
   });
 
   return sendEmail({
     to: review.user.email,
-    subject: `${review.daycare.name} responded to your review`,
+    subject: `${review.provider.name} responded to your review`,
     html,
   });
 }

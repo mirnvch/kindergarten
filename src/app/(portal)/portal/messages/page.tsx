@@ -23,13 +23,13 @@ export default async function PortalMessagesPage() {
     redirect("/login");
   }
 
-  // Get daycare
+  // Get provider
   const providerStaff = await db.providerStaff.findFirst({
     where: {
       userId: session.user.id,
       role: { in: ["owner", "manager"] },
     },
-    include: { daycare: true },
+    include: { provider: true },
   });
 
   if (!providerStaff) {
@@ -39,7 +39,7 @@ export default async function PortalMessagesPage() {
   // Get message threads
   const threads = await db.messageThread.findMany({
     where: {
-      providerId: providerStaff.daycare.id,
+      providerId: providerStaff.provider.id,
       isArchived: false,
     },
     include: {
@@ -56,19 +56,19 @@ export default async function PortalMessagesPage() {
     orderBy: { lastMessageAt: "desc" },
   });
 
-  // Get parent info for each thread
-  const parentIds = threads.map((t) => t.parentId);
-  const parents = await db.user.findMany({
-    where: { id: { in: parentIds } },
+  // Get patient info for each thread
+  const patientIds = threads.map((t) => t.patientId);
+  const patients = await db.user.findMany({
+    where: { id: { in: patientIds } },
     select: { id: true, firstName: true, lastName: true, avatarUrl: true },
   });
-  const parentMap = new Map(parents.map((p) => [p.id, p]));
+  const patientMap = new Map(patients.map((p) => [p.id, p]));
 
   // Count unread messages
   const unreadCounts = await db.message.groupBy({
     by: ["threadId"],
     where: {
-      thread: { providerId: providerStaff.daycare.id },
+      thread: { providerId: providerStaff.provider.id },
       readAt: null,
       senderId: { not: session.user.id },
     },
@@ -114,7 +114,7 @@ export default async function PortalMessagesPage() {
           ) : (
             <div className="divide-y">
               {threads.map((thread) => {
-                const parent = parentMap.get(thread.parentId);
+                const patient = patientMap.get(thread.patientId);
                 const lastMessage = thread.messages[0];
                 const unread = unreadMap.get(thread.id) || 0;
 
@@ -126,13 +126,13 @@ export default async function PortalMessagesPage() {
                   >
                     <Avatar>
                       <AvatarFallback>
-                        {parent ? getInitials(parent.firstName, parent.lastName) : "?"}
+                        {patient ? getInitials(patient.firstName, patient.lastName) : "?"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-medium truncate">
-                          {parent ? `${parent.firstName} ${parent.lastName}` : "Unknown"}
+                          {patient ? `${patient.firstName} ${patient.lastName}` : "Unknown"}
                         </p>
                         {unread > 0 && (
                           <Badge variant="default" className="h-5 px-1.5">

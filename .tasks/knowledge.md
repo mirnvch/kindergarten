@@ -239,6 +239,33 @@ dev branch → Test on Vercel Preview → main branch → Production
 
 ## Session Notes
 
+### 2026-02-03 (Session 21 — DocConnect Migration Phase 4 COMPLETE)
+- **Phase 4: Fix TypeScript build errors — COMPLETED**
+- **Build прошёл успешно!** `npm run build` без ошибок TypeScript
+- **Исправленные файлы:**
+  - `src/server/actions/portal/daycare.ts` — удалены capacity/minAge/maxAge из profileSchema
+  - `src/server/actions/portal/pricing.ts` — pricePerMonth → consultationFee/telehealthFee
+  - `src/server/actions/portal/programs.ts` — program → service, ageMin/ageMax → duration
+  - `src/components/portal/pricing-manager.tsx` — полностью переписан для medical pricing
+  - `src/components/portal/programs-manager.tsx` — переписан как ServicesManager
+  - `src/app/(portal)/portal/daycare/page.tsx` — programs → services props
+  - `src/server/actions/security/account-deletion.ts` — child → familyMember
+  - `src/server/actions/security/data-export.ts` — daycare → provider, child → familyMember
+  - `src/server/actions/stripe.ts` — daycare → provider
+  - `src/server/services/booking.service.ts` — BookingStatus → AppointmentStatus, daycareId → providerId
+- **Изменения терминологии (завершены):**
+  - `BookingStatus` → `AppointmentStatus`
+  - `BookingType.TOUR` → `AppointmentType.IN_PERSON`
+  - `DaycareStatus` → `ProviderStatus`
+  - `daycareId` → `providerId`
+  - `childId` → `familyMemberId`
+  - `isTelemedicine` → `isTelehealth` (в соответствии с Prisma schema)
+- **Runtime ошибки (Prisma):** Таблицы Provider, Appointment не существуют в БД — нужна миграция
+- **Следующее:**
+  - Запустить `npx prisma db push` для миграции БД
+  - Phase 5: Telemedicine Infrastructure
+  - Phase 6: Seed Data
+
 ### 2026-02-02 (Session 20 — DocConnect Migration Phase 4)
 - **Миграция ToddlerHQ → DocConnect — IN PROGRESS**
 - **Выполнено в предыдущей сессии:**

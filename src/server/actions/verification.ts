@@ -29,7 +29,7 @@ export type VerificationRequestWithDocs = {
     mimeType: string | null;
     createdAt: Date;
   }[];
-  daycare: {
+  provider: {
     id: string;
     name: string;
     slug: string;
@@ -213,7 +213,7 @@ export async function getVerificationRequests(options?: {
       skip,
       take: limit,
       include: {
-        daycare: {
+        provider: {
           select: {
             id: true,
             name: true,
@@ -254,7 +254,7 @@ export async function getVerificationRequest(requestId: string) {
   const request = await db.verificationRequest.findUnique({
     where: { id: requestId },
     include: {
-      daycare: {
+      provider: {
         select: {
           id: true,
           name: true,
@@ -333,7 +333,7 @@ export async function reviewVerificationRequest(
 
   const request = await db.verificationRequest.findUnique({
     where: { id: requestId },
-    include: { daycare: true },
+    include: { provider: true },
   });
 
   if (!request) {
@@ -361,9 +361,9 @@ export async function reviewVerificationRequest(
       },
     });
 
-    // If approved, update daycare's isVerified status
+    // If approved, update provider's isVerified status
     if (status === "APPROVED") {
-      await tx.daycare.update({
+      await tx.provider.update({
         where: { id: request.providerId },
         data: { isVerified: true },
       });
@@ -403,10 +403,10 @@ export async function revokeVerification(providerId: string, reason: string) {
     return { success: false, error: "Daycare is not verified" };
   }
 
-  // Create a revocation record and update daycare
+  // Create a revocation record and update provider
   await db.$transaction(async (tx) => {
-    // Update daycare
-    await tx.daycare.update({
+    // Update provider
+    await tx.provider.update({
       where: { id: providerId },
       data: { isVerified: false },
     });

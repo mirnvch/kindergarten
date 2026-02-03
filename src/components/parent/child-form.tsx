@@ -32,7 +32,7 @@ const formSchema = z.object({
   lastName: z.string().min(1, "Last name is required").max(50),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
   gender: z.string().optional(),
-  relationship: z.string().default("child"),
+  relationship: z.string().min(1),
   allergies: z.string().optional(),
   medications: z.string().optional(),
   conditions: z.string().optional(),

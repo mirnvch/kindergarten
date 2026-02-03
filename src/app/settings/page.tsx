@@ -10,10 +10,10 @@ export default async function SettingsRedirectPage() {
 
   // Redirect based on user role
   switch (session.user.role) {
-    case "PARENT":
+    case "PATIENT":
       redirect("/dashboard/settings");
-    case "DAYCARE_OWNER":
-    case "DAYCARE_STAFF":
+    case "PROVIDER":
+    case "CLINIC_STAFF":
       redirect("/portal/settings");
     case "ADMIN":
       redirect("/admin/settings");

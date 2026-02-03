@@ -23,9 +23,14 @@ interface DaycareProfileFormProps {
     city: string;
     state: string;
     zipCode: string;
-    capacity: number;
-    minAge: number;
-    maxAge: number;
+    // These fields are optional for healthcare providers
+    capacity?: number;
+    minAge?: number;
+    maxAge?: number;
+    // Healthcare provider fields
+    specialty?: string | null;
+    credentials?: string | null;
+    acceptingNewPatients?: boolean;
   };
 }
 
@@ -42,9 +47,9 @@ export function DaycareProfileForm({ daycare }: DaycareProfileFormProps) {
     city: daycare.city,
     state: daycare.state,
     zipCode: daycare.zipCode,
-    capacity: daycare.capacity,
-    minAge: daycare.minAge,
-    maxAge: daycare.maxAge,
+    capacity: daycare.capacity ?? 0,
+    minAge: daycare.minAge ?? 0,
+    maxAge: daycare.maxAge ?? 0,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

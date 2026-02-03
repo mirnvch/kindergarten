@@ -108,18 +108,18 @@ export async function POST(req: Request) {
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  const daycareId = session.metadata?.daycareId;
+  const providerId = session.metadata?.providerId;
   const plan = session.metadata?.plan as SubscriptionPlan | undefined;
 
-  if (!daycareId || !plan) {
+  if (!providerId || !plan) {
     console.error("Missing metadata in checkout session");
     return;
   }
 
   await db.subscription.upsert({
-    where: { daycareId },
+    where: { providerId },
     create: {
-      daycareId,
+      providerId,
       plan,
       status: "ACTIVE",
       stripeCustomerId: session.customer as string,
@@ -144,8 +144,8 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
 
   if (!existingSubscription) {
     // Check if this is a new subscription with metadata
-    const daycareId = subscription.metadata?.daycareId;
-    if (!daycareId) {
+    const providerId = subscription.metadata?.providerId;
+    if (!providerId) {
       // Throw error so Stripe retries - subscription might not be created yet
       throw new Error(`Subscription not found: ${subscription.id}`);
     }
@@ -208,7 +208,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   if (subscription) {
     await db.payment.create({
       data: {
-        daycareId: subscription.daycareId,
+        providerId: subscription.providerId,
         amount: (invoiceAny.amount_paid || 0) / 100, // Convert from cents
         status: "SUCCEEDED",
         type: "subscription",
@@ -231,11 +231,11 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
 }
 
 async function handleAccountUpdated(account: Stripe.Account) {
-  const daycareId = account.metadata?.daycareId;
+  const providerId = account.metadata?.providerId;
 
-  if (daycareId) {
+  if (providerId) {
     await db.provider.update({
-      where: { id: daycareId },
+      where: { id: providerId },
       data: {
         stripeOnboarded: account.charges_enabled && account.payouts_enabled,
       },

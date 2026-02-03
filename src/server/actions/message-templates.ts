@@ -102,7 +102,7 @@ export async function updateMessageTemplate(input: z.infer<typeof updateTemplate
   const template = await db.messageTemplate.findUnique({
     where: { id: validated.id },
     include: {
-      daycare: {
+      provider: {
         include: {
           staff: {
             where: { userId: session.user.id },
@@ -117,7 +117,7 @@ export async function updateMessageTemplate(input: z.infer<typeof updateTemplate
   }
 
   const hasAccess =
-    template.daycare.staff.some((s) => ["owner", "manager"].includes(s.role)) ||
+    template.provider.staff.some((s) => ["owner", "manager"].includes(s.role)) ||
     session.user.role === "ADMIN";
 
   if (!hasAccess) {
@@ -151,7 +151,7 @@ export async function deleteMessageTemplate(id: string) {
   const template = await db.messageTemplate.findUnique({
     where: { id },
     include: {
-      daycare: {
+      provider: {
         include: {
           staff: {
             where: { userId: session.user.id },
@@ -166,7 +166,7 @@ export async function deleteMessageTemplate(id: string) {
   }
 
   const hasAccess =
-    template.daycare.staff.some((s) => ["owner", "manager"].includes(s.role)) ||
+    template.provider.staff.some((s) => ["owner", "manager"].includes(s.role)) ||
     session.user.role === "ADMIN";
 
   if (!hasAccess) {

@@ -14,7 +14,6 @@ import {
   ChevronLeft,
   Stethoscope,
   Video,
-  CreditCard,
   Languages,
 } from "lucide-react";
 

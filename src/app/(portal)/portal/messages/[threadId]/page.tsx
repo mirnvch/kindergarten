@@ -52,7 +52,7 @@ async function getPortalThread(threadId: string, userId: string) {
       providerId: providerStaff.providerId,
     },
     include: {
-      daycare: {
+      provider: {
         select: {
           id: true,
           name: true,
@@ -91,9 +91,9 @@ async function getPortalThread(threadId: string, userId: string) {
 
   if (!thread) return null;
 
-  // Get parent info
-  const parent = await db.user.findUnique({
-    where: { id: thread.parentId },
+  // Get patient info
+  const patient = await db.user.findUnique({
+    where: { id: thread.patientId },
     select: { firstName: true, lastName: true },
   });
 
@@ -113,12 +113,12 @@ async function getPortalThread(threadId: string, userId: string) {
   return {
     id: thread.id,
     subject: thread.subject,
-    parentName: parent ? `${parent.firstName} ${parent.lastName}` : "Parent",
-    daycare: {
-      id: thread.daycare.id,
-      name: thread.daycare.name,
-      slug: thread.daycare.slug,
-      photo: thread.daycare.photos[0]?.url || null,
+    parentName: patient ? `${patient.firstName} ${patient.lastName}` : "Patient",
+    provider: {
+      id: thread.provider.id,
+      name: thread.provider.name,
+      slug: thread.provider.slug,
+      photo: thread.provider.photos[0]?.url || null,
     },
     messages: thread.messages.map((msg) => ({
       id: msg.id,

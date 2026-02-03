@@ -134,7 +134,7 @@ export async function deleteReview(reviewId: string) {
 
     const review = await db.review.findUnique({
       where: { id: result.data.reviewId },
-      select: { id: true, userId: true, daycareId: true, rating: true },
+      select: { id: true, userId: true, providerId: true, rating: true },
     });
 
     if (!review) {
@@ -153,7 +153,7 @@ export async function deleteReview(reviewId: string) {
         entityId: result.data.reviewId,
         oldData: {
           userId: review.userId,
-          daycareId: review.daycareId,
+          providerId: review.providerId,
           rating: review.rating,
         },
       },

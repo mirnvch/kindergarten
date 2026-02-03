@@ -105,8 +105,8 @@ export function WaitlistEntriesList({ entries }: WaitlistEntriesListProps) {
                   <MapPin className="h-3 w-3" />
                   {entity.city}, {entity.state}
                 </span>
-                {"specialty" in entity && entity.specialty && (
-                  <span>{entity.specialty}</span>
+                {entry.provider?.specialty && (
+                  <span>{entry.provider.specialty}</span>
                 )}
                 <span>
                   Joined {format(new Date(entry.createdAt), "MMM d, yyyy")}

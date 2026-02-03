@@ -22,35 +22,40 @@ import { Textarea } from "@/components/ui/textarea";
 import { joinWaitlist } from "@/server/actions/waitlist";
 
 const formSchema = z.object({
-  parentName: z.string().min(1, "Name is required"),
-  parentEmail: z.string().email("Valid email is required"),
-  parentPhone: z.string().optional(),
-  childAge: z.number().min(0, "Age must be positive").max(144, "Age must be under 12 years"),
-  desiredStart: z.string().min(1, "Desired start date is required"),
+  patientName: z.string().min(1, "Name is required"),
+  patientEmail: z.string().email("Valid email is required"),
+  patientPhone: z.string().optional(),
+  desiredDate: z.string().min(1, "Desired date is required"),
+  reasonForVisit: z.string().max(500).optional(),
   notes: z.string().max(500).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 interface WaitlistFormProps {
-  daycareId: string;
-  daycareName: string;
+  providerId: string;
+  providerName: string;
   defaultEmail?: string;
   defaultName?: string;
-  spotsAvailable: number;
-  capacity: number;
-  enrolled: number;
+  // Legacy compatibility (optional)
+  daycareId?: string;
+  daycareName?: string;
+  spotsAvailable?: number;
+  capacity?: number;
+  enrolled?: number;
 }
 
 export function WaitlistForm({
-  daycareId,
-  daycareName,
+  providerId,
+  providerName,
   defaultEmail = "",
   defaultName = "",
-  spotsAvailable,
-  capacity,
-  enrolled,
+  daycareId,
+  daycareName,
 }: WaitlistFormProps) {
+  // Support legacy props
+  const entityId = providerId || daycareId || "";
+  const entityName = providerName || daycareName || "";
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<number | null>(null);
 
@@ -62,18 +67,18 @@ export function WaitlistForm({
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      parentName: defaultName,
-      parentEmail: defaultEmail,
-      parentPhone: "",
-      childAge: 24,
-      desiredStart: "",
+      patientName: defaultName,
+      patientEmail: defaultEmail,
+      patientPhone: "",
+      desiredDate: "",
+      reasonForVisit: "",
       notes: "",
     },
   });
 
   const onSubmit = async (data: FormData) => {
     const result = await joinWaitlist({
-      daycareId,
+      providerId: entityId,
       ...data,
     });
 
@@ -113,8 +118,8 @@ export function WaitlistForm({
                 <div className="text-6xl font-bold text-primary">#{position}</div>
                 <p className="text-muted-foreground">
                   You&apos;ve been added to the waitlist for{" "}
-                  <strong>{daycareName}</strong>. We&apos;ll notify you when a spot
-                  becomes available.
+                  <strong>{entityName}</strong>. We&apos;ll notify you when an
+                  appointment becomes available.
                 </p>
               </div>
             </div>
@@ -127,71 +132,64 @@ export function WaitlistForm({
             <DialogHeader>
               <DialogTitle>Join Waitlist</DialogTitle>
               <DialogDescription>
-                {daycareName} is currently full ({enrolled}/{capacity} spots).
-                Join the waitlist to be notified when a spot opens.
+                Join the waitlist for {entityName} to be notified when an appointment becomes available.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label htmlFor="parentName">Your Name</Label>
+                <Label htmlFor="patientName">Your Name</Label>
                 <Input
-                  id="parentName"
-                  {...register("parentName")}
+                  id="patientName"
+                  {...register("patientName")}
                   placeholder="John Smith"
                 />
-                {errors.parentName && (
-                  <p className="text-sm text-destructive">{errors.parentName.message}</p>
+                {errors.patientName && (
+                  <p className="text-sm text-destructive">{errors.patientName.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="parentEmail">Email</Label>
+                <Label htmlFor="patientEmail">Email</Label>
                 <Input
-                  id="parentEmail"
+                  id="patientEmail"
                   type="email"
-                  {...register("parentEmail")}
+                  {...register("patientEmail")}
                   placeholder="john@example.com"
                 />
-                {errors.parentEmail && (
-                  <p className="text-sm text-destructive">{errors.parentEmail.message}</p>
+                {errors.patientEmail && (
+                  <p className="text-sm text-destructive">{errors.patientEmail.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="parentPhone">Phone (optional)</Label>
+                <Label htmlFor="patientPhone">Phone (optional)</Label>
                 <Input
-                  id="parentPhone"
+                  id="patientPhone"
                   type="tel"
-                  {...register("parentPhone")}
+                  {...register("patientPhone")}
                   placeholder="+1 (555) 123-4567"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="childAge">Child&apos;s Age (months)</Label>
+                <Label htmlFor="reasonForVisit">Reason for Visit (optional)</Label>
                 <Input
-                  id="childAge"
-                  type="number"
-                  {...register("childAge", { valueAsNumber: true })}
-                  placeholder="24"
-                  min={0}
-                  max={144}
+                  id="reasonForVisit"
+                  {...register("reasonForVisit")}
+                  placeholder="Annual checkup, consultation, etc."
                 />
-                {errors.childAge && (
-                  <p className="text-sm text-destructive">{errors.childAge.message}</p>
-                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="desiredStart">Desired Start Date</Label>
+                <Label htmlFor="desiredDate">Desired Appointment Date</Label>
                 <Input
-                  id="desiredStart"
+                  id="desiredDate"
                   type="date"
-                  {...register("desiredStart")}
+                  {...register("desiredDate")}
                   min={new Date().toISOString().split("T")[0]}
                 />
-                {errors.desiredStart && (
-                  <p className="text-sm text-destructive">{errors.desiredStart.message}</p>
+                {errors.desiredDate && (
+                  <p className="text-sm text-destructive">{errors.desiredDate.message}</p>
                 )}
               </div>
 

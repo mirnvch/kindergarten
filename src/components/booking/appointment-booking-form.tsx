@@ -73,7 +73,9 @@ export function AppointmentBookingForm({
       providerId,
       familyMemberId: selectedFamilyMemberId || undefined,
       scheduledAt: scheduledAt.toISOString(),
-      type: appointmentType,
+      isTelemedicine: appointmentType === "TELEMEDICINE",
+      isNewPatient: true,
+      recurrence: "NONE",
       reasonForVisit: reasonForVisit.trim() || undefined,
       notes: notes.trim() || undefined,
     };

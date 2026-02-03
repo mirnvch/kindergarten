@@ -23,14 +23,14 @@ export async function createCheckoutSession(plan: PlanType) {
   // Get the daycare for this user
   const providerStaff = await db.providerStaff.findFirst({
     where: { userId: session.user.id, role: "owner" },
-    include: { daycare: true },
+    include: { provider: true },
   });
 
   if (!providerStaff) {
     return { error: "Daycare not found" };
   }
 
-  const daycare = providerStaff.daycare;
+  const daycare = providerStaff.provider;
 
   // Check if daycare already has a Stripe customer
   let stripeCustomerId: string | null = null;
@@ -93,18 +93,18 @@ export async function createCustomerPortalSession() {
   const providerStaff = await db.providerStaff.findFirst({
     where: { userId: session.user.id, role: "owner" },
     include: {
-      daycare: {
+      provider: {
         include: { subscription: true },
       },
     },
   });
 
-  if (!providerStaff?.daycare.subscription?.stripeCustomerId) {
+  if (!providerStaff?.provider.subscription?.stripeCustomerId) {
     return { error: "No subscription found" };
   }
 
   const portalSession = await stripe.billingPortal.sessions.create({
-    customer: providerStaff.daycare.subscription.stripeCustomerId,
+    customer: providerStaff.provider.subscription.stripeCustomerId,
     return_url: `${process.env.NEXT_PUBLIC_APP_URL}/portal/settings/billing`,
   });
 
@@ -120,7 +120,7 @@ export async function getSubscriptionStatus() {
   const providerStaff = await db.providerStaff.findFirst({
     where: { userId: session.user.id, role: "owner" },
     include: {
-      daycare: {
+      provider: {
         include: { subscription: true },
       },
     },
@@ -130,7 +130,7 @@ export async function getSubscriptionStatus() {
     return null;
   }
 
-  return providerStaff.daycare.subscription;
+  return providerStaff.provider.subscription;
 }
 
 // Stripe Connect for daycare to receive payments
@@ -147,14 +147,14 @@ export async function createConnectAccount() {
 
   const providerStaff = await db.providerStaff.findFirst({
     where: { userId: session.user.id, role: "owner" },
-    include: { daycare: true },
+    include: { provider: true },
   });
 
   if (!providerStaff) {
     return { error: "Daycare not found" };
   }
 
-  const daycare = providerStaff.daycare;
+  const daycare = providerStaff.provider;
 
   // Check if already has a Stripe account
   if (daycare.stripeAccountId) {
@@ -217,15 +217,15 @@ export async function getConnectAccountStatus() {
 
   const providerStaff = await db.providerStaff.findFirst({
     where: { userId: session.user.id, role: "owner" },
-    include: { daycare: true },
+    include: { provider: true },
   });
 
-  if (!providerStaff?.daycare.stripeAccountId) {
+  if (!providerStaff?.provider.stripeAccountId) {
     return { configured: false };
   }
 
   const account = await stripe.accounts.retrieve(
-    providerStaff.daycare.stripeAccountId
+    providerStaff.provider.stripeAccountId
   );
 
   return {

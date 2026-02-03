@@ -23,17 +23,17 @@ export const metadata: Metadata = {
 };
 
 async function getDaycareStats(userId: string) {
-  // Find the daycare owned by this user
+  // Find the provider owned by this user
   const providerStaff = await db.providerStaff.findFirst({
     where: { userId, role: "owner" },
-    include: { daycare: true },
+    include: { provider: true },
   });
 
   if (!providerStaff) {
     return null;
   }
 
-  const providerId = providerStaff.daycare.id;
+  const providerId = providerStaff.provider.id;
 
   // Get stats
   const [
@@ -53,7 +53,7 @@ async function getDaycareStats(userId: string) {
       },
     }),
     db.appointment.count({
-      where: { providerId, status: "ACTIVE" },
+      where: { providerId, status: "CONFIRMED" },
     }),
     db.payment.aggregate({
       where: {
@@ -73,15 +73,16 @@ async function getDaycareStats(userId: string) {
       scheduledAt: { gte: new Date() },
     },
     include: {
-      parent: { select: { firstName: true, lastName: true } },
-      child: { select: { firstName: true } },
+      patient: { select: { firstName: true, lastName: true } },
+      familyMember: { select: { firstName: true } },
+      service: { select: { name: true } },
     },
     orderBy: { scheduledAt: "asc" },
     take: 5,
   });
 
   return {
-    daycare: providerStaff.daycare,
+    daycare: providerStaff.provider,
     stats: {
       pendingBookings,
       unreadMessages,
@@ -176,14 +177,14 @@ export default async function PortalDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Active Enrollments
+              Confirmed Appointments
             </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalEnrollments}</div>
             <p className="text-xs text-muted-foreground">
-              of {daycare.capacity} capacity
+              This month
             </p>
           </CardContent>
         </Card>
@@ -228,11 +229,11 @@ export default async function PortalDashboardPage() {
                   >
                     <div>
                       <p className="font-medium">
-                        {booking.parent.firstName} {booking.parent.lastName}
+                        {booking.patient.firstName} {booking.patient.lastName}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {booking.type === "TOUR" ? "Tour" : "Enrollment"} for{" "}
-                        {booking.child?.firstName || "child"}
+                        {booking.type === "TELEMEDICINE" ? "Telehealth" : "In-Person"} for{" "}
+                        {booking.familyMember?.firstName || "patient"}
                       </p>
                     </div>
                     <div className="text-right">

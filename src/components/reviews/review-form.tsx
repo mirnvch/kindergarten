@@ -20,8 +20,8 @@ import { createReview, type ReviewInput } from "@/server/actions/reviews";
 import { toast } from "sonner";
 
 interface ReviewFormProps {
-  daycareId: string;
-  daycareName: string;
+  providerId: string;
+  providerName: string;
   trigger?: React.ReactNode;
 }
 
@@ -63,21 +63,21 @@ function StarRating({
   );
 }
 
-export function ReviewForm({ daycareId, daycareName, trigger }: ReviewFormProps) {
+export function ReviewForm({ providerId, providerName, trigger }: ReviewFormProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showDetailedRatings, setShowDetailedRatings] = useState(false);
   const [formData, setFormData] = useState<ReviewInput>({
-    daycareId,
+    providerId,
     rating: 0,
     title: "",
     content: "",
-    safetyRating: undefined,
-    cleanlinessRating: undefined,
+    communicationRating: undefined,
+    waitTimeRating: undefined,
     staffRating: undefined,
-    programRating: undefined,
-    valueRating: undefined,
+    facilityRating: undefined,
+    overallCareRating: undefined,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,7 +95,7 @@ export function ReviewForm({ daycareId, daycareName, trigger }: ReviewFormProps)
         toast.success(result.message || "Review submitted!");
         setIsOpen(false);
         setFormData({
-          daycareId,
+          providerId,
           rating: 0,
           title: "",
           content: "",
@@ -124,9 +124,9 @@ export function ReviewForm({ daycareId, daycareName, trigger }: ReviewFormProps)
       <DialogContent className="sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Review {daycareName}</DialogTitle>
+            <DialogTitle>Review {providerName}</DialogTitle>
             <DialogDescription>
-              Share your experience to help other parents make informed decisions.
+              Share your experience to help other patients make informed decisions.
             </DialogDescription>
           </DialogHeader>
 
@@ -163,7 +163,7 @@ export function ReviewForm({ daycareId, daycareName, trigger }: ReviewFormProps)
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, content: e.target.value }))
                 }
-                placeholder="Tell us about your experience with this daycare..."
+                placeholder="Tell us about your experience with this provider..."
                 rows={4}
                 maxLength={2000}
               />
@@ -188,17 +188,17 @@ export function ReviewForm({ daycareId, daycareName, trigger }: ReviewFormProps)
             {showDetailedRatings && (
               <div className="grid grid-cols-2 gap-4 border rounded-lg p-4 bg-muted/50">
                 <StarRating
-                  label="Safety"
-                  value={formData.safetyRating || 0}
+                  label="Communication"
+                  value={formData.communicationRating || 0}
                   onChange={(v) =>
-                    setFormData((prev) => ({ ...prev, safetyRating: v }))
+                    setFormData((prev) => ({ ...prev, communicationRating: v }))
                   }
                 />
                 <StarRating
-                  label="Cleanliness"
-                  value={formData.cleanlinessRating || 0}
+                  label="Wait Time"
+                  value={formData.waitTimeRating || 0}
                   onChange={(v) =>
-                    setFormData((prev) => ({ ...prev, cleanlinessRating: v }))
+                    setFormData((prev) => ({ ...prev, waitTimeRating: v }))
                   }
                 />
                 <StarRating
@@ -209,17 +209,17 @@ export function ReviewForm({ daycareId, daycareName, trigger }: ReviewFormProps)
                   }
                 />
                 <StarRating
-                  label="Program"
-                  value={formData.programRating || 0}
+                  label="Facility"
+                  value={formData.facilityRating || 0}
                   onChange={(v) =>
-                    setFormData((prev) => ({ ...prev, programRating: v }))
+                    setFormData((prev) => ({ ...prev, facilityRating: v }))
                   }
                 />
                 <StarRating
-                  label="Value"
-                  value={formData.valueRating || 0}
+                  label="Overall Care"
+                  value={formData.overallCareRating || 0}
                   onChange={(v) =>
-                    setFormData((prev) => ({ ...prev, valueRating: v }))
+                    setFormData((prev) => ({ ...prev, overallCareRating: v }))
                   }
                 />
               </div>

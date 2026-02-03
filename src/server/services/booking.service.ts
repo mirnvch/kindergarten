@@ -14,7 +14,7 @@
  */
 
 import { db } from "@/lib/db";
-import { BookingStatus, BookingType, DaycareStatus } from "@prisma/client";
+import { AppointmentStatus, AppointmentType, ProviderStatus } from "@prisma/client";
 import {
   generateAvailableSlots,
   generateRecurringDates,
@@ -53,8 +53,8 @@ export interface RescheduleBookingParams {
 
 export interface CreateTourBookingParams {
   patientId: string;
-  daycareId: string;
-  childId: string;
+  providerId: string;
+  familyMemberId: string;
   scheduledAt: Date;
   notes?: string;
   recurrence?: RecurrencePattern;
@@ -125,7 +125,7 @@ export async function cancelBookingService({
   await db.appointment.update({
     where: { id: bookingId },
     data: {
-      status: BookingStatus.CANCELLED,
+      status: AppointmentStatus.CANCELLED,
       cancelledAt: new Date(),
       cancelReason: reason || "Cancelled by parent",
     },
@@ -180,7 +180,7 @@ export async function cancelBookingSeriesService({
       scheduledAt: { gt: new Date() },
     },
     data: {
-      status: BookingStatus.CANCELLED,
+      status: AppointmentStatus.CANCELLED,
       cancelledAt: new Date(),
       cancelReason: reason || "Series cancelled by parent",
     },
@@ -220,7 +220,7 @@ export async function rescheduleBookingService({
 
   // Check for conflicts
   const hasConflict = await checkTimeSlotConflict(
-    booking.daycareId,
+    booking.providerId,
     newScheduledAt,
     bookingId
   );
@@ -234,7 +234,7 @@ export async function rescheduleBookingService({
     where: { id: bookingId },
     data: {
       scheduledAt: newScheduledAt,
-      status: BookingStatus.PENDING,
+      status: AppointmentStatus.PENDING,
       notes: booking.notes
         ? `${booking.notes}\n\nRescheduled from ${booking.scheduledAt?.toISOString()}`
         : `Rescheduled from ${booking.scheduledAt?.toISOString()}`,
@@ -248,15 +248,15 @@ export async function rescheduleBookingService({
  * Check if a time slot has a conflict.
  */
 export async function checkTimeSlotConflict(
-  daycareId: string,
+  providerId: string,
   scheduledAt: Date,
   excludeBookingId?: string
 ): Promise<boolean> {
   const conflictingBooking = await db.appointment.findFirst({
     where: {
-      daycareId,
-      type: BookingType.TOUR,
-      status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+      providerId,
+      type: AppointmentType.IN_PERSON,
+      status: { in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED] },
       ...(excludeBookingId && { id: { not: excludeBookingId } }),
       scheduledAt: {
         gte: new Date(scheduledAt.getTime() - TOUR_CONFLICT_WINDOW_MINUTES * 60 * 1000),
@@ -273,8 +273,8 @@ export async function checkTimeSlotConflict(
  */
 export async function createTourBookingService({
   patientId,
-  daycareId,
-  childId,
+  providerId,
+  familyMemberId,
   scheduledAt,
   notes,
   recurrence = "NONE",
@@ -284,7 +284,7 @@ export async function createTourBookingService({
 > {
   // Verify child belongs to parent
   const child = await db.familyMember.findFirst({
-    where: { id: childId, patientId },
+    where: { id: familyMemberId, patientId },
   });
 
   if (!child) {
@@ -294,8 +294,8 @@ export async function createTourBookingService({
   // Verify daycare is approved
   const daycare = await db.provider.findUnique({
     where: {
-      id: daycareId,
-      status: DaycareStatus.APPROVED,
+      id: providerId,
+      status: ProviderStatus.APPROVED,
       deletedAt: null,
     },
   });
@@ -329,7 +329,7 @@ export async function createTourBookingService({
 
   // Check for conflicts with ALL dates
   for (const date of bookingDates) {
-    const hasConflict = await checkTimeSlotConflict(daycareId, date);
+    const hasConflict = await checkTimeSlotConflict(providerId, date);
     if (hasConflict) {
       return {
         success: false,
@@ -346,10 +346,10 @@ export async function createTourBookingService({
       db.appointment.create({
         data: {
           patientId,
-          daycareId,
-          childId,
-          type: BookingType.TOUR,
-          status: BookingStatus.PENDING,
+          providerId,
+          familyMemberId,
+          type: AppointmentType.IN_PERSON,
+          status: AppointmentStatus.PENDING,
           scheduledAt: date,
           duration: TOUR_DURATION_MINUTES,
           notes: notes || null,
@@ -372,11 +372,11 @@ export async function createTourBookingService({
  * Get available booking slots for a daycare.
  */
 export async function getAvailableSlotsService(
-  daycareId: string,
+  providerId: string,
   options?: { startDate?: Date; endDate?: Date; daysAhead?: number }
 ): Promise<DayAvailability[]> {
   const daycare = await db.provider.findUnique({
-    where: { id: daycareId, status: DaycareStatus.APPROVED, deletedAt: null },
+    where: { id: providerId, status: ProviderStatus.APPROVED, deletedAt: null },
     select: {
       openingTime: true,
       closingTime: true,
@@ -396,9 +396,9 @@ export async function getAvailableSlotsService(
   // Get existing bookings
   const existingBookings = await db.appointment.findMany({
     where: {
-      daycareId,
-      type: BookingType.TOUR,
-      status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+      providerId,
+      type: AppointmentType.IN_PERSON,
+      status: { in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED] },
       scheduledAt: { gte: start, lte: end },
     },
     select: {

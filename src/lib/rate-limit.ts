@@ -27,6 +27,7 @@ export type RateLimitType =
   | "api"             // General API: 60/min
   | "auth"            // Auth attempts: 5/min
   | "booking"         // Booking creation: 10/min
+  | "appointment"     // Appointment creation: 10/min
   | "review"          // Review submission: 5/hour
   | "waitlist"        // Waitlist join: 10/hour
   | "bulk-message"    // Bulk messaging: 3/hour
@@ -39,7 +40,7 @@ export type RateLimitType =
   | "account-delete"  // Account deletion: 3/hour
   // Admin actions (destructive operations)
   | "admin-delete-user"    // Delete user: 10/hour
-  | "admin-delete-daycare" // Delete daycare: 10/hour
+  | "admin-delete-provider" // Delete provider: 10/hour
   | "admin-delete-review"  // Delete review: 20/hour
   | "admin-suspend"        // Suspend user/daycare: 20/hour
   | "admin-bulk"           // Bulk admin operations: 5/hour
@@ -51,6 +52,7 @@ const RATE_LIMITS: Record<RateLimitType, { requests: number; window: Duration }>
   "api":            { requests: 60,  window: "1 m" },
   "auth":           { requests: 5,   window: "1 m" },
   "booking":        { requests: 10,  window: "1 m" },
+  "appointment":    { requests: 10,  window: "1 m" },
   "review":         { requests: 5,   window: "1 h" },
   "waitlist":       { requests: 10,  window: "1 h" },
   "bulk-message":   { requests: 3,   window: "1 h" },
@@ -63,7 +65,7 @@ const RATE_LIMITS: Record<RateLimitType, { requests: number; window: Duration }>
   "account-delete": { requests: 3,   window: "1 h" },
   // Admin actions
   "admin-delete-user":    { requests: 10, window: "1 h" },
-  "admin-delete-daycare": { requests: 10, window: "1 h" },
+  "admin-delete-provider": { requests: 10, window: "1 h" },
   "admin-delete-review":  { requests: 20, window: "1 h" },
   "admin-suspend":        { requests: 20, window: "1 h" },
   "admin-bulk":           { requests: 5,  window: "1 h" },

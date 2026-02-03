@@ -62,7 +62,7 @@ export default async function PortalSettingsPage() {
       {/* Notification preferences */}
       <NotificationPreferences
         initialPreferences={notificationPrefs || {
-          emailBookings: true,
+          emailAppointments: true,
           emailMessages: true,
           emailMarketing: false,
           pushEnabled: false,

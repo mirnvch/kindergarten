@@ -56,7 +56,7 @@ export async function deleteThread(threadId: string) {
 
     const thread = await db.messageThread.findUnique({
       where: { id: threadId },
-      select: { id: true, daycareId: true, parentId: true },
+      select: { id: true, providerId: true, patientId: true },
     });
 
     if (!thread) {
@@ -74,8 +74,8 @@ export async function deleteThread(threadId: string) {
         entityType: "MessageThread",
         entityId: threadId,
         oldData: {
-          daycareId: thread.daycareId,
-          parentId: thread.parentId,
+          providerId: thread.providerId,
+          patientId: thread.patientId,
         },
       },
     });

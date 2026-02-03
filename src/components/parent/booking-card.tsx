@@ -8,14 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { CancelDialog } from "@/components/booking/cancel-dialog";
 import { RescheduleDialog } from "@/components/booking/reschedule-dialog";
 import { formatDate, formatTime } from "@/lib/utils";
-import { BookingStatus, AppointmentType } from "@prisma/client";
+import { AppointmentStatus, AppointmentType } from "@prisma/client";
 
 // Support both old daycare/child and new provider/familyMember terminology
 interface BookingCardProps {
   booking: {
     id: string;
     type: AppointmentType;
-    status: BookingStatus;
+    status: AppointmentStatus;
     scheduledAt: Date | null;
     duration: number | null;
     notes: string | null;
@@ -58,7 +58,7 @@ interface BookingCardProps {
   showCancelButton?: boolean;
 }
 
-const statusColors: Record<BookingStatus, "default" | "secondary" | "destructive" | "outline"> = {
+const statusColors: Record<AppointmentStatus, "default" | "secondary" | "destructive" | "outline"> = {
   PENDING: "secondary",
   CONFIRMED: "default",
   CANCELLED: "destructive",
@@ -66,7 +66,7 @@ const statusColors: Record<BookingStatus, "default" | "secondary" | "destructive
   NO_SHOW: "destructive",
 };
 
-const statusLabels: Record<BookingStatus, string> = {
+const statusLabels: Record<AppointmentStatus, string> = {
   PENDING: "Pending",
   CONFIRMED: "Confirmed",
   CANCELLED: "Cancelled",
@@ -123,8 +123,8 @@ export function BookingCard({ booking, showCancelButton = true }: BookingCardPro
                 {getTypeLabel()}
                 {person && ` for ${person.firstName}`}
               </p>
-              {"specialty" in entity && entity.specialty && (
-                <p className="text-xs text-muted-foreground">{entity.specialty}</p>
+              {booking.provider?.specialty && (
+                <p className="text-xs text-muted-foreground">{booking.provider.specialty}</p>
               )}
             </div>
 

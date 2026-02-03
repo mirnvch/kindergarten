@@ -14,7 +14,7 @@ async function getDaycareWithVerification(userId: string) {
   const providerStaff = await db.providerStaff.findFirst({
     where: { userId, role: "owner", isActive: true },
     include: {
-      daycare: {
+      provider: {
         select: {
           id: true,
           name: true,
@@ -31,7 +31,7 @@ async function getDaycareWithVerification(userId: string) {
     },
   });
 
-  return providerStaff?.daycare;
+  return providerStaff?.provider;
 }
 
 export default async function VerificationPage() {

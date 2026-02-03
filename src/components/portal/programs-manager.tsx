@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Video, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -41,78 +42,68 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  createProgram,
-  updateProgram,
-  deleteProgram,
-  type ProgramInput,
+  createService,
+  updateService,
+  deleteService,
+  type ServiceInput,
 } from "@/server/actions/portal/programs";
 import { toast } from "sonner";
 import { Prisma } from "@prisma/client";
 
-interface Program {
+interface Service {
   id: string;
   name: string;
   description: string | null;
-  ageMin: number;
-  ageMax: number;
+  duration: number;
   price: Prisma.Decimal;
-  schedule: string | null;
+  isTelehealth: boolean;
 }
 
-interface ProgramsManagerProps {
-  programs: Program[];
+interface ServicesManagerProps {
+  services: Service[];
 }
 
-const SCHEDULE_OPTIONS = [
-  { value: "full-time", label: "Full-time" },
-  { value: "part-time", label: "Part-time" },
-  { value: "before-after-school", label: "Before/After School" },
-  { value: "summer", label: "Summer Program" },
-  { value: "drop-in", label: "Drop-in" },
+/** @deprecated Use ServicesManagerProps */
+export type ProgramsManagerProps = ServicesManagerProps;
+
+const DURATION_OPTIONS = [
+  { value: "15", label: "15 minutes" },
+  { value: "30", label: "30 minutes" },
+  { value: "45", label: "45 minutes" },
+  { value: "60", label: "1 hour" },
+  { value: "90", label: "1.5 hours" },
+  { value: "120", label: "2 hours" },
 ];
 
-function formatAgeRange(minMonths: number, maxMonths: number) {
-  const formatAge = (months: number) => {
-    if (months < 12) return `${months} mo`;
-    const years = Math.floor(months / 12);
-    const remainingMonths = months % 12;
-    if (remainingMonths === 0) return `${years} yr`;
-    return `${years} yr ${remainingMonths} mo`;
-  };
-  return `${formatAge(minMonths)} - ${formatAge(maxMonths)}`;
-}
-
-const emptyForm: ProgramInput = {
+const emptyForm: ServiceInput = {
   name: "",
   description: "",
-  ageMin: 0,
-  ageMax: 60,
+  duration: 30,
   price: 0,
-  schedule: "",
+  isTelehealth: false,
 };
 
-export function ProgramsManager({ programs }: ProgramsManagerProps) {
+export function ServicesManager({ services }: ServicesManagerProps) {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [editingProgram, setEditingProgram] = useState<Program | null>(null);
-  const [formData, setFormData] = useState<ProgramInput>(emptyForm);
+  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [formData, setFormData] = useState<ServiceInput>(emptyForm);
 
   const openCreateDialog = () => {
-    setEditingProgram(null);
+    setEditingService(null);
     setFormData(emptyForm);
     setIsDialogOpen(true);
   };
 
-  const openEditDialog = (program: Program) => {
-    setEditingProgram(program);
+  const openEditDialog = (service: Service) => {
+    setEditingService(service);
     setFormData({
-      name: program.name,
-      description: program.description || "",
-      ageMin: program.ageMin,
-      ageMax: program.ageMax,
-      price: Number(program.price),
-      schedule: program.schedule || "",
+      name: service.name,
+      description: service.description || "",
+      duration: service.duration,
+      price: Number(service.price),
+      isTelehealth: service.isTelehealth,
     });
     setIsDialogOpen(true);
   };
@@ -120,16 +111,16 @@ export function ProgramsManager({ programs }: ProgramsManagerProps) {
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      const result = editingProgram
-        ? await updateProgram(editingProgram.id, formData)
-        : await createProgram(formData);
+      const result = editingService
+        ? await updateService(editingService.id, formData)
+        : await createService(formData);
 
       if (result.success) {
-        toast.success(editingProgram ? "Program updated" : "Program created");
+        toast.success(editingService ? "Service updated" : "Service created");
         setIsDialogOpen(false);
         router.refresh();
       } else {
-        toast.error(result.error || "Failed to save program");
+        toast.error(result.error || "Failed to save service");
       }
     } catch {
       toast.error("An error occurred");
@@ -140,19 +131,19 @@ export function ProgramsManager({ programs }: ProgramsManagerProps) {
 
   const handleDelete = async (id: string) => {
     try {
-      const result = await deleteProgram(id);
+      const result = await deleteService(id);
       if (result.success) {
-        toast.success("Program deleted");
+        toast.success("Service deleted");
         router.refresh();
       } else {
-        toast.error(result.error || "Failed to delete program");
+        toast.error(result.error || "Failed to delete service");
       }
     } catch {
       toast.error("An error occurred");
     }
   };
 
-  const updateField = (field: keyof ProgramInput, value: string | number) => {
+  const updateField = (field: keyof ServiceInput, value: string | number | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -161,91 +152,93 @@ export function ProgramsManager({ programs }: ProgramsManagerProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Programs</CardTitle>
+            <CardTitle>Services</CardTitle>
             <CardDescription>
-              Manage the programs you offer at your daycare
+              Manage the services you offer to patients
             </CardDescription>
           </div>
           <Button onClick={openCreateDialog}>
             <Plus className="mr-2 h-4 w-4" />
-            Add Program
+            Add Service
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        {programs.length === 0 ? (
+        {services.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="rounded-full bg-muted p-4 mb-4">
               <Plus className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="font-medium mb-1">No programs yet</h3>
+            <h3 className="font-medium mb-1">No services yet</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Add programs to show parents what age groups you serve
+              Add services to show patients what you offer
             </p>
             <Button onClick={openCreateDialog}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Your First Program
+              Add Your First Service
             </Button>
           </div>
         ) : (
           <div className="space-y-4">
-            {programs.map((program) => (
+            {services.map((service) => (
               <div
-                key={program.id}
+                key={service.id}
                 className="flex items-center justify-between p-4 border rounded-lg"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <h4 className="font-medium">{program.name}</h4>
-                    {program.schedule && (
-                      <span className="text-xs bg-muted px-2 py-0.5 rounded">
-                        {program.schedule}
+                    <h4 className="font-medium">{service.name}</h4>
+                    {service.isTelehealth && (
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded flex items-center gap-1">
+                        <Video className="h-3 w-3" />
+                        Telehealth
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Ages: {formatAgeRange(program.ageMin, program.ageMax)}
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {service.duration} minutes
                   </p>
-                  {program.description && (
+                  {service.description && (
                     <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                      {program.description}
+                      {service.description}
                     </p>
                   )}
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <p className="font-semibold">
-                      ${Number(program.price).toLocaleString()}
+                      ${Number(service.price).toLocaleString()}
                     </p>
-                    <p className="text-xs text-muted-foreground">per month</p>
+                    <p className="text-xs text-muted-foreground">per visit</p>
                   </div>
                   <div className="flex gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => openEditDialog(program)}
-                      aria-label="Edit program"
+                      onClick={() => openEditDialog(service)}
+                      aria-label="Edit service"
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label="Delete program">
+                        <Button variant="ghost" size="icon" aria-label="Delete service">
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Program</AlertDialogTitle>
+                          <AlertDialogTitle>Delete Service</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Are you sure you want to delete &quot;{program.name}&quot;?
+                            Are you sure you want to delete &quot;{service.name}&quot;?
                             This action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => handleDelete(program.id)}
+                            onClick={() => handleDelete(service.id)}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                           >
                             Delete
@@ -265,66 +258,57 @@ export function ProgramsManager({ programs }: ProgramsManagerProps) {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>
-              {editingProgram ? "Edit Program" : "Add Program"}
+              {editingService ? "Edit Service" : "Add Service"}
             </DialogTitle>
             <DialogDescription>
-              {editingProgram
-                ? "Update the program details"
-                : "Create a new program for your daycare"}
+              {editingService
+                ? "Update the service details"
+                : "Create a new service for your practice"}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="programName">Program Name *</Label>
+              <Label htmlFor="serviceName">Service Name *</Label>
               <Input
-                id="programName"
+                id="serviceName"
                 value={formData.name}
                 onChange={(e) => updateField("name", e.target.value)}
-                placeholder="e.g., Infant Care, Toddler Program"
+                placeholder="e.g., Annual Physical, Consultation"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="programDescription">Description</Label>
+              <Label htmlFor="serviceDescription">Description</Label>
               <Textarea
-                id="programDescription"
+                id="serviceDescription"
                 value={formData.description}
                 onChange={(e) => updateField("description", e.target.value)}
-                placeholder="Describe what this program offers..."
+                placeholder="Describe what this service includes..."
                 rows={3}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="ageMin">Min Age (months) *</Label>
-                <Input
-                  id="ageMin"
-                  type="number"
-                  min={0}
-                  value={formData.ageMin}
-                  onChange={(e) =>
-                    updateField("ageMin", parseInt(e.target.value) || 0)
-                  }
-                />
+                <Label htmlFor="duration">Duration *</Label>
+                <Select
+                  value={formData.duration.toString()}
+                  onValueChange={(v) => updateField("duration", parseInt(v))}
+                >
+                  <SelectTrigger id="duration">
+                    <SelectValue placeholder="Select duration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DURATION_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="ageMax">Max Age (months) *</Label>
-                <Input
-                  id="ageMax"
-                  type="number"
-                  min={1}
-                  value={formData.ageMax}
-                  onChange={(e) =>
-                    updateField("ageMax", parseInt(e.target.value) || 1)
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="price">Monthly Price ($) *</Label>
+                <Label htmlFor="price">Price ($) *</Label>
                 <Input
                   id="price"
                   type="number"
@@ -336,24 +320,20 @@ export function ProgramsManager({ programs }: ProgramsManagerProps) {
                   }
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="schedule">Schedule Type</Label>
-                <Select
-                  value={formData.schedule || ""}
-                  onValueChange={(v) => updateField("schedule", v)}
-                >
-                  <SelectTrigger id="schedule">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SCHEDULE_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <div className="space-y-0.5">
+                <Label htmlFor="isTelehealth">Telehealth Available</Label>
+                <p className="text-xs text-muted-foreground">
+                  This service can be provided via video call
+                </p>
               </div>
+              <Switch
+                id="isTelehealth"
+                checked={formData.isTelehealth}
+                onCheckedChange={(checked) => updateField("isTelehealth", checked)}
+              />
             </div>
           </div>
           <DialogFooter>
@@ -363,9 +343,9 @@ export function ProgramsManager({ programs }: ProgramsManagerProps) {
             <Button onClick={handleSubmit} disabled={isLoading}>
               {isLoading
                 ? "Saving..."
-                : editingProgram
+                : editingService
                   ? "Save Changes"
-                  : "Create Program"}
+                  : "Create Service"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -373,3 +353,6 @@ export function ProgramsManager({ programs }: ProgramsManagerProps) {
     </Card>
   );
 }
+
+/** @deprecated Use ServicesManager */
+export const ProgramsManager = ServicesManager;

@@ -30,15 +30,15 @@ interface Child {
 }
 
 interface TourBookingFormProps {
-  daycareId: string;
-  daycareName: string;
+  providerId: string;
+  providerName: string;
   availability: DayAvailability[];
   childProfiles: Child[];
 }
 
 export function TourBookingForm({
-  daycareId,
-  daycareName,
+  providerId,
+  providerName,
   availability,
   childProfiles,
 }: TourBookingFormProps) {
@@ -71,8 +71,8 @@ export function TourBookingForm({
     const scheduledAt = new Date(`${selectedDate}T${selectedTime}:00`);
 
     const input: TourBookingInput = {
-      daycareId,
-      childId: selectedChildId,
+      providerId,
+      familyMemberId: selectedChildId,
       scheduledAt: scheduledAt.toISOString(),
       notes: notes.trim() || undefined,
       recurrence,
@@ -216,7 +216,7 @@ export function TourBookingForm({
         <div className="mt-2 space-y-1 text-sm">
           <p>
             <span className="text-muted-foreground">Daycare:</span>{" "}
-            {daycareName}
+            {providerName}
           </p>
           <p>
             <span className="text-muted-foreground">Date:</span>{" "}
@@ -284,7 +284,7 @@ export function TourBookingForm({
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
-        Your tour request will be sent to {daycareName} for confirmation.
+        Your tour request will be sent to {providerName} for confirmation.
         You&apos;ll receive a notification once they respond.
       </p>
     </form>

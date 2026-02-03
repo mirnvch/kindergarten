@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FileText, Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,7 +42,7 @@ interface Template {
 }
 
 interface TemplateSelectorProps {
-  daycareId: string;
+  providerId: string;
   onSelect: (content: string) => void;
 }
 
@@ -54,7 +54,7 @@ const CATEGORIES = [
   { value: "general", label: "General" },
 ];
 
-export function TemplateSelector({ daycareId, onSelect }: TemplateSelectorProps) {
+export function TemplateSelector({ providerId, onSelect }: TemplateSelectorProps) {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
@@ -67,23 +67,23 @@ export function TemplateSelector({ daycareId, onSelect }: TemplateSelectorProps)
   const [formContent, setFormContent] = useState("");
   const [formCategory, setFormCategory] = useState("general");
 
-  useEffect(() => {
-    if (isOpen) {
-      loadTemplates();
-    }
-  }, [isOpen, daycareId]);
-
-  const loadTemplates = async () => {
+  const loadTemplates = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await getMessageTemplates(daycareId);
+      const data = await getMessageTemplates(providerId);
       setTemplates(data);
     } catch {
       toast.error("Failed to load templates");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [providerId]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadTemplates();
+    }
+  }, [isOpen, loadTemplates]);
 
   const handleSelect = (template: Template) => {
     onSelect(template.content);
@@ -124,7 +124,7 @@ export function TemplateSelector({ daycareId, onSelect }: TemplateSelectorProps)
         toast.success("Template updated");
       } else {
         await createMessageTemplate({
-          daycareId,
+          providerId,
           name: formName,
           content: formContent,
           category: formCategory,

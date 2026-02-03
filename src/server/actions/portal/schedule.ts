@@ -15,14 +15,14 @@ async function requireDaycareOwner() {
       userId: session.user.id,
       role: { in: ["owner", "manager"] },
     },
-    include: { daycare: true },
+    include: { provider: true },
   });
 
   if (!providerStaff) {
     throw new Error("No daycare found");
   }
 
-  return { user: session.user, daycare: providerStaff.daycare };
+  return { user: session.user, daycare: providerStaff.provider };
 }
 
 export interface ScheduleDay {
@@ -35,7 +35,7 @@ export interface ScheduleDay {
 export async function getSchedule() {
   const { daycare } = await requireDaycareOwner();
 
-  return db.daycareSchedule.findMany({
+  return db.providerSchedule.findMany({
     where: { providerId: daycare.id },
     orderBy: { dayOfWeek: "asc" },
   });
@@ -47,7 +47,7 @@ export async function updateSchedule(schedules: ScheduleDay[]) {
 
     // Use upsert for each day
     const updates = schedules.map((s) =>
-      db.daycareSchedule.upsert({
+      db.providerSchedule.upsert({
         where: {
           providerId_dayOfWeek: {
             providerId: daycare.id,

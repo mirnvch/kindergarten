@@ -1,29 +1,20 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Star, BadgeCheck, Crown, Sparkles } from "lucide-react";
+import { MapPin, Star, BadgeCheck, Crown, Sparkles, Video } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { DaycareSearchResult } from "@/server/actions/daycare";
+import type { ProviderSearchResult } from "@/server/actions/daycare";
 
-interface DaycareCardProps {
-  daycare: DaycareSearchResult;
+interface ProviderCardProps {
+  daycare: ProviderSearchResult;
 }
 
-function formatAge(months: number): string {
-  if (months < 12) return `${months}mo`;
-  const years = Math.floor(months / 12);
-  const remainingMonths = months % 12;
-  if (remainingMonths === 0) return `${years}yr`;
-  return `${years}yr ${remainingMonths}mo`;
-}
-
-export function DaycareCard({ daycare }: DaycareCardProps) {
-  const isPremium = daycare.subscriptionPlan !== "FREE";
+export function DaycareCard({ daycare }: ProviderCardProps) {
   const isTopTier = daycare.subscriptionPlan === "PROFESSIONAL" || daycare.subscriptionPlan === "ENTERPRISE";
 
   return (
-    <Link href={`/daycare/${daycare.slug}`}>
+    <Link href={`/provider/${daycare.slug}`}>
       <Card className={cn(
         "overflow-hidden hover:shadow-lg transition-shadow h-full",
         isTopTier && "ring-2 ring-primary/20"
@@ -90,11 +81,19 @@ export function DaycareCard({ daycare }: DaycareCardProps) {
 
           <div className="mt-3 flex items-center justify-between text-sm">
             <span className="text-muted-foreground">
-              Ages {formatAge(daycare.minAge)} - {formatAge(daycare.maxAge)}
+              {daycare.specialty || "General Practice"}
             </span>
-            <span className="font-semibold text-primary">
-              ${daycare.pricePerMonth.toLocaleString()}/mo
-            </span>
+            {daycare.consultationFee && (
+              <span className="font-semibold text-primary">
+                ${daycare.consultationFee.toLocaleString()}
+              </span>
+            )}
+            {daycare.offersTelehealth && (
+              <Badge variant="outline" className="ml-1">
+                <Video className="h-3 w-3 mr-1" />
+                Telehealth
+              </Badge>
+            )}
           </div>
 
           {daycare.description && (

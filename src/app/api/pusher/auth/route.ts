@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { authenticateChannel, getThreadChannel, getUserChannel } from "@/lib/pusher";
+import { authenticateChannel, getUserChannel } from "@/lib/pusher";
 import { db } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
@@ -62,22 +62,22 @@ async function validateChannelAccess(
   if (channelName.startsWith("private-thread-")) {
     const threadId = channelName.replace("private-thread-", "");
 
-    // Check if user is parent of thread
+    // Check if user is patient of thread
     const thread = await db.messageThread.findFirst({
       where: {
         id: threadId,
-        parentId: userId,
+        patientId: userId,
       },
     });
 
     if (thread) return true;
 
-    // Check if user is daycare owner/staff of thread
-    if (userRole === "DAYCARE_OWNER" || userRole === "DAYCARE_STAFF") {
-      const daycareThread = await db.messageThread.findFirst({
+    // Check if user is provider owner/staff of thread
+    if (userRole === "PROVIDER" || userRole === "CLINIC_STAFF") {
+      const providerThread = await db.messageThread.findFirst({
         where: {
           id: threadId,
-          daycare: {
+          provider: {
             staff: {
               some: { userId },
             },
@@ -85,7 +85,7 @@ async function validateChannelAccess(
         },
       });
 
-      if (daycareThread) return true;
+      if (providerThread) return true;
     }
 
     // Admin can access all
