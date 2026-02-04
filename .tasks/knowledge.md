@@ -239,6 +239,65 @@ dev branch → Test on Vercel Preview → main branch → Production
 
 ## Session Notes
 
+### 2026-02-04 (Session 24 — Task #44 Auth Fix COMPLETED)
+- **Task #44: Fix Production Auth — COMPLETED**
+- **Root Cause Found:** Role enum mismatch
+  - `auth.ts` used `PARENT`/`DAYCARE_OWNER`
+  - Prisma schema defines `PATIENT`/`PROVIDER`
+  - Zod validation failed silently → "Registration failed"
+- **Files Fixed:**
+  - `src/server/actions/auth.ts` — registerSchema role enum
+  - `src/components/forms/register-form.tsx` — role enum + UI text
+  - `src/components/layout/header.tsx` — dashboard redirect role check
+  - `src/lib/email.ts` — welcomeEmail role type
+  - `src/server/actions/notifications.ts` — sendWelcomeEmail role type
+- **Testing with Playwright MCP:**
+  - Registration: ✅ Account created, user saved to DB with role PATIENT
+  - Login: ✅ Redirected to /dashboard, user data displayed correctly
+- **Claude Code Tools Used:**
+  - Context7 MCP — NextAuth v5 documentation
+  - Postgres MCP — Verified 42 tables exist, checked user data
+  - Playwright MCP — E2E testing of auth flows
+  - Explore Agent — Found 85 "KinderCare" occurrences in 44 files
+  - Plan Agent — Created implementation plan, found root cause
+- **Commit:** `fix: update role enums from PARENT/DAYCARE_OWNER to PATIENT/PROVIDER`
+- **Next:** Task #45 (Branding), #46 (Content), #47 (Hydration)
+
+### 2026-02-03 (Session 23 — Production Audit)
+- **Полный аудит production сайта toddlerhq.com**
+- **КРИТИЧЕСКИЕ ПРОБЛЕМЫ найдены:**
+
+#### 1. Брендинг НЕ обновлён (Phase 1 не выполнена)
+| Место | Текущее | Должно быть |
+|-------|---------|-------------|
+| Логотип | "K KinderCare" | "DocConnect" |
+| Page titles | "KinderCare" | "DocConnect" |
+| Footer | "© 2026 KinderCare" | "© 2026 DocConnect" |
+| Контент | "ToddlerHQ" (смешано!) | "DocConnect" |
+
+#### 2. Контент НЕ обновлён для медицины
+- Всё ещё "Find Daycares", "childcare", "parents", "families"
+- Должно быть: "Find Doctors", "healthcare", "patients"
+
+#### 3. Функциональность НЕ РАБОТАЕТ
+| Функция | Статус | Ошибка |
+|---------|--------|--------|
+| Регистрация | ❌ | "Registration failed" |
+| Логин | ❌ | "Invalid email or password" |
+| Поиск | ❌ | Пусто + React error #418 |
+
+#### 4. База данных
+- Seed data НЕ загружен в production
+- Нет пользователей и провайдеров
+
+- **Созданы задачи #44-47** для исправления
+- **Приоритет:** #44 (auth) → #45 (branding) → #46 (content) → #47 (hydration)
+
+#### Прогресс по Task #44 (Auth Fix):
+- ✅ Добавлен `DIRECT_URL` в Vercel production env vars
+- ⏳ **Следующий шаг:** `npx prisma db push` для синхронизации схемы с production БД
+- ⏳ Затем: загрузка seed data (опционально)
+
 ### 2026-02-03 (Session 22 — DocConnect Migration FINALIZED)
 - **Phase 4: All remaining files committed — COMPLETED**
 - **Lint warnings fixed:** 30 → 0
@@ -258,6 +317,10 @@ dev branch → Test on Vercel Preview → main branch → Production
   - `fix: resolve all ESLint warnings (30 → 0)`
   - `feat: add Skeleton loading and real-time message read status`
   - `feat: complete Phase 4 DocConnect migration` (53 files)
+- **Production deployment:**
+  - Merged `feature/missing-pages-and-link-fixes` → `main`
+  - Pushed to production (149 files changed)
+  - Vercel auto-deploy triggered
 - **Следующее:**
   - Phase 1: Брендинг (ToddlerHQ/KinderCare → DocConnect в emails, manifest, marketing)
   - Phase 5: Telemedicine UI (фильтры, badges)
