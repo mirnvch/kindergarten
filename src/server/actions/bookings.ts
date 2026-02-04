@@ -16,209 +16,249 @@ import {
   type RecurrencePattern,
 } from "@/lib/booking-utils";
 import type { BookingWithRelations, BookingFull } from "@/types";
+import type { ActionResult } from "@/types/action-result";
 
 export type BookingFilter = "upcoming" | "past";
 
 export async function getParentBookings(
   filter: BookingFilter = "upcoming"
-): Promise<BookingWithRelations[]> {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "PATIENT") {
-    throw new Error("Unauthorized");
+): Promise<ActionResult<BookingWithRelations[]>> {
+  try {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "PATIENT") {
+      return { success: false, error: "Please sign in to view bookings" };
+    }
+
+    const now = new Date();
+
+    const bookings = await db.appointment.findMany({
+      where: {
+        patientId: session.user.id,
+        ...(filter === "upcoming"
+          ? {
+              scheduledAt: { gte: now },
+              status: { in: ["PENDING", "CONFIRMED"] },
+            }
+          : {
+              OR: [
+                { scheduledAt: { lt: now } },
+                { status: { in: ["COMPLETED", "CANCELLED", "NO_SHOW"] } },
+              ],
+            }),
+      },
+      include: {
+        provider: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            address: true,
+            city: true,
+            state: true,
+            specialty: true,
+          },
+        },
+        familyMember: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        service: {
+          select: {
+            id: true,
+            name: true,
+            duration: true,
+          },
+        },
+      },
+      orderBy: {
+        scheduledAt: filter === "upcoming" ? "asc" : "desc",
+      },
+    });
+
+    return { success: true, data: bookings };
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    return { success: false, error: "Failed to load bookings" };
   }
-
-  const now = new Date();
-
-  const bookings = await db.appointment.findMany({
-    where: {
-      patientId: session.user.id,
-      ...(filter === "upcoming"
-        ? {
-            scheduledAt: { gte: now },
-            status: { in: ["PENDING", "CONFIRMED"] },
-          }
-        : {
-            OR: [
-              { scheduledAt: { lt: now } },
-              { status: { in: ["COMPLETED", "CANCELLED", "NO_SHOW"] } },
-            ],
-          }),
-    },
-    include: {
-      provider: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          address: true,
-          city: true,
-          state: true,
-          specialty: true,
-        },
-      },
-      familyMember: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-      service: {
-        select: {
-          id: true,
-          name: true,
-          duration: true,
-        },
-      },
-    },
-    orderBy: {
-      scheduledAt: filter === "upcoming" ? "asc" : "desc",
-    },
-  });
-
-  return bookings;
 }
 
-export async function cancelBooking(id: string, reason?: string) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "PATIENT") {
-    throw new Error("Unauthorized");
-  }
-
-  // Verify ownership and status
-  const booking = await db.appointment.findFirst({
-    where: {
-      id,
-      patientId: session.user.id,
-      status: { in: ["PENDING", "CONFIRMED"] },
-    },
-    include: {
-      provider: { select: { slug: true } },
-    },
-  });
-
-  if (!booking) {
-    throw new Error("Booking not found or cannot be cancelled");
-  }
-
-  // Check cancellation policy (must be at least 24 hours before)
-  if (booking.scheduledAt) {
-    const hoursUntilBooking = (booking.scheduledAt.getTime() - Date.now()) / (1000 * 60 * 60);
-    if (hoursUntilBooking < 24) {
-      throw new Error("Cancellations must be made at least 24 hours in advance");
+export async function cancelBooking(id: string, reason?: string): Promise<ActionResult> {
+  try {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "PATIENT") {
+      return { success: false, error: "Please sign in to cancel bookings" };
     }
+
+    // Verify ownership and status
+    const booking = await db.appointment.findFirst({
+      where: {
+        id,
+        patientId: session.user.id,
+        status: { in: ["PENDING", "CONFIRMED"] },
+      },
+      include: {
+        provider: { select: { slug: true } },
+      },
+    });
+
+    if (!booking) {
+      return { success: false, error: "Booking not found or cannot be cancelled" };
+    }
+
+    // Check cancellation policy (must be at least 24 hours before)
+    if (booking.scheduledAt) {
+      const hoursUntilBooking = (booking.scheduledAt.getTime() - Date.now()) / (1000 * 60 * 60);
+      if (hoursUntilBooking < 24) {
+        return { success: false, error: "Cancellations must be made at least 24 hours in advance" };
+      }
+    }
+
+    await db.appointment.update({
+      where: { id },
+      data: {
+        status: AppointmentStatus.CANCELLED,
+        cancelledAt: new Date(),
+        cancelReason: reason || "Cancelled by parent",
+      },
+    });
+
+    revalidatePath("/dashboard/bookings");
+    revalidatePath("/dashboard");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error cancelling booking:", error);
+    return { success: false, error: "Failed to cancel booking" };
   }
-
-  await db.appointment.update({
-    where: { id },
-    data: {
-      status: AppointmentStatus.CANCELLED,
-      cancelledAt: new Date(),
-      cancelReason: reason || "Cancelled by parent",
-    },
-  });
-
-  revalidatePath("/dashboard/bookings");
-  revalidatePath("/dashboard");
 }
 
 // ==================== CANCEL BOOKING SERIES ====================
 
-export async function cancelBookingSeries(seriesId: string, reason?: string) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "PATIENT") {
-    throw new Error("Unauthorized");
-  }
+export async function cancelBookingSeries(
+  seriesId: string,
+  reason?: string
+): Promise<ActionResult<{ cancelledCount: number }>> {
+  try {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "PATIENT") {
+      return { success: false, error: "Please sign in to cancel bookings" };
+    }
 
-  // Verify ownership and get all bookings in series
-  const bookings = await db.appointment.findMany({
-    where: {
-      seriesId,
-      patientId: session.user.id,
-      status: { in: ["PENDING", "CONFIRMED"] },
-    },
-  });
+    // Verify ownership and get all bookings in series
+    const bookings = await db.appointment.findMany({
+      where: {
+        seriesId,
+        patientId: session.user.id,
+        status: { in: ["PENDING", "CONFIRMED"] },
+      },
+    });
 
-  if (bookings.length === 0) {
-    throw new Error("No bookings found in this series");
-  }
+    if (bookings.length === 0) {
+      return { success: false, error: "No bookings found in this series" };
+    }
 
-  // Check cancellation policy for all future bookings
-  const now = Date.now();
-  const futureBookings = bookings.filter(
-    (b) => b.scheduledAt && b.scheduledAt.getTime() > now
-  );
+    // Check cancellation policy for all future bookings
+    const now = Date.now();
+    const futureBookings = bookings.filter(
+      (b) => b.scheduledAt && b.scheduledAt.getTime() > now
+    );
 
-  for (const booking of futureBookings) {
-    if (booking.scheduledAt) {
-      const hoursUntilBooking = (booking.scheduledAt.getTime() - now) / (1000 * 60 * 60);
-      if (hoursUntilBooking < 24) {
-        throw new Error(
-          `Cannot cancel booking on ${booking.scheduledAt.toLocaleDateString()} - less than 24 hours away`
-        );
+    for (const booking of futureBookings) {
+      if (booking.scheduledAt) {
+        const hoursUntilBooking = (booking.scheduledAt.getTime() - now) / (1000 * 60 * 60);
+        if (hoursUntilBooking < 24) {
+          return {
+            success: false,
+            error: `Cannot cancel booking on ${booking.scheduledAt.toLocaleDateString()} - less than 24 hours away`,
+          };
+        }
       }
     }
+
+    // Cancel all future bookings in the series
+    await db.appointment.updateMany({
+      where: {
+        seriesId,
+        patientId: session.user.id,
+        status: { in: ["PENDING", "CONFIRMED"] },
+        scheduledAt: { gt: new Date() },
+      },
+      data: {
+        status: AppointmentStatus.CANCELLED,
+        cancelledAt: new Date(),
+        cancelReason: reason || "Series cancelled by parent",
+      },
+    });
+
+    revalidatePath("/dashboard/bookings");
+    revalidatePath("/dashboard");
+
+    return { success: true, data: { cancelledCount: futureBookings.length } };
+  } catch (error) {
+    console.error("Error cancelling booking series:", error);
+    return { success: false, error: "Failed to cancel booking series" };
   }
-
-  // Cancel all future bookings in the series
-  await db.appointment.updateMany({
-    where: {
-      seriesId,
-      patientId: session.user.id,
-      status: { in: ["PENDING", "CONFIRMED"] },
-      scheduledAt: { gt: new Date() },
-    },
-    data: {
-      status: AppointmentStatus.CANCELLED,
-      cancelledAt: new Date(),
-      cancelReason: reason || "Series cancelled by parent",
-    },
-  });
-
-  revalidatePath("/dashboard/bookings");
-  revalidatePath("/dashboard");
-
-  return { cancelledCount: futureBookings.length };
 }
 
 // ==================== GET SERIES BOOKINGS ====================
 
-export async function getSeriesBookings(seriesId: string) {
-  const session = await auth();
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
+export async function getSeriesBookings(seriesId: string): Promise<ActionResult<BookingWithRelations[]>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: "Please sign in to view bookings" };
+    }
 
-  const bookings = await db.appointment.findMany({
-    where: {
-      seriesId,
-      OR: [
-        { patientId: session.user.id },
-        {
-          provider: {
-            staff: { some: { userId: session.user.id } },
+    const bookings = await db.appointment.findMany({
+      where: {
+        seriesId,
+        OR: [
+          { patientId: session.user.id },
+          {
+            provider: {
+              staff: { some: { userId: session.user.id } },
+            },
+          },
+        ],
+      },
+      include: {
+        provider: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            address: true,
+            city: true,
+            state: true,
+            specialty: true,
           },
         },
-      ],
-    },
-    include: {
-      provider: {
-        select: {
-          name: true,
-          slug: true,
+        familyMember: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        service: {
+          select: {
+            id: true,
+            name: true,
+            duration: true,
+          },
         },
       },
-      familyMember: {
-        select: {
-          firstName: true,
-          lastName: true,
-        },
-      },
-    },
-    orderBy: { scheduledAt: "asc" },
-  });
+      orderBy: { scheduledAt: "asc" },
+    });
 
-  return bookings;
+    return { success: true, data: bookings };
+  } catch (error) {
+    console.error("Error fetching series bookings:", error);
+    return { success: false, error: "Failed to load series bookings" };
+  }
 }
 
 // ==================== RESCHEDULE BOOKING ====================
@@ -230,73 +270,81 @@ const rescheduleSchema = z.object({
 
 export type RescheduleInput = z.infer<typeof rescheduleSchema>;
 
-export async function rescheduleBooking(input: RescheduleInput) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "PATIENT") {
-    throw new Error("Unauthorized");
-  }
+export async function rescheduleBooking(input: RescheduleInput): Promise<ActionResult> {
+  try {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "PATIENT") {
+      return { success: false, error: "Please sign in to reschedule bookings" };
+    }
 
-  const validated = rescheduleSchema.parse(input);
+    const validated = rescheduleSchema.safeParse(input);
+    if (!validated.success) {
+      return { success: false, error: validated.error.issues[0]?.message || "Invalid data" };
+    }
 
-  // Verify ownership and status
-  const booking = await db.appointment.findFirst({
-    where: {
-      id: validated.bookingId,
-      patientId: session.user.id,
-      status: { in: ["PENDING", "CONFIRMED"] },
-    },
-    include: {
-      provider: { select: { id: true, slug: true } },
-    },
-  });
-
-  if (!booking) {
-    throw new Error("Booking not found or cannot be rescheduled");
-  }
-
-  const newScheduledAt = new Date(validated.newScheduledAt);
-
-  // Verify new slot is at least 24 hours ahead
-  const minTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  if (newScheduledAt < minTime) {
-    throw new Error("Please select a time at least 24 hours in advance");
-  }
-
-  // Check for conflicts at new time
-  const conflictingBooking = await db.appointment.findFirst({
-    where: {
-      providerId: booking.providerId,
-      type: AppointmentType.IN_PERSON,
-      status: { in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED] },
-      id: { not: booking.id }, // Exclude current booking
-      scheduledAt: {
-        gte: new Date(newScheduledAt.getTime() - 30 * 60 * 1000),
-        lt: new Date(newScheduledAt.getTime() + 30 * 60 * 1000),
+    // Verify ownership and status
+    const booking = await db.appointment.findFirst({
+      where: {
+        id: validated.data.bookingId,
+        patientId: session.user.id,
+        status: { in: ["PENDING", "CONFIRMED"] },
       },
-    },
-  });
+      include: {
+        provider: { select: { id: true, slug: true } },
+      },
+    });
 
-  if (conflictingBooking) {
-    throw new Error("This time slot is no longer available");
+    if (!booking) {
+      return { success: false, error: "Booking not found or cannot be rescheduled" };
+    }
+
+    const newScheduledAt = new Date(validated.data.newScheduledAt);
+
+    // Verify new slot is at least 24 hours ahead
+    const minTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    if (newScheduledAt < minTime) {
+      return { success: false, error: "Please select a time at least 24 hours in advance" };
+    }
+
+    // Check for conflicts at new time
+    const conflictingBooking = await db.appointment.findFirst({
+      where: {
+        providerId: booking.providerId,
+        type: AppointmentType.IN_PERSON,
+        status: { in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED] },
+        id: { not: booking.id }, // Exclude current booking
+        scheduledAt: {
+          gte: new Date(newScheduledAt.getTime() - 30 * 60 * 1000),
+          lt: new Date(newScheduledAt.getTime() + 30 * 60 * 1000),
+        },
+      },
+    });
+
+    if (conflictingBooking) {
+      return { success: false, error: "This time slot is no longer available" };
+    }
+
+    // Update booking with new time
+    await db.appointment.update({
+      where: { id: booking.id },
+      data: {
+        scheduledAt: newScheduledAt,
+        status: AppointmentStatus.PENDING, // Reset to pending for reconfirmation
+        notes: booking.notes
+          ? `${booking.notes}\n\nRescheduled from ${booking.scheduledAt?.toISOString()}`
+          : `Rescheduled from ${booking.scheduledAt?.toISOString()}`,
+      },
+    });
+
+    revalidatePath("/dashboard/bookings");
+    revalidatePath("/dashboard");
+    revalidatePath(`/provider/${booking.provider.slug}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error rescheduling booking:", error);
+    return { success: false, error: "Failed to reschedule booking" };
   }
-
-  // Update booking with new time
-  await db.appointment.update({
-    where: { id: booking.id },
-    data: {
-      scheduledAt: newScheduledAt,
-      status: AppointmentStatus.PENDING, // Reset to pending for reconfirmation
-      notes: booking.notes
-        ? `${booking.notes}\n\nRescheduled from ${booking.scheduledAt?.toISOString()}`
-        : `Rescheduled from ${booking.scheduledAt?.toISOString()}`,
-    },
-  });
-
-  revalidatePath("/dashboard/bookings");
-  revalidatePath("/dashboard");
-  revalidatePath(`/provider/${booking.provider.slug}`);
-
-  return { success: true };
 }
 
 // ==================== SLOT AVAILABILITY ====================
@@ -305,132 +353,144 @@ export async function getAvailableSlots(
   providerId: string,
   startDate?: Date,
   endDate?: Date
-): Promise<DayAvailability[]> {
-  const daycare = await db.provider.findUnique({
-    where: { id: providerId, status: ProviderStatus.APPROVED, deletedAt: null },
-    select: {
-      openingTime: true,
-      closingTime: true,
-      operatingDays: true,
-    },
-  });
-
-  if (!daycare) {
-    throw new Error("Daycare not found");
-  }
-
-  // Get existing bookings for the time period
-  const now = new Date();
-  const start = startDate || now;
-  const end = endDate || new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
-
-  const existingBookings = await db.appointment.findMany({
-    where: {
-      providerId,
-      type: AppointmentType.IN_PERSON,
-      status: { in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED] },
-      scheduledAt: {
-        gte: start,
-        lte: end,
+): Promise<ActionResult<DayAvailability[]>> {
+  try {
+    const daycare = await db.provider.findUnique({
+      where: { id: providerId, status: ProviderStatus.APPROVED, deletedAt: null },
+      select: {
+        openingTime: true,
+        closingTime: true,
+        operatingDays: true,
       },
-    },
-    select: {
-      scheduledAt: true,
-      duration: true,
-      status: true,
-    },
-  });
+    });
 
-  const daysAhead = Math.ceil((end.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+    if (!daycare) {
+      return { success: false, error: "Provider not found" };
+    }
 
-  return generateAvailableSlots(
-    {
-      openingTime: daycare.openingTime,
-      closingTime: daycare.closingTime,
-      operatingDays: daycare.operatingDays,
-    },
-    existingBookings.map((b) => ({
-      scheduledAt: b.scheduledAt,
-      duration: b.duration,
-      status: b.status,
-    })),
-    daysAhead,
-    30 // 30-minute slots for tours
-  );
+    // Get existing bookings for the time period
+    const now = new Date();
+    const start = startDate || now;
+    const end = endDate || new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+    const existingBookings = await db.appointment.findMany({
+      where: {
+        providerId,
+        type: AppointmentType.IN_PERSON,
+        status: { in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED] },
+        scheduledAt: {
+          gte: start,
+          lte: end,
+        },
+      },
+      select: {
+        scheduledAt: true,
+        duration: true,
+        status: true,
+      },
+    });
+
+    const daysAhead = Math.ceil((end.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+
+    const slots = generateAvailableSlots(
+      {
+        openingTime: daycare.openingTime,
+        closingTime: daycare.closingTime,
+        operatingDays: daycare.operatingDays,
+      },
+      existingBookings.map((b) => ({
+        scheduledAt: b.scheduledAt,
+        duration: b.duration,
+        status: b.status,
+      })),
+      daysAhead,
+      30 // 30-minute slots for tours
+    );
+
+    return { success: true, data: slots };
+  } catch (error) {
+    console.error("Error fetching available slots:", error);
+    return { success: false, error: "Failed to load available time slots" };
+  }
 }
 
 // ==================== BOOKING QUERIES ====================
 
-export async function getBookingById(id: string): Promise<BookingFull | null> {
-  const session = await auth();
-  if (!session?.user) {
-    throw new Error("Unauthorized");
+export async function getBookingById(id: string): Promise<ActionResult<BookingFull | null>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: "Please sign in to view booking details" };
+    }
+
+    const booking = await db.appointment.findUnique({
+      where: { id },
+      include: {
+        provider: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            specialty: true,
+            offersTelehealth: true,
+            address: true,
+            city: true,
+            state: true,
+            zipCode: true,
+            phone: true,
+            email: true,
+          },
+        },
+        service: {
+          select: {
+            id: true,
+            name: true,
+            duration: true,
+            price: true,
+            isTelehealth: true,
+          },
+        },
+        familyMember: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            dateOfBirth: true,
+            relationship: true,
+          },
+        },
+        patient: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!booking) {
+      return { success: true, data: null };
+    }
+
+    // Verify user has access to this booking
+    const isParent = booking.patientId === session.user.id;
+    const isDaycareOwner =
+      session.user.role === "PROVIDER" &&
+      (await db.providerStaff.findFirst({
+        where: { providerId: booking.providerId, userId: session.user.id },
+      }));
+
+    if (!isParent && !isDaycareOwner && session.user.role !== "ADMIN") {
+      return { success: false, error: "You don't have access to this booking" };
+    }
+
+    return { success: true, data: booking };
+  } catch (error) {
+    console.error("Error fetching booking:", error);
+    return { success: false, error: "Failed to load booking details" };
   }
-
-  const booking = await db.appointment.findUnique({
-    where: { id },
-    include: {
-      provider: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          specialty: true,
-          offersTelehealth: true,
-          address: true,
-          city: true,
-          state: true,
-          zipCode: true,
-          phone: true,
-          email: true,
-        },
-      },
-      service: {
-        select: {
-          id: true,
-          name: true,
-          duration: true,
-          price: true,
-          isTelehealth: true,
-        },
-      },
-      familyMember: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          dateOfBirth: true,
-          relationship: true,
-        },
-      },
-      patient: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
-      },
-    },
-  });
-
-  if (!booking) {
-    return null;
-  }
-
-  // Verify user has access to this booking
-  const isParent = booking.patientId === session.user.id;
-  const isDaycareOwner =
-    session.user.role === "PROVIDER" &&
-    (await db.providerStaff.findFirst({
-      where: { providerId: booking.providerId, userId: session.user.id },
-    }));
-
-  if (!isParent && !isDaycareOwner && session.user.role !== "ADMIN") {
-    throw new Error("Unauthorized");
-  }
-
-  return booking;
 }
 
 // ==================== TOUR BOOKING ====================

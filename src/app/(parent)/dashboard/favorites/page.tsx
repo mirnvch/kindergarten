@@ -16,7 +16,8 @@ export const metadata: Metadata = {
 };
 
 export default async function FavoritesPage() {
-  const favorites = await getFavorites();
+  const result = await getFavorites();
+  const favorites = result.success ? result.data ?? [] : [];
 
   return (
     <div className="space-y-6">

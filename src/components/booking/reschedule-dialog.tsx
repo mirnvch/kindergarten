@@ -51,8 +51,12 @@ export function RescheduleDialog({
   const loadAvailability = async () => {
     setIsLoading(true);
     try {
-      const slots = await getAvailableSlots(daycareId);
-      setAvailability(slots);
+      const result = await getAvailableSlots(daycareId);
+      if (result.success && result.data) {
+        setAvailability(result.data);
+      } else {
+        toast.error(result.error || "Failed to load available slots");
+      }
     } catch {
       toast.error("Failed to load available slots");
     } finally {
@@ -84,12 +88,16 @@ export function RescheduleDialog({
 
     startTransition(async () => {
       try {
-        await rescheduleBooking({
+        const result = await rescheduleBooking({
           bookingId,
           newScheduledAt: newScheduledAt.toISOString(),
         });
-        toast.success("Booking rescheduled successfully");
-        setOpen(false);
+        if (result.success) {
+          toast.success("Booking rescheduled successfully");
+          setOpen(false);
+        } else {
+          toast.error(result.error || "Failed to reschedule");
+        }
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to reschedule"

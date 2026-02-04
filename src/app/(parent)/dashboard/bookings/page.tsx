@@ -13,10 +13,13 @@ export const metadata: Metadata = {
 };
 
 export default async function AppointmentsPage() {
-  const [upcomingAppointments, pastAppointments] = await Promise.all([
+  const [upcomingResult, pastResult] = await Promise.all([
     getPatientAppointments("upcoming"),
     getPatientAppointments("past"),
   ]);
+
+  const upcomingAppointments = upcomingResult.success ? upcomingResult.data ?? [] : [];
+  const pastAppointments = pastResult.success ? pastResult.data ?? [] : [];
 
   return (
     <div className="space-y-6">

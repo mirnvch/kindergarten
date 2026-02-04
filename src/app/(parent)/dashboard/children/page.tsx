@@ -12,7 +12,8 @@ export const metadata: Metadata = {
 };
 
 export default async function ChildrenPage() {
-  const children = await getChildren();
+  const result = await getChildren();
+  const children = result.success ? result.data ?? [] : [];
 
   return (
     <div className="space-y-6">

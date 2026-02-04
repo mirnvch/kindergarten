@@ -18,11 +18,13 @@ interface EditChildPageProps {
 
 export default async function EditChildPage({ params }: EditChildPageProps) {
   const { id } = await params;
-  const child = await getChildById(id);
+  const result = await getChildById(id);
 
-  if (!child) {
+  if (!result.success || !result.data) {
     notFound();
   }
+
+  const child = result.data;
 
   return (
     <div className="space-y-6">

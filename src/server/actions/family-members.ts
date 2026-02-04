@@ -6,6 +6,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { FamilyMember, FamilyMemberWithRelations } from "@/types";
+import type { ActionResult } from "@/types/action-result";
 
 const familyMemberSchema = z.object({
   firstName: z.string().min(1, "First name is required").max(50),
@@ -23,149 +24,185 @@ const familyMemberSchema = z.object({
 
 export type FamilyMemberFormData = z.infer<typeof familyMemberSchema>;
 
-export async function createFamilyMember(data: FamilyMemberFormData) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "PATIENT") {
-    throw new Error("Unauthorized");
-  }
+export async function createFamilyMember(data: FamilyMemberFormData): Promise<ActionResult<{ id: string }>> {
+  try {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "PATIENT") {
+      return { success: false, error: "Please sign in to add family members" };
+    }
 
-  const validated = familyMemberSchema.parse(data);
+    const validated = familyMemberSchema.safeParse(data);
+    if (!validated.success) {
+      return { success: false, error: validated.error.issues[0]?.message || "Invalid data" };
+    }
 
-  await db.familyMember.create({
-    data: {
-      patientId: session.user.id,
-      firstName: validated.firstName,
-      lastName: validated.lastName,
-      dateOfBirth: new Date(validated.dateOfBirth),
-      gender: validated.gender || null,
-      relationship: validated.relationship,
-      allergies: validated.allergies || null,
-      medications: validated.medications || null,
-      conditions: validated.conditions || null,
-      bloodType: validated.bloodType || null,
-      notes: validated.notes || null,
-    },
-  });
-
-  revalidatePath("/dashboard/family");
-  revalidatePath("/dashboard");
-  redirect("/dashboard/family");
-}
-
-export async function getFamilyMembers(): Promise<FamilyMember[]> {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "PATIENT") {
-    throw new Error("Unauthorized");
-  }
-
-  const familyMembers = await db.familyMember.findMany({
-    where: { patientId: session.user.id },
-    orderBy: { createdAt: "desc" },
-  });
-
-  return familyMembers;
-}
-
-export async function getFamilyMemberById(id: string): Promise<FamilyMemberWithRelations | null> {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "PATIENT") {
-    throw new Error("Unauthorized");
-  }
-
-  const familyMember = await db.familyMember.findFirst({
-    where: {
-      id,
-      patientId: session.user.id,
-    },
-    include: {
-      appointments: {
-        include: {
-          provider: {
-            select: { name: true, slug: true, specialty: true },
-          },
-        },
-        orderBy: { scheduledAt: "desc" },
-        take: 10,
+    const member = await db.familyMember.create({
+      data: {
+        patientId: session.user.id,
+        firstName: validated.data.firstName,
+        lastName: validated.data.lastName,
+        dateOfBirth: new Date(validated.data.dateOfBirth),
+        gender: validated.data.gender || null,
+        relationship: validated.data.relationship,
+        allergies: validated.data.allergies || null,
+        medications: validated.data.medications || null,
+        conditions: validated.data.conditions || null,
+        bloodType: validated.data.bloodType || null,
+        notes: validated.data.notes || null,
       },
-    },
-  });
+    });
 
-  return familyMember;
+    revalidatePath("/dashboard/family");
+    revalidatePath("/dashboard");
+
+    return { success: true, data: { id: member.id } };
+  } catch (error) {
+    console.error("Error creating family member:", error);
+    return { success: false, error: "Failed to add family member" };
+  }
 }
 
-export async function updateFamilyMember(id: string, data: FamilyMemberFormData) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "PATIENT") {
-    throw new Error("Unauthorized");
+export async function getFamilyMembers(): Promise<ActionResult<FamilyMember[]>> {
+  try {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "PATIENT") {
+      return { success: false, error: "Please sign in to view family members" };
+    }
+
+    const familyMembers = await db.familyMember.findMany({
+      where: { patientId: session.user.id },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return { success: true, data: familyMembers };
+  } catch (error) {
+    console.error("Error fetching family members:", error);
+    return { success: false, error: "Failed to load family members" };
   }
-
-  const validated = familyMemberSchema.parse(data);
-
-  // Verify ownership
-  const existing = await db.familyMember.findFirst({
-    where: { id, patientId: session.user.id },
-  });
-
-  if (!existing) {
-    throw new Error("Family member not found");
-  }
-
-  await db.familyMember.update({
-    where: { id },
-    data: {
-      firstName: validated.firstName,
-      lastName: validated.lastName,
-      dateOfBirth: new Date(validated.dateOfBirth),
-      gender: validated.gender || null,
-      relationship: validated.relationship,
-      allergies: validated.allergies || null,
-      medications: validated.medications || null,
-      conditions: validated.conditions || null,
-      bloodType: validated.bloodType || null,
-      notes: validated.notes || null,
-    },
-  });
-
-  revalidatePath("/dashboard/family");
-  revalidatePath(`/dashboard/family/${id}`);
-  revalidatePath("/dashboard");
-  redirect("/dashboard/family");
 }
 
-export async function deleteFamilyMember(id: string) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "PATIENT") {
-    throw new Error("Unauthorized");
+export async function getFamilyMemberById(id: string): Promise<ActionResult<FamilyMemberWithRelations | null>> {
+  try {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "PATIENT") {
+      return { success: false, error: "Please sign in to view family member details" };
+    }
+
+    const familyMember = await db.familyMember.findFirst({
+      where: {
+        id,
+        patientId: session.user.id,
+      },
+      include: {
+        appointments: {
+          include: {
+            provider: {
+              select: { name: true, slug: true, specialty: true },
+            },
+          },
+          orderBy: { scheduledAt: "desc" },
+          take: 10,
+        },
+      },
+    });
+
+    return { success: true, data: familyMember };
+  } catch (error) {
+    console.error("Error fetching family member:", error);
+    return { success: false, error: "Failed to load family member details" };
   }
+}
 
-  // Verify ownership
-  const existing = await db.familyMember.findFirst({
-    where: { id, patientId: session.user.id },
-  });
+export async function updateFamilyMember(id: string, data: FamilyMemberFormData): Promise<ActionResult> {
+  try {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "PATIENT") {
+      return { success: false, error: "Please sign in to update family members" };
+    }
 
-  if (!existing) {
-    throw new Error("Family member not found");
+    const validated = familyMemberSchema.safeParse(data);
+    if (!validated.success) {
+      return { success: false, error: validated.error.issues[0]?.message || "Invalid data" };
+    }
+
+    // Verify ownership
+    const existing = await db.familyMember.findFirst({
+      where: { id, patientId: session.user.id },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Family member not found" };
+    }
+
+    await db.familyMember.update({
+      where: { id },
+      data: {
+        firstName: validated.data.firstName,
+        lastName: validated.data.lastName,
+        dateOfBirth: new Date(validated.data.dateOfBirth),
+        gender: validated.data.gender || null,
+        relationship: validated.data.relationship,
+        allergies: validated.data.allergies || null,
+        medications: validated.data.medications || null,
+        conditions: validated.data.conditions || null,
+        bloodType: validated.data.bloodType || null,
+        notes: validated.data.notes || null,
+      },
+    });
+
+    revalidatePath("/dashboard/family");
+    revalidatePath(`/dashboard/family/${id}`);
+    revalidatePath("/dashboard");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating family member:", error);
+    return { success: false, error: "Failed to update family member" };
   }
+}
 
-  // Check if there are any upcoming appointments
-  const upcomingAppointments = await db.appointment.count({
-    where: {
-      familyMemberId: id,
-      scheduledAt: { gte: new Date() },
-      status: { in: ["PENDING", "CONFIRMED"] },
-    },
-  });
+export async function deleteFamilyMember(id: string): Promise<ActionResult> {
+  try {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "PATIENT") {
+      return { success: false, error: "Please sign in to delete family members" };
+    }
 
-  if (upcomingAppointments > 0) {
-    throw new Error(
-      `Cannot delete family member with ${upcomingAppointments} upcoming appointment(s). Please cancel them first.`
-    );
+    // Verify ownership
+    const existing = await db.familyMember.findFirst({
+      where: { id, patientId: session.user.id },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Family member not found" };
+    }
+
+    // Check if there are any upcoming appointments
+    const upcomingAppointments = await db.appointment.count({
+      where: {
+        familyMemberId: id,
+        scheduledAt: { gte: new Date() },
+        status: { in: ["PENDING", "CONFIRMED"] },
+      },
+    });
+
+    if (upcomingAppointments > 0) {
+      return {
+        success: false,
+        error: `Cannot delete family member with ${upcomingAppointments} upcoming appointment(s). Please cancel them first.`,
+      };
+    }
+
+    await db.familyMember.delete({
+      where: { id },
+    });
+
+    revalidatePath("/dashboard/family");
+    revalidatePath("/dashboard");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting family member:", error);
+    return { success: false, error: "Failed to delete family member" };
   }
-
-  await db.familyMember.delete({
-    where: { id },
-  });
-
-  revalidatePath("/dashboard/family");
-  revalidatePath("/dashboard");
 }

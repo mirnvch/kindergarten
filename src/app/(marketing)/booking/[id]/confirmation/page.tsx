@@ -38,12 +38,13 @@ export default async function ConfirmationPage({
   }
 
   const { id } = await params;
-  const appointment = await getAppointmentById(id);
+  const result = await getAppointmentById(id);
 
-  if (!appointment) {
+  if (!result.success || !result.data) {
     notFound();
   }
 
+  const appointment = result.data;
   const isTelemedicine = appointment.type === "TELEMEDICINE";
 
   return (

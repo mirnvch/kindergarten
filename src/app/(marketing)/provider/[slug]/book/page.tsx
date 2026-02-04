@@ -54,10 +54,13 @@ export default async function BookAppointmentPage({ params }: BookAppointmentPag
   }
 
   // Fetch family members and availability in parallel
-  const [familyMembers, availability] = await Promise.all([
+  const [familyMembersResult, availabilityResult] = await Promise.all([
     getFamilyMembers(),
     getAvailableSlots(provider.id),
   ]);
+
+  const familyMembers = familyMembersResult.success ? familyMembersResult.data ?? [] : [];
+  const availability = availabilityResult.success ? availabilityResult.data ?? [] : [];
 
   return (
     <div className="container mx-auto px-4 py-8">

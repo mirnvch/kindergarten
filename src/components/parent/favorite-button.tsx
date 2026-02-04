@@ -34,10 +34,14 @@ export function FavoriteButton({
     startTransition(async () => {
       try {
         const result = await toggleFavorite(entityId);
-        setIsFavorited(result.favorited);
-        toast.success(
-          result.favorited ? "Added to favorites" : "Removed from favorites"
-        );
+        if (result.success && result.data) {
+          setIsFavorited(result.data.favorited);
+          toast.success(
+            result.data.favorited ? "Added to favorites" : "Removed from favorites"
+          );
+        } else {
+          toast.error(result.error || "Something went wrong");
+        }
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Something went wrong"
