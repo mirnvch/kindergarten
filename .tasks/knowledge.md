@@ -239,6 +239,37 @@ dev branch → Test on Vercel Preview → main branch → Production
 
 ## Session Notes
 
+### 2026-02-04 (Session 28 — Error Handling Standardization COMPLETED)
+- **Task #4: Fix UI/UX accessibility issues — COMPLETED**
+  - Button icon sizes updated to WCAG 44px minimum:
+    - `icon`: `size-9` → `size-11` (44px)
+    - `icon-xs`: `size-6` → `size-8`
+    - `icon-sm`: `size-8` → `size-9`
+    - `icon-lg`: `size-10` → `size-11`
+  - Added success/warning CSS variables to globals.css:
+    - Light: `--success: oklch(0.627 0.194 149.214)`, `--warning: oklch(0.769 0.188 70.08)`
+    - Dark: `--success: oklch(0.696 0.17 162.48)`, `--warning: oklch(0.828 0.189 84.429)`
+  - Fixed error.tsx to use proper Button components and semantic colors
+
+- **Task #5: Standardize backend error handling — COMPLETED**
+  - Converted core server actions to ActionResult pattern:
+    - `appointments.ts` — All get/cancel/reschedule functions
+    - `bookings.ts` — All get/cancel/reschedule functions
+    - `children.ts` — All CRUD functions
+    - `family-members.ts` — All CRUD functions
+    - `favorites.ts` — toggle/get functions
+  - Functions with `redirect()` kept throw pattern (redirect uses exceptions)
+  - Updated all consuming pages/components to handle ActionResult:
+    - Dashboard pages (bookings, children, favorites)
+    - Booking confirmation page
+    - Provider book page
+    - Reschedule dialog
+    - Favorite button
+  - Fixed Zod error access: `.error.errors` → `.error.issues`
+  - Note: Portal/admin actions still use throw pattern (TODO for future)
+
+- **Deployed to production:** https://toddlerhq.com
+
 ### 2026-02-04 (Session 27 — Task #46 Code Refactoring COMPLETED)
 - **Task #46: Content Update — CODE LEVEL REFACTORING COMPLETED**
   - **Components renamed:**
