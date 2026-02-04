@@ -126,7 +126,7 @@ export function RegisterForm() {
       <div className="text-center">
         <h1 className="text-2xl font-bold">Create an account</h1>
         <p className="text-muted-foreground mt-2">
-          Join KinderCare to find or list daycare services
+          Join DocConnect to find healthcare providers
         </p>
       </div>
 

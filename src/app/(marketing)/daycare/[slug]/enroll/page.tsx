@@ -12,5 +12,5 @@ interface EnrollPageProps {
 export default async function EnrollPage({ params }: EnrollPageProps) {
   const { slug } = await params;
   // Redirect to the appointment booking page
-  redirect(`/daycare/${slug}/book`);
+  redirect(`/provider/${slug}/book`);
 }

@@ -53,10 +53,10 @@ export default function ContactPage() {
             </CardHeader>
             <CardContent>
               <a
-                href="mailto:support@toddlerhq.com"
+                href="mailto:support@docconnect.com"
                 className="text-muted-foreground hover:text-foreground"
               >
-                support@toddlerhq.com
+                support@docconnect.com
               </a>
             </CardContent>
           </Card>
@@ -68,10 +68,10 @@ export default function ContactPage() {
             </CardHeader>
             <CardContent>
               <a
-                href="tel:+1-800-TODDLER"
+                href="tel:+1-800-DOCCONNECT"
                 className="text-muted-foreground hover:text-foreground"
               >
-                1-800-TODDLER
+                1-800-DOCCONNECT
               </a>
               <p className="mt-1 text-sm text-muted-foreground">
                 Mon-Fri, 9am-5pm EST
@@ -196,7 +196,7 @@ export default function ContactPage() {
         <h2 className="mb-4 text-xl font-semibold">Connect With Us</h2>
         <div className="flex justify-center gap-6">
           <a
-            href="https://twitter.com/toddlerhq"
+            href="https://twitter.com/docconnect"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-foreground"
@@ -204,7 +204,7 @@ export default function ContactPage() {
             Twitter
           </a>
           <a
-            href="https://facebook.com/toddlerhq"
+            href="https://facebook.com/docconnect"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-foreground"
@@ -212,7 +212,7 @@ export default function ContactPage() {
             Facebook
           </a>
           <a
-            href="https://instagram.com/toddlerhq"
+            href="https://instagram.com/docconnect"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-foreground"
@@ -220,7 +220,7 @@ export default function ContactPage() {
             Instagram
           </a>
           <a
-            href="https://linkedin.com/company/toddlerhq"
+            href="https://linkedin.com/company/docconnect"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-foreground"

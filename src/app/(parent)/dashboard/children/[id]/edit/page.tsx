@@ -8,8 +8,8 @@ import { ChildForm } from "@/components/parent/child-form";
 import { getChildById } from "@/server/actions/children";
 
 export const metadata: Metadata = {
-  title: "Edit Child | KinderCare",
-  description: "Edit child profile",
+  title: "Edit Family Member | DocConnect",
+  description: "Edit family member profile",
 };
 
 interface EditChildPageProps {

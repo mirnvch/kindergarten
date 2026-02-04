@@ -10,9 +10,9 @@ import {
 } from "@/lib/validations";
 
 export const metadata: Metadata = {
-  title: "Find Daycare | KinderCare",
+  title: "Find Providers | DocConnect",
   description:
-    "Search and find the perfect daycare for your child. Filter by location, price, and age group.",
+    "Search and find the perfect healthcare provider. Filter by location, specialty, and availability.",
 };
 
 interface SearchPageProps {
@@ -64,9 +64,9 @@ export default function SearchPage({ searchParams }: SearchPageProps) {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Find Daycare</h1>
+        <h1 className="text-3xl font-bold mb-2">Find Healthcare Providers</h1>
         <p className="text-muted-foreground">
-          Search for trusted daycare providers in your area
+          Search for trusted healthcare providers in your area
         </p>
       </div>
 

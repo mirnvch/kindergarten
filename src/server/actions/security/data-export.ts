@@ -185,7 +185,7 @@ async function processDataExport(requestId: string) {
     // Send notification email
     await sendEmail({
       to: exportRequest.user.email,
-      subject: "Your KinderCare Data Export is Ready",
+      subject: "Your DocConnect Data Export is Ready",
       html: dataExportReadyEmail({
         userName: exportRequest.user.firstName,
         downloadUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings/security`,
@@ -371,7 +371,7 @@ function dataExportReadyEmail({
     <p style="color: #666; font-size: 14px; margin-top: 30px;">
       If you didn't request this export, please contact our support team immediately.
       <br><br>
-      Best regards,<br>The KinderCare Team
+      Best regards,<br>The DocConnect Team
     </p>
   </div>
 </body>

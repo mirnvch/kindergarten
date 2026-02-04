@@ -18,30 +18,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: "Features | ToddlerHQ",
-  description: "Explore all the features ToddlerHQ offers for parents and daycare providers.",
+  title: "Features | DocConnect",
+  description: "Explore all the features DocConnect offers for patients and healthcare providers.",
 };
 
-const parentFeatures = [
+const patientFeatures = [
   {
     icon: Search,
     title: "Smart Search",
-    description: "Find daycares by location, age group, programs, price, and more. Filter and compare to find the perfect match.",
+    description: "Find healthcare providers by location, specialty, availability, and more. Filter and compare to find the perfect match.",
   },
   {
     icon: Calendar,
     title: "Easy Booking",
-    description: "Book tours and schedule visits online. No phone calls needed - see availability and book in seconds.",
+    description: "Book appointments online. No phone calls needed - see availability and book in seconds.",
   },
   {
     icon: MessageSquare,
     title: "Direct Messaging",
-    description: "Communicate directly with daycare providers. Ask questions and get answers quickly through our secure platform.",
+    description: "Communicate directly with healthcare providers. Ask questions and get answers quickly through our secure platform.",
   },
   {
     icon: Star,
     title: "Reviews & Ratings",
-    description: "Read authentic reviews from other parents. Make informed decisions based on real experiences.",
+    description: "Read authentic reviews from other patients. Make informed decisions based on real experiences.",
   },
 ];
 
@@ -49,17 +49,17 @@ const providerFeatures = [
   {
     icon: Building2,
     title: "Professional Profile",
-    description: "Showcase your daycare with photos, programs, pricing, and availability. Stand out to prospective families.",
+    description: "Showcase your practice with photos, services, pricing, and availability. Stand out to prospective patients.",
   },
   {
     icon: Calendar,
-    title: "Booking Management",
-    description: "Manage tour requests and enrollments from one dashboard. Accept, decline, or reschedule with ease.",
+    title: "Appointment Management",
+    description: "Manage appointment requests from one dashboard. Accept, decline, or reschedule with ease.",
   },
   {
     icon: BarChart3,
     title: "Analytics Dashboard",
-    description: "Track profile views, bookings, and revenue. Understand your performance with detailed insights.",
+    description: "Track profile views, appointments, and revenue. Understand your performance with detailed insights.",
   },
   {
     icon: CreditCard,
@@ -77,12 +77,12 @@ const platformFeatures = [
   {
     icon: Smartphone,
     title: "Mobile Friendly",
-    description: "Access ToddlerHQ from any device. Our responsive design works perfectly on phones, tablets, and desktops.",
+    description: "Access DocConnect from any device. Our responsive design works perfectly on phones, tablets, and desktops.",
   },
   {
     icon: Bell,
     title: "Real-time Notifications",
-    description: "Get instant updates on bookings, messages, and important events. Never miss an opportunity.",
+    description: "Get instant updates on appointments, messages, and important events. Never miss an opportunity.",
   },
   {
     icon: Clock,
@@ -97,22 +97,22 @@ export default function FeaturesPage() {
       <div className="mb-16 text-center">
         <h1 className="mb-4 text-4xl font-bold">Platform Features</h1>
         <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-          ToddlerHQ provides powerful tools for both parents looking for childcare
-          and daycare providers looking to grow their business.
+          DocConnect provides powerful tools for both patients looking for healthcare
+          and providers looking to grow their practice.
         </p>
       </div>
 
-      {/* For Parents */}
+      {/* For Patients */}
       <section className="mb-20">
         <div className="mb-8 text-center">
           <Users className="mx-auto mb-4 h-12 w-12 text-primary" />
-          <h2 className="mb-2 text-3xl font-bold">For Parents</h2>
+          <h2 className="mb-2 text-3xl font-bold">For Patients</h2>
           <p className="text-muted-foreground">
-            Everything you need to find the perfect daycare for your child
+            Everything you need to find the perfect healthcare provider
           </p>
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {parentFeatures.map((feature) => (
+          {patientFeatures.map((feature) => (
             <Card key={feature.title}>
               <CardHeader>
                 <feature.icon className="mb-2 h-8 w-8 text-primary" />
@@ -126,7 +126,7 @@ export default function FeaturesPage() {
         </div>
         <div className="mt-8 text-center">
           <Button asChild>
-            <Link href="/search">Find a Daycare</Link>
+            <Link href="/search">Find a Provider</Link>
           </Button>
         </div>
       </section>
@@ -135,9 +135,9 @@ export default function FeaturesPage() {
       <section className="mb-20">
         <div className="mb-8 text-center">
           <Building2 className="mx-auto mb-4 h-12 w-12 text-primary" />
-          <h2 className="mb-2 text-3xl font-bold">For Daycare Providers</h2>
+          <h2 className="mb-2 text-3xl font-bold">For Healthcare Providers</h2>
           <p className="text-muted-foreground">
-            Tools to manage and grow your daycare business
+            Tools to manage and grow your healthcare practice
           </p>
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -155,7 +155,7 @@ export default function FeaturesPage() {
         </div>
         <div className="mt-8 text-center">
           <Button asChild>
-            <Link href="/for-daycares">Learn More</Link>
+            <Link href="/for-providers">Learn More</Link>
           </Button>
         </div>
       </section>
@@ -188,7 +188,7 @@ export default function FeaturesPage() {
       <section className="rounded-lg bg-muted/40 px-8 py-12 text-center">
         <h2 className="mb-4 text-2xl font-bold">Ready to Get Started?</h2>
         <p className="mx-auto mb-8 max-w-xl text-muted-foreground">
-          Join thousands of families and daycare providers already using ToddlerHQ.
+          Join thousands of patients and healthcare providers already using DocConnect.
         </p>
         <div className="flex flex-col justify-center gap-4 sm:flex-row">
           <Button size="lg" asChild>

@@ -85,7 +85,7 @@ export async function requestAccountDeletion(
     // Send confirmation email
     await sendEmail({
       to: user.email,
-      subject: "Account Deletion Scheduled - KinderCare",
+      subject: "Account Deletion Scheduled - DocConnect",
       html: accountDeletionScheduledEmail({
         userName: user.firstName,
         scheduledDate: scheduledAt.toLocaleDateString("en-US", {
@@ -149,7 +149,7 @@ export async function cancelAccountDeletion(): Promise<ActionResult> {
     // Send confirmation email
     await sendEmail({
       to: user.email,
-      subject: "Account Deletion Cancelled - KinderCare",
+      subject: "Account Deletion Cancelled - DocConnect",
       html: accountDeletionCancelledEmail({
         userName: user.firstName,
       }),
@@ -257,7 +257,7 @@ export async function processScheduledDeletions(): Promise<
 async function anonymizeUser(userId: string) {
   // Use a transaction for data consistency
   await db.$transaction(async (tx) => {
-    const anonymizedEmail = `deleted-${userId}@anonymized.kindercare.app`;
+    const anonymizedEmail = `deleted-${userId}@anonymized.docconnect.app`;
 
     // Revoke all sessions
     await revokeAllUserSessions(userId);
@@ -365,7 +365,7 @@ function accountDeletionScheduledEmail({
   <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
     <p>Hi ${userName},</p>
 
-    <p>As requested, your KinderCare account has been scheduled for deletion.</p>
+    <p>As requested, your DocConnect account has been scheduled for deletion.</p>
 
     <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
       <p style="margin: 5px 0;"><strong>Scheduled Deletion Date:</strong></p>
@@ -387,7 +387,7 @@ function accountDeletionScheduledEmail({
     <p style="color: #666; font-size: 14px; margin-top: 30px;">
       If you didn't request this, please cancel the deletion immediately and change your password.
       <br><br>
-      Best regards,<br>The KinderCare Team
+      Best regards,<br>The DocConnect Team
     </p>
   </div>
 </body>
@@ -426,7 +426,7 @@ function accountDeletionCancelledEmail({ userName }: { userName: string }) {
     <p style="color: #666; font-size: 14px; margin-top: 30px;">
       Welcome back!
       <br><br>
-      Best regards,<br>The KinderCare Team
+      Best regards,<br>The DocConnect Team
     </p>
   </div>
 </body>

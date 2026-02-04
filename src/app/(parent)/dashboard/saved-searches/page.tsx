@@ -18,8 +18,8 @@ import { DeleteSavedSearchButton } from "@/components/search/delete-saved-search
 import { formatDistanceToNow } from "date-fns";
 
 export const metadata: Metadata = {
-  title: "Saved Searches | KinderCare",
-  description: "View and manage your saved daycare searches",
+  title: "Saved Searches | DocConnect",
+  description: "View and manage your saved provider searches",
 };
 
 export default async function SavedSearchesPage() {

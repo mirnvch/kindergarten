@@ -65,7 +65,7 @@ export function generateSecret(): string {
 export function generateTotpUri(secret: string, email: string): string {
   return generateURI({
     strategy: "totp",
-    issuer: "KinderCare",
+    issuer: "DocConnect",
     label: email,
     secret,
   });

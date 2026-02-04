@@ -3,8 +3,8 @@ import { siteConfig } from "@/config/site";
 
 const footerLinks = {
   product: [
-    { name: "Find Daycares", href: "/search" },
-    { name: "For Providers", href: "/for-daycares" },
+    { name: "Find Providers", href: "/search" },
+    { name: "For Providers", href: "/for-providers" },
     { name: "Pricing", href: "/pricing" },
     { name: "Features", href: "/features" },
   ],
@@ -36,13 +36,13 @@ export function Footer() {
           <div className="lg:col-span-1">
             <Link href="/" className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <span className="text-lg font-bold text-primary-foreground">K</span>
+                <span className="text-lg font-bold text-primary-foreground">D</span>
               </div>
-              <span className="text-xl font-bold">KinderCare</span>
+              <span className="text-xl font-bold">DocConnect</span>
             </Link>
             <p className="mt-4 text-sm text-muted-foreground">
-              Find the perfect daycare for your child. Trusted by thousands of
-              families across the United States.
+              Find the perfect healthcare provider. Trusted by thousands of
+              patients across the United States.
             </p>
             <div className="mt-4 flex gap-4">
               <Link
@@ -176,7 +176,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="mt-12 border-t pt-8">
           <p className="text-center text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} KinderCare. All rights reserved.
+            &copy; {new Date().getFullYear()} DocConnect. All rights reserved.
           </p>
         </div>
       </div>

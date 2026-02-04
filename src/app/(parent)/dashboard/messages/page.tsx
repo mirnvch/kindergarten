@@ -6,8 +6,8 @@ import { getMessageThreads } from "@/server/actions/messages";
 import { MessageThreadList } from "@/components/messages/message-thread-list";
 
 export const metadata: Metadata = {
-  title: "Messages | KinderCare",
-  description: "Your conversations with daycares",
+  title: "Messages | DocConnect",
+  description: "Your conversations with healthcare providers",
 };
 
 export default async function MessagesPage() {

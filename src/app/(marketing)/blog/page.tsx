@@ -7,32 +7,32 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "Blog | ToddlerHQ",
-  description: "Tips, guides, and news about childcare and parenting from ToddlerHQ.",
+  title: "Blog | DocConnect",
+  description: "Tips, guides, and news about healthcare from DocConnect.",
 };
 
 // Placeholder articles - in production these would come from a CMS
 const placeholderArticles = [
   {
-    title: "5 Questions to Ask When Touring a Daycare",
+    title: "5 Questions to Ask When Choosing a Healthcare Provider",
     excerpt:
-      "Make the most of your daycare tour with these essential questions that will help you make an informed decision.",
+      "Make the most of your provider selection with these essential questions that will help you make an informed decision.",
     date: "Coming Soon",
-    category: "For Parents",
+    category: "For Patients",
     slug: "#",
   },
   {
-    title: "How to Prepare Your Child for Their First Day at Daycare",
+    title: "How to Prepare for Your First Appointment",
     excerpt:
-      "Starting daycare is a big transition. Here's how to make it easier for both you and your little one.",
+      "Starting with a new provider is a big step. Here's how to make your first visit a success.",
     date: "Coming Soon",
-    category: "For Parents",
+    category: "For Patients",
     slug: "#",
   },
   {
-    title: "Marketing Your Daycare in the Digital Age",
+    title: "Marketing Your Practice in the Digital Age",
     excerpt:
-      "Tips for daycare providers on how to attract more families through online marketing and social media.",
+      "Tips for healthcare providers on how to attract more patients through online marketing and social media.",
     date: "Coming Soon",
     category: "For Providers",
     slug: "#",
@@ -46,7 +46,7 @@ export default function BlogPage() {
       <div className="mb-16 text-center">
         <h1 className="mb-4 text-4xl font-bold">Blog</h1>
         <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-          Tips, guides, and news about childcare and parenting.
+          Tips, guides, and news about healthcare.
         </p>
       </div>
 
@@ -55,8 +55,8 @@ export default function BlogPage() {
         <Bell className="mx-auto mb-4 h-12 w-12 text-primary" />
         <h2 className="mb-2 text-2xl font-bold">Coming Soon!</h2>
         <p className="mb-6 text-muted-foreground">
-          We&apos;re working on bringing you helpful content about childcare,
-          parenting tips, and industry news. Subscribe to be notified when we
+          We&apos;re working on bringing you helpful content about healthcare,
+          wellness tips, and industry news. Subscribe to be notified when we
           launch.
         </p>
         <div className="mx-auto flex max-w-md gap-2">
@@ -93,7 +93,7 @@ export default function BlogPage() {
         <h2 className="mb-6 text-2xl font-bold">Categories</h2>
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline" className="px-4 py-2">
-            For Parents
+            For Patients
           </Badge>
           <Badge variant="outline" className="px-4 py-2">
             For Providers

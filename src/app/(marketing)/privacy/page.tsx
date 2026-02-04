@@ -2,8 +2,8 @@ import { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | ToddlerHQ",
-  description: "Learn how ToddlerHQ collects, uses, and protects your personal information.",
+  title: "Privacy Policy | DocConnect",
+  description: "Learn how DocConnect collects, uses, and protects your personal information.",
 };
 
 export default function PrivacyPage() {
@@ -39,8 +39,8 @@ export default function PrivacyPage() {
             </p>
             <ul className="mt-4 list-inside list-disc space-y-2 text-muted-foreground">
               <li>Account information (name, email, phone number)</li>
-              <li>Profile information for parents (children&apos;s names, ages)</li>
-              <li>Profile information for daycare providers (business details, photos)</li>
+              <li>Profile information for patients (health preferences, insurance)</li>
+              <li>Profile information for healthcare providers (practice details, credentials, photos)</li>
               <li>Communications and messages sent through our platform</li>
               <li>Payment information (processed securely through Stripe)</li>
               <li>Reviews and ratings you submit</li>
@@ -63,9 +63,9 @@ export default function PrivacyPage() {
             </p>
             <ul className="mt-4 list-inside list-disc space-y-2 text-muted-foreground">
               <li>Provide and maintain our services</li>
-              <li>Connect parents with daycare providers</li>
-              <li>Process bookings and payments</li>
-              <li>Send notifications about bookings and messages</li>
+              <li>Connect patients with healthcare providers</li>
+              <li>Process appointments and payments</li>
+              <li>Send notifications about appointments and messages</li>
               <li>Improve and personalize our services</li>
               <li>Ensure safety and security of our platform</li>
               <li>Comply with legal obligations</li>
@@ -78,7 +78,7 @@ export default function PrivacyPage() {
               We may share your information in the following circumstances:
             </p>
             <ul className="mt-4 list-inside list-disc space-y-2 text-muted-foreground">
-              <li><strong>With daycare providers or parents:</strong> To facilitate connections and bookings</li>
+              <li><strong>With healthcare providers or patients:</strong> To facilitate connections and appointments</li>
               <li><strong>With service providers:</strong> Who assist us in operating our platform (e.g., payment processors, hosting providers)</li>
               <li><strong>For legal reasons:</strong> When required by law or to protect our rights</li>
               <li><strong>With your consent:</strong> When you explicitly agree to share information</li>
@@ -115,7 +115,7 @@ export default function PrivacyPage() {
               <li>Withdraw consent where applicable</li>
             </ul>
             <p className="mt-4 text-muted-foreground">
-              To exercise these rights, please contact us at privacy@toddlerhq.com.
+              To exercise these rights, please contact us at privacy@docconnect.com.
             </p>
           </section>
 
@@ -134,9 +134,8 @@ export default function PrivacyPage() {
             <h2 className="text-2xl font-semibold">7. Children&apos;s Privacy</h2>
             <p className="mt-4 text-muted-foreground">
               Our services are not directed to children under 13. We do not knowingly collect
-              personal information from children under 13. Parents provide information about
-              their children for the purpose of connecting with daycare services, and this
-              information is protected with the same care as all user data.
+              personal information from children under 13. This information is protected with
+              the same care as all user data.
             </p>
           </section>
 
@@ -155,7 +154,7 @@ export default function PrivacyPage() {
               If you have any questions about this Privacy Policy, please contact us:
             </p>
             <ul className="mt-4 list-inside list-disc space-y-2 text-muted-foreground">
-              <li>Email: privacy@toddlerhq.com</li>
+              <li>Email: privacy@docconnect.com</li>
               <li>Through our <Link href="/contact" className="text-primary hover:underline">contact form</Link></li>
             </ul>
           </section>

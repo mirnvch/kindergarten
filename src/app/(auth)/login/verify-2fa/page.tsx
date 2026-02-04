@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { TwoFactorVerifyForm } from "./two-factor-verify-form";
 
 export const metadata: Metadata = {
-  title: "Verify Two-Factor Authentication | KinderCare",
+  title: "Verify Two-Factor Authentication | DocConnect",
   description: "Enter your two-factor authentication code",
 };
 

@@ -68,7 +68,7 @@ export function DataExportCard() {
       // For data URLs, create a download link
       const link = document.createElement("a");
       link.href = exportStatus.fileUrl;
-      link.download = `kindercare-data-export-${new Date().toISOString().split("T")[0]}.json`;
+      link.download = `docconnect-data-export-${new Date().toISOString().split("T")[0]}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -137,7 +137,7 @@ export function DataExportCard() {
           <CardTitle>Download Your Data</CardTitle>
         </div>
         <CardDescription>
-          Get a copy of all your personal data stored in KinderCare (GDPR
+          Get a copy of all your personal data stored in DocConnect (GDPR
           compliance)
         </CardDescription>
       </CardHeader>

@@ -7,8 +7,8 @@ import { ChildCard } from "@/components/parent/child-card";
 import type { Child } from "@/types";
 
 export const metadata: Metadata = {
-  title: "My Children | KinderCare",
-  description: "Manage your children's profiles",
+  title: "My Family | DocConnect",
+  description: "Manage your family members' profiles",
 };
 
 export default async function ChildrenPage() {

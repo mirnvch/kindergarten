@@ -2,8 +2,8 @@ import { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Cookie Policy | ToddlerHQ",
-  description: "Learn about how ToddlerHQ uses cookies and similar technologies.",
+  title: "Cookie Policy | DocConnect",
+  description: "Learn about how DocConnect uses cookies and similar technologies.",
 };
 
 export default function CookiesPage() {
@@ -133,7 +133,7 @@ export default function CookiesPage() {
             </p>
             <ul className="mt-4 list-inside list-disc space-y-2 text-muted-foreground">
               <li><strong>Stripe:</strong> For secure payment processing</li>
-              <li><strong>Google Maps:</strong> For displaying daycare locations</li>
+              <li><strong>Google Maps:</strong> For displaying provider locations</li>
             </ul>
             <p className="mt-4 text-muted-foreground">
               These third parties have their own privacy and cookie policies. We encourage you
@@ -181,7 +181,7 @@ export default function CookiesPage() {
               If you have questions about our use of cookies, please contact us:
             </p>
             <ul className="mt-4 list-inside list-disc space-y-2 text-muted-foreground">
-              <li>Email: privacy@toddlerhq.com</li>
+              <li>Email: privacy@docconnect.com</li>
               <li>Through our <Link href="/contact" className="text-primary hover:underline">contact form</Link></li>
             </ul>
           </section>

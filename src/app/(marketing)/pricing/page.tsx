@@ -8,8 +8,8 @@ import { PRICING_PLANS, PLATFORM_COMMISSION } from "@/config/pricing";
 import { SubscriptionPlan } from "@prisma/client";
 
 export const metadata: Metadata = {
-  title: "Pricing | KinderCare",
-  description: "Simple, transparent pricing for daycare providers",
+  title: "Pricing | DocConnect",
+  description: "Simple, transparent pricing for healthcare providers",
 };
 
 const planOrder: SubscriptionPlan[] = ["FREE", "STARTER", "PROFESSIONAL", "ENTERPRISE"];
@@ -20,7 +20,7 @@ export default function PricingPage() {
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-4">Simple, Transparent Pricing</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Choose the plan that works for your daycare. Start free and upgrade as
+          Choose the plan that works for your practice. Start free and upgrade as
           you grow.
         </p>
       </div>
@@ -88,7 +88,7 @@ export default function PricingPage() {
                   className="w-full"
                   variant={plan.popular ? "default" : "outline"}
                 >
-                  <Link href={planKey === "ENTERPRISE" ? "/contact" : "/register/daycare"}>
+                  <Link href={planKey === "ENTERPRISE" ? "/contact" : "/register/provider"}>
                     {planKey === "FREE" ? "Get Started" : planKey === "ENTERPRISE" ? "Contact Sales" : "Start Free Trial"}
                   </Link>
                 </Button>
@@ -135,7 +135,7 @@ export default function PricingPage() {
           <div>
             <h3 className="font-medium mb-2">What&apos;s the platform fee?</h3>
             <p className="text-muted-foreground text-sm">
-              The platform fee is a small percentage taken from payments you receive from parents. Higher tier plans have lower fees.
+              The platform fee is a small percentage taken from payments you receive from patients. Higher tier plans have lower fees.
             </p>
           </div>
         </div>

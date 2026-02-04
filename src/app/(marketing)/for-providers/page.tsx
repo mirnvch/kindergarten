@@ -15,29 +15,29 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: "For Daycare Providers | ToddlerHQ",
+  title: "For Healthcare Providers | DocConnect",
   description:
-    "Grow your daycare business with ToddlerHQ. Get more families, manage bookings easily, and access powerful analytics.",
+    "Grow your healthcare practice with DocConnect. Reach more patients, manage appointments easily, and access powerful analytics.",
 };
 
 const benefits = [
   {
     icon: Users,
-    title: "Reach More Families",
+    title: "Reach More Patients",
     description:
-      "Connect with thousands of parents actively searching for quality childcare in your area.",
+      "Connect with thousands of patients actively searching for quality healthcare in your area.",
   },
   {
     icon: Calendar,
-    title: "Easy Booking Management",
+    title: "Easy Appointment Management",
     description:
-      "Manage tour requests, enrollments, and waitlists all in one place with our intuitive dashboard.",
+      "Manage appointment requests, patient intake, and waitlists all in one place with our intuitive dashboard.",
   },
   {
     icon: BarChart3,
     title: "Powerful Analytics",
     description:
-      "Understand your business with detailed insights on bookings, revenue, and parent engagement.",
+      "Understand your practice with detailed insights on appointments, revenue, and patient engagement.",
   },
   {
     icon: CreditCard,
@@ -49,22 +49,22 @@ const benefits = [
     icon: Shield,
     title: "Build Trust",
     description:
-      "Get verified and display badges that show parents you meet our quality standards.",
+      "Get verified and display badges that show patients you meet our quality standards.",
   },
   {
     icon: MessageSquare,
     title: "Direct Messaging",
     description:
-      "Communicate directly with parents through our secure messaging system.",
+      "Communicate directly with patients through our secure, HIPAA-compliant messaging system.",
   },
 ];
 
 const features = [
-  "Custom daycare profile page",
-  "Online tour booking",
-  "Enrollment management",
+  "Custom provider profile page",
+  "Online appointment booking",
+  "Patient intake management",
   "Waitlist management",
-  "Parent messaging",
+  "Patient messaging",
   "Review management",
   "Analytics dashboard",
   "Payment processing",
@@ -77,40 +77,40 @@ const features = [
 const testimonials = [
   {
     quote:
-      "ToddlerHQ has transformed how we manage our daycare. The booking system alone saves us hours every week.",
-    author: "Sarah M.",
-    role: "Owner, Sunshine Daycare",
+      "DocConnect has transformed how we manage our practice. The booking system alone saves us hours every week.",
+    author: "Dr. Sarah M.",
+    role: "Family Medicine Physician",
   },
   {
     quote:
-      "We've seen a 40% increase in tour requests since joining ToddlerHQ. The platform really delivers on its promise.",
+      "We've seen a 40% increase in new patient requests since joining DocConnect. The platform really delivers on its promise.",
     author: "Michael T.",
-    role: "Director, Little Steps Learning Center",
+    role: "Practice Manager, City Health Clinic",
   },
   {
     quote:
-      "The analytics help me understand which programs are most popular and where to focus my marketing efforts.",
-    author: "Jennifer L.",
-    role: "Owner, Bright Futures Academy",
+      "The analytics help me understand which services are most in demand and where to focus my marketing efforts.",
+    author: "Dr. Jennifer L.",
+    role: "Owner, Wellness Medical Center",
   },
 ];
 
-export default function ForDaycaresPage() {
+export default function ForProvidersPage() {
   return (
     <div>
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-primary/5 to-background py-20">
         <div className="container mx-auto px-4 text-center">
           <h1 className="mb-6 text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-            Grow Your Daycare Business
+            Grow Your Healthcare Practice
           </h1>
           <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground md:text-xl">
-            Join thousands of daycare providers who use ToddlerHQ to reach more
-            families, manage bookings, and grow their business.
+            Join thousands of healthcare providers who use DocConnect to reach more
+            patients, manage appointments, and grow their practice.
           </p>
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <Button size="lg" asChild>
-              <Link href="/register/daycare">
+              <Link href="/register/provider">
                 Get Started Free
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -129,11 +129,11 @@ export default function ForDaycaresPage() {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <h2 className="mb-4 text-center text-3xl font-bold">
-            Why Choose ToddlerHQ?
+            Why Choose DocConnect?
           </h2>
           <p className="mx-auto mb-12 max-w-2xl text-center text-muted-foreground">
-            Everything you need to run your daycare more efficiently and connect
-            with more families.
+            Everything you need to run your practice more efficiently and connect
+            with more patients.
           </p>
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {benefits.map((benefit) => (
@@ -160,7 +160,7 @@ export default function ForDaycaresPage() {
             </h2>
             <p className="mb-12 text-muted-foreground">
               Our comprehensive suite of tools helps you manage every aspect of
-              your daycare business.
+              your healthcare practice.
             </p>
             <div className="grid gap-4 text-left sm:grid-cols-2 md:grid-cols-3">
               {features.map((feature) => (
@@ -178,7 +178,7 @@ export default function ForDaycaresPage() {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <h2 className="mb-12 text-center text-3xl font-bold">
-            Trusted by Daycare Providers
+            Trusted by Healthcare Providers
           </h2>
           <div className="grid gap-8 md:grid-cols-3">
             {testimonials.map((testimonial, index) => (
@@ -212,14 +212,14 @@ export default function ForDaycaresPage() {
       <section className="bg-primary py-20 text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
           <h2 className="mb-4 text-3xl font-bold">
-            Ready to Grow Your Business?
+            Ready to Grow Your Practice?
           </h2>
           <p className="mx-auto mb-8 max-w-xl opacity-90">
-            Join ToddlerHQ today and start connecting with families in your
+            Join DocConnect today and start connecting with patients in your
             area. Setup takes less than 10 minutes.
           </p>
           <Button size="lg" variant="secondary" asChild>
-            <Link href="/register/daycare">
+            <Link href="/register/provider">
               Get Started Free
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

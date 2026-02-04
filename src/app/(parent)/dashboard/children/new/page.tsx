@@ -6,8 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ChildForm } from "@/components/parent/child-form";
 
 export const metadata: Metadata = {
-  title: "Add Child | KinderCare",
-  description: "Add a new child profile",
+  title: "Add Family Member | DocConnect",
+  description: "Add a new family member profile",
 };
 
 export default function NewChildPage() {

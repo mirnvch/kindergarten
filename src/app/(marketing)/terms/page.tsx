@@ -2,8 +2,8 @@ import { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | ToddlerHQ",
-  description: "Read the Terms of Service for using ToddlerHQ platform.",
+  title: "Terms of Service | DocConnect",
+  description: "Read the Terms of Service for using DocConnect platform.",
 };
 
 export default function TermsPage() {
@@ -23,8 +23,8 @@ export default function TermsPage() {
             <li><a href="#description" className="text-primary hover:underline">Description of Service</a></li>
             <li><a href="#accounts" className="text-primary hover:underline">User Accounts</a></li>
             <li><a href="#conduct" className="text-primary hover:underline">User Conduct</a></li>
-            <li><a href="#providers" className="text-primary hover:underline">Daycare Providers</a></li>
-            <li><a href="#parents" className="text-primary hover:underline">Parents</a></li>
+            <li><a href="#providers" className="text-primary hover:underline">Healthcare Providers</a></li>
+            <li><a href="#patients" className="text-primary hover:underline">Patients</a></li>
             <li><a href="#payments" className="text-primary hover:underline">Payments and Fees</a></li>
             <li><a href="#content" className="text-primary hover:underline">Content and Intellectual Property</a></li>
             <li><a href="#disclaimers" className="text-primary hover:underline">Disclaimers</a></li>
@@ -39,7 +39,7 @@ export default function TermsPage() {
           <section id="acceptance" className="mb-8">
             <h2 className="text-2xl font-semibold">1. Acceptance of Terms</h2>
             <p className="mt-4 text-muted-foreground">
-              By accessing or using ToddlerHQ (&quot;the Service&quot;), you agree to be bound by these
+              By accessing or using DocConnect (&quot;the Service&quot;), you agree to be bound by these
               Terms of Service. If you do not agree to these terms, please do not use our Service.
             </p>
           </section>
@@ -47,18 +47,18 @@ export default function TermsPage() {
           <section id="description" className="mb-8">
             <h2 className="text-2xl font-semibold">2. Description of Service</h2>
             <p className="mt-4 text-muted-foreground">
-              ToddlerHQ is a platform that connects parents with daycare providers. We provide:
+              DocConnect is a platform that connects patients with healthcare providers. We provide:
             </p>
             <ul className="mt-4 list-inside list-disc space-y-2 text-muted-foreground">
-              <li>A searchable directory of daycare providers</li>
-              <li>Tools for booking tours and managing enrollments</li>
-              <li>Messaging between parents and providers</li>
+              <li>A searchable directory of healthcare providers</li>
+              <li>Tools for booking appointments and managing care</li>
+              <li>Messaging between patients and providers</li>
               <li>Review and rating systems</li>
               <li>Payment processing services</li>
             </ul>
             <p className="mt-4 text-muted-foreground">
-              ToddlerHQ is a marketplace platform. We do not operate daycares and are not
-              responsible for the services provided by daycare providers listed on our platform.
+              DocConnect is a marketplace platform. We do not provide healthcare services and are not
+              responsible for the services provided by healthcare providers listed on our platform.
             </p>
           </section>
 
@@ -91,29 +91,29 @@ export default function TermsPage() {
           </section>
 
           <section id="providers" className="mb-8">
-            <h2 className="text-2xl font-semibold">5. Daycare Providers</h2>
+            <h2 className="text-2xl font-semibold">5. Healthcare Providers</h2>
             <p className="mt-4 text-muted-foreground">
-              As a daycare provider, you agree to:
+              As a healthcare provider, you agree to:
             </p>
             <ul className="mt-4 list-inside list-disc space-y-2 text-muted-foreground">
-              <li>Provide accurate information about your facility and services</li>
+              <li>Provide accurate information about your practice and services</li>
               <li>Maintain all required licenses and certifications</li>
-              <li>Respond to inquiries and booking requests in a timely manner</li>
-              <li>Honor confirmed bookings and enrollments</li>
+              <li>Respond to inquiries and appointment requests in a timely manner</li>
+              <li>Honor confirmed appointments</li>
               <li>Comply with all applicable laws and regulations</li>
               <li>Maintain appropriate insurance coverage</li>
             </ul>
           </section>
 
-          <section id="parents" className="mb-8">
-            <h2 className="text-2xl font-semibold">6. Parents</h2>
+          <section id="patients" className="mb-8">
+            <h2 className="text-2xl font-semibold">6. Patients</h2>
             <p className="mt-4 text-muted-foreground">
-              As a parent using our Service, you agree to:
+              As a patient using our Service, you agree to:
             </p>
             <ul className="mt-4 list-inside list-disc space-y-2 text-muted-foreground">
-              <li>Provide accurate information about your children</li>
-              <li>Conduct your own due diligence when selecting a daycare</li>
-              <li>Honor confirmed bookings or cancel with reasonable notice</li>
+              <li>Provide accurate health information</li>
+              <li>Conduct your own due diligence when selecting a provider</li>
+              <li>Honor confirmed appointments or cancel with reasonable notice</li>
               <li>Submit honest and fair reviews</li>
               <li>Pay for services as agreed with providers</li>
             </ul>
@@ -122,11 +122,11 @@ export default function TermsPage() {
           <section id="payments" className="mb-8">
             <h2 className="text-2xl font-semibold">7. Payments and Fees</h2>
             <p className="mt-4 text-muted-foreground">
-              Payments processed through ToddlerHQ are subject to the following:
+              Payments processed through DocConnect are subject to the following:
             </p>
             <ul className="mt-4 list-inside list-disc space-y-2 text-muted-foreground">
               <li>Payments are processed by Stripe, our third-party payment processor</li>
-              <li>ToddlerHQ may charge platform fees as described in our <Link href="/pricing" className="text-primary hover:underline">pricing page</Link></li>
+              <li>DocConnect may charge platform fees as described in our <Link href="/pricing" className="text-primary hover:underline">pricing page</Link></li>
               <li>Refunds are subject to individual provider policies and our mediation</li>
               <li>You are responsible for any applicable taxes</li>
             </ul>
@@ -135,12 +135,12 @@ export default function TermsPage() {
           <section id="content" className="mb-8">
             <h2 className="text-2xl font-semibold">8. Content and Intellectual Property</h2>
             <p className="mt-4 text-muted-foreground">
-              You retain ownership of content you post. By posting content, you grant ToddlerHQ
+              You retain ownership of content you post. By posting content, you grant DocConnect
               a non-exclusive, worldwide license to use, display, and distribute your content
               in connection with the Service.
             </p>
             <p className="mt-4 text-muted-foreground">
-              ToddlerHQ and its logos, features, and content are protected by intellectual
+              DocConnect and its logos, features, and content are protected by intellectual
               property laws. You may not copy, modify, or distribute our content without permission.
             </p>
           </section>
@@ -148,10 +148,10 @@ export default function TermsPage() {
           <section id="disclaimers" className="mb-8">
             <h2 className="text-2xl font-semibold">9. Disclaimers</h2>
             <p className="mt-4 text-muted-foreground">
-              THE SERVICE IS PROVIDED &quot;AS IS&quot; WITHOUT WARRANTIES OF ANY KIND. ToddlerHQ:
+              THE SERVICE IS PROVIDED &quot;AS IS&quot; WITHOUT WARRANTIES OF ANY KIND. DocConnect:
             </p>
             <ul className="mt-4 list-inside list-disc space-y-2 text-muted-foreground">
-              <li>Does not guarantee the quality of daycare services</li>
+              <li>Does not guarantee the quality of healthcare services</li>
               <li>Does not verify all information provided by users</li>
               <li>Is not responsible for interactions between users</li>
               <li>Does not guarantee uninterrupted or error-free service</li>
@@ -161,7 +161,7 @@ export default function TermsPage() {
           <section id="liability" className="mb-8">
             <h2 className="text-2xl font-semibold">10. Limitation of Liability</h2>
             <p className="mt-4 text-muted-foreground">
-              TO THE MAXIMUM EXTENT PERMITTED BY LAW, TODDLERHQ SHALL NOT BE LIABLE FOR ANY
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, DOCCONNECT SHALL NOT BE LIABLE FOR ANY
               INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM
               YOUR USE OF THE SERVICE.
             </p>
@@ -191,7 +191,7 @@ export default function TermsPage() {
               If you have questions about these Terms, please contact us:
             </p>
             <ul className="mt-4 list-inside list-disc space-y-2 text-muted-foreground">
-              <li>Email: legal@toddlerhq.com</li>
+              <li>Email: legal@docconnect.com</li>
               <li>Through our <Link href="/contact" className="text-primary hover:underline">contact form</Link></li>
             </ul>
           </section>

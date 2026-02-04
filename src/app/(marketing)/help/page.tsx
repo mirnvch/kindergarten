@@ -15,41 +15,41 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
 export const metadata: Metadata = {
-  title: "Help Center | ToddlerHQ",
-  description: "Find answers to common questions and get help with ToddlerHQ.",
+  title: "Help Center | DocConnect",
+  description: "Find answers to common questions and get help with DocConnect.",
 };
 
 const categories = [
   {
     icon: BookOpen,
     title: "Getting Started",
-    description: "New to ToddlerHQ? Start here.",
+    description: "New to DocConnect? Start here.",
     articles: [
       "How to create an account",
       "Setting up your profile",
-      "Finding your first daycare",
-      "How to book a tour",
+      "Finding your first provider",
+      "How to book an appointment",
     ],
   },
   {
     icon: Users,
-    title: "For Parents",
-    description: "Help for families using ToddlerHQ.",
+    title: "For Patients",
+    description: "Help for patients using DocConnect.",
     articles: [
-      "Searching for daycares",
-      "Managing your children's profiles",
-      "Understanding daycare ratings",
+      "Searching for healthcare providers",
+      "Managing your health profile",
+      "Understanding provider ratings",
       "Leaving reviews",
     ],
   },
   {
     icon: Building2,
-    title: "For Daycares",
-    description: "Help for daycare providers.",
+    title: "For Providers",
+    description: "Help for healthcare providers.",
     articles: [
-      "Creating your daycare profile",
-      "Managing bookings",
-      "Setting up programs and pricing",
+      "Creating your practice profile",
+      "Managing appointments",
+      "Setting up services and pricing",
       "Getting verified",
     ],
   },
@@ -78,7 +78,7 @@ const categories = [
   {
     icon: MessageSquare,
     title: "Messaging",
-    description: "Communication on ToddlerHQ.",
+    description: "Communication on DocConnect.",
     articles: [
       "Sending messages",
       "Message notifications",
@@ -90,9 +90,9 @@ const categories = [
 
 const popularArticles = [
   { title: "How do I reset my password?", href: "/help/reset-password", comingSoon: true },
-  { title: "How to cancel a booking", href: "/help/cancel-booking", comingSoon: true },
+  { title: "How to cancel an appointment", href: "/help/cancel-booking", comingSoon: true },
   { title: "Updating payment information", href: "/help/payment-info", comingSoon: true },
-  { title: "How verification works for daycares", href: "/help/verification", comingSoon: true },
+  { title: "How verification works for providers", href: "/help/verification", comingSoon: true },
   { title: "Understanding platform fees", href: "/help/platform-fees", comingSoon: true },
 ];
 
@@ -103,7 +103,7 @@ export default function HelpPage() {
       <div className="mb-12 text-center">
         <h1 className="mb-4 text-4xl font-bold">Help Center</h1>
         <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground">
-          Find answers to your questions and learn how to get the most out of ToddlerHQ.
+          Find answers to your questions and learn how to get the most out of DocConnect.
         </p>
 
         {/* Search */}
@@ -180,7 +180,7 @@ export default function HelpPage() {
             <Link href="/contact">Contact Support</Link>
           </Button>
           <Button variant="outline" asChild>
-            <a href="mailto:support@toddlerhq.com">Email Us</a>
+            <a href="mailto:support@docconnect.com">Email Us</a>
           </Button>
         </div>
       </section>

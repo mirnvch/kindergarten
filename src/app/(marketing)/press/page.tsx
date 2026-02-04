@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: "Press | ToddlerHQ",
-  description: "Press resources and media kit for ToddlerHQ.",
+  title: "Press | DocConnect",
+  description: "Press resources and media kit for DocConnect.",
 };
 
 const companyFacts = [
   { label: "Founded", value: "2024" },
   { label: "Headquarters", value: "San Francisco, CA" },
-  { label: "Mission", value: "Connecting families with quality childcare" },
+  { label: "Mission", value: "Connecting patients with quality healthcare" },
   { label: "Platform", value: "Web & Mobile" },
 ];
 
@@ -23,9 +23,9 @@ const pressReleases: {
 }[] = [
   // Add press releases as they come
   // {
-  //   title: "ToddlerHQ Launches in San Francisco",
+  //   title: "DocConnect Launches in San Francisco",
   //   date: "January 2024",
-  //   excerpt: "ToddlerHQ launches its childcare discovery platform...",
+  //   excerpt: "DocConnect launches its healthcare discovery platform...",
   //   link: "#",
   // },
 ];
@@ -37,18 +37,18 @@ export default function PressPage() {
       <div className="mb-16 text-center">
         <h1 className="mb-4 text-4xl font-bold">Press & Media</h1>
         <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-          Resources for journalists and media professionals writing about ToddlerHQ.
+          Resources for journalists and media professionals writing about DocConnect.
         </p>
       </div>
 
       {/* Company Info */}
       <section className="mb-16">
-        <h2 className="mb-8 text-2xl font-bold">About ToddlerHQ</h2>
+        <h2 className="mb-8 text-2xl font-bold">About DocConnect</h2>
         <div className="mb-8">
           <p className="text-muted-foreground">
-            ToddlerHQ is a platform that connects parents with trusted daycare
-            providers. We make it easy for families to find, compare, and book
-            quality childcare, while helping daycare providers grow their business
+            DocConnect is a platform that connects patients with trusted healthcare
+            providers. We make it easy to find, compare, and book
+            quality healthcare, while helping providers grow their practice
             and manage operations efficiently.
           </p>
         </div>
@@ -80,7 +80,7 @@ export default function PressPage() {
               <div className="mb-4 flex h-24 items-center justify-center rounded-lg bg-muted">
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
                   <span className="text-2xl font-bold text-primary-foreground">
-                    T
+                    D
                   </span>
                 </div>
               </div>
@@ -160,9 +160,9 @@ export default function PressPage() {
           contact our communications team.
         </p>
         <Button asChild>
-          <a href="mailto:press@toddlerhq.com">
+          <a href="mailto:press@docconnect.com">
             <Mail className="mr-2 h-4 w-4" />
-            press@toddlerhq.com
+            press@docconnect.com
           </a>
         </Button>
       </section>

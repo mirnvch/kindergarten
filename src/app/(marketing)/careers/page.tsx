@@ -15,15 +15,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "Careers | ToddlerHQ",
-  description: "Join the ToddlerHQ team and help families find quality childcare.",
+  title: "Careers | DocConnect",
+  description: "Join the DocConnect team and help patients find quality healthcare.",
 };
 
 const values = [
   {
     icon: Heart,
-    title: "Family First",
-    description: "We're building products that make life easier for families and caregivers.",
+    title: "Patient First",
+    description: "We're building products that make healthcare more accessible for everyone.",
   },
   {
     icon: Zap,
@@ -38,7 +38,7 @@ const values = [
   {
     icon: Globe,
     title: "Think Big",
-    description: "We're on a mission to transform childcare discovery globally.",
+    description: "We're on a mission to transform healthcare discovery globally.",
   },
 ];
 
@@ -77,7 +77,7 @@ export default function CareersPage() {
       <div className="mb-16 text-center">
         <h1 className="mb-4 text-4xl font-bold">Join Our Team</h1>
         <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-          We&apos;re on a mission to help every family find quality childcare.
+          We&apos;re on a mission to help every patient find quality healthcare.
           Join us in making a difference.
         </p>
       </div>
@@ -149,7 +149,7 @@ export default function CareersPage() {
               we&apos;ll keep you in mind for future opportunities.
             </p>
             <Button variant="outline" asChild>
-              <a href="mailto:careers@toddlerhq.com">Send Your Resume</a>
+              <a href="mailto:careers@docconnect.com">Send Your Resume</a>
             </Button>
           </div>
         )}
@@ -161,10 +161,10 @@ export default function CareersPage() {
         <p className="mb-6 text-muted-foreground">
           Reach out to our team at{" "}
           <a
-            href="mailto:careers@toddlerhq.com"
+            href="mailto:careers@docconnect.com"
             className="text-primary hover:underline"
           >
-            careers@toddlerhq.com
+            careers@docconnect.com
           </a>
         </p>
         <Button variant="outline" asChild>

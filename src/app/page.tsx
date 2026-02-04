@@ -19,43 +19,43 @@ const features = [
     icon: Search,
     title: "Easy Search",
     description:
-      "Find daycares near you with advanced filters for price, age, and amenities.",
+      "Find healthcare providers near you with advanced filters for specialty, availability, and insurance.",
   },
   {
     icon: Shield,
     title: "Verified Providers",
     description:
-      "All daycares are licensed and verified with background-checked staff.",
+      "All providers are licensed and verified with verified credentials.",
   },
   {
     icon: Star,
     title: "Trusted Reviews",
     description:
-      "Read honest reviews from real parents to make informed decisions.",
+      "Read honest reviews from real patients to make informed decisions.",
   },
   {
     icon: MessageSquare,
     title: "Direct Messaging",
     description:
-      "Connect directly with daycares to ask questions and schedule tours.",
+      "Connect directly with providers to ask questions and schedule appointments.",
   },
   {
     icon: CreditCard,
     title: "Easy Payments",
     description:
-      "Pay tuition securely online with automatic billing and receipts.",
+      "Pay for services securely online with automatic billing and receipts.",
   },
   {
     icon: BarChart3,
     title: "Provider Tools",
     description:
-      "Powerful dashboard for daycares to manage bookings and grow their business.",
+      "Powerful dashboard for providers to manage appointments and grow their practice.",
   },
 ];
 
 const stats = [
-  { value: "10,000+", label: "Daycares" },
-  { value: "50,000+", label: "Families" },
+  { value: "10,000+", label: "Providers" },
+  { value: "50,000+", label: "Patients" },
   { value: "100+", label: "Cities" },
   { value: "4.8/5", label: "Average Rating" },
 ];
@@ -83,21 +83,21 @@ export default async function HomePage() {
           <div className="container mx-auto px-4">
             <div className="mx-auto max-w-3xl text-center">
               <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-                Find the Perfect Daycare for Your Child
+                Find the Perfect Healthcare Provider
               </h1>
               <p className="mt-6 text-lg text-muted-foreground">
-                Browse thousands of licensed daycares, read reviews from real
-                parents, and book tours online. KinderCare makes finding quality
-                childcare easy.
+                Browse thousands of healthcare providers, read reviews from real
+                patients, and book appointments online. DocConnect makes finding quality
+                healthcare easy.
               </p>
               <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
                 <Button size="lg" asChild>
                   <Link href="/search">
-                    Find Daycares <ArrowRight className="ml-2 h-4 w-4" />
+                    Find Providers <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
-                  <Link href="/for-daycares">List Your Daycare</Link>
+                  <Link href="/for-providers">List Your Practice</Link>
                 </Button>
               </div>
             </div>
@@ -132,11 +132,11 @@ export default async function HomePage() {
           <div className="container mx-auto px-4">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                Everything You Need to Find Great Childcare
+                Everything You Need to Find Great Healthcare
               </h2>
               <p className="mt-4 text-muted-foreground">
-                KinderCare connects families with quality daycares and gives
-                providers the tools they need to succeed.
+                DocConnect connects patients with quality healthcare providers and gives
+                practices the tools they need to succeed.
               </p>
             </div>
             <div className="mx-auto mt-16 grid max-w-5xl gap-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -164,19 +164,19 @@ export default async function HomePage() {
             <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
               <div>
                 <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                  Grow Your Daycare Business
+                  Grow Your Healthcare Practice
                 </h2>
                 <p className="mt-4 text-muted-foreground">
-                  Join thousands of daycares using KinderCare to fill enrollment,
-                  manage payments, and communicate with families.
+                  Join thousands of providers using DocConnect to fill appointments,
+                  manage payments, and communicate with patients.
                 </p>
                 <ul className="mt-8 space-y-4">
                   {[
-                    "Free listing to reach more families",
-                    "Automated tour scheduling and reminders",
+                    "Free listing to reach more patients",
+                    "Automated appointment scheduling and reminders",
                     "Secure payment processing",
                     "Analytics to track your performance",
-                    "Direct messaging with parents",
+                    "Direct messaging with patients",
                   ].map((item) => (
                     <li key={item} className="flex items-center gap-3">
                       <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-primary" />
@@ -186,7 +186,7 @@ export default async function HomePage() {
                 </ul>
                 <div className="mt-8">
                   <Button size="lg" asChild>
-                    <Link href="/register/daycare">
+                    <Link href="/register/provider">
                       Get Started Free <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
@@ -207,15 +207,15 @@ export default async function HomePage() {
             <div className="relative overflow-hidden rounded-3xl bg-primary px-6 py-20 sm:px-12 sm:py-28">
               <div className="relative mx-auto max-w-2xl text-center">
                 <h2 className="text-3xl font-bold tracking-tight text-primary-foreground sm:text-4xl">
-                  Ready to Find the Perfect Daycare?
+                  Ready to Find the Perfect Provider?
                 </h2>
                 <p className="mt-4 text-primary-foreground/80">
-                  Join thousands of families who have found quality childcare
-                  through KinderCare.
+                  Join thousands of patients who have found quality healthcare
+                  through DocConnect.
                 </p>
                 <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
                   <Button size="lg" variant="secondary" asChild>
-                    <Link href="/search">Search Daycares</Link>
+                    <Link href="/search">Search Providers</Link>
                   </Button>
                   <Button
                     size="lg"

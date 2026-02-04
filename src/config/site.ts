@@ -1,24 +1,24 @@
 export const siteConfig = {
-  name: "KinderCare",
+  name: "DocConnect",
   description:
-    "Find the perfect daycare for your child. Browse thousands of licensed daycares, read reviews, and book tours online.",
+    "Find the perfect healthcare provider. Browse verified doctors, read patient reviews, and book appointments online.",
   url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   ogImage: "/og.png",
   links: {
-    twitter: "https://twitter.com/kindercare",
-    facebook: "https://facebook.com/kindercare",
-    instagram: "https://instagram.com/kindercare",
+    twitter: "https://twitter.com/docconnect",
+    facebook: "https://facebook.com/docconnect",
+    instagram: "https://instagram.com/docconnect",
   },
-  creator: "KinderCare Team",
+  creator: "DocConnect Team",
   keywords: [
-    "daycare",
-    "childcare",
-    "preschool",
-    "child care near me",
-    "daycare near me",
-    "early childhood education",
-    "babysitter",
-    "nursery",
+    "doctor",
+    "healthcare",
+    "medical",
+    "doctor near me",
+    "clinic near me",
+    "telemedicine",
+    "appointment",
+    "specialist",
   ],
 };
 

@@ -16,7 +16,7 @@ import {
 import { get2FAStatus } from "@/server/actions/security/two-factor";
 
 export const metadata: Metadata = {
-  title: "Security Settings | KinderCare",
+  title: "Security Settings | DocConnect",
   description: "Manage your account security settings",
 };
 

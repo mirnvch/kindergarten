@@ -1,13 +1,13 @@
 {
-  "name": "KinderCare",
-  "short_name": "KinderCare",
-  "description": "Find trusted daycare for your child",
+  "name": "DocConnect",
+  "short_name": "DocConnect",
+  "description": "Find trusted healthcare providers",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#16a34a",
-  "categories": ["lifestyle", "education"],
+  "categories": ["health", "medical"],
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
@@ -74,9 +74,9 @@
   ],
   "shortcuts": [
     {
-      "name": "Find Daycares",
+      "name": "Find Providers",
       "short_name": "Search",
-      "description": "Search for daycares near you",
+      "description": "Search for healthcare providers near you",
       "url": "/search",
       "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
     },

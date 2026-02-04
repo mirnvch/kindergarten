@@ -321,7 +321,7 @@ export async function sendNewMessageNotification(
 
     return sendEmail({
       to: recipient.email,
-      subject: `New message from ${message.sender.firstName || "KinderCare"}`,
+      subject: `New message from ${message.sender.firstName || "DocConnect"}`,
       html,
     });
   }
@@ -359,7 +359,7 @@ export async function sendWelcomeEmail(
 
   return sendEmail({
     to: user.email,
-    subject: "Welcome to KinderCare!",
+    subject: "Welcome to DocConnect!",
     html,
   });
 }

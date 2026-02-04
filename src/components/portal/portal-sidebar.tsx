@@ -26,7 +26,7 @@ import {
 
 const navigation: NavItem[] = [
   { name: "Dashboard", href: "/portal", icon: LayoutDashboard },
-  { name: "My Daycare", href: "/portal/daycare", icon: Building2 },
+  { name: "My Practice", href: "/portal/daycare", icon: Building2 },
   { name: "Verification", href: "/portal/verification", icon: ShieldCheck },
   { name: "Bookings", href: "/portal/bookings", icon: Calendar },
   { name: "Messages", href: "/portal/messages", icon: MessageSquare },
@@ -52,10 +52,10 @@ export function PortalSidebar({ user, notificationCount = 0 }: PortalSidebarProp
       branding={{
         icon: (
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <span className="text-lg font-bold text-primary-foreground">K</span>
+            <span className="text-lg font-bold text-primary-foreground">D</span>
           </div>
         ),
-        text: "KinderCare Portal",
+        text: "DocConnect Portal",
         href: "/portal",
       }}
       headerSlot={<NotificationBell initialCount={notificationCount} />}

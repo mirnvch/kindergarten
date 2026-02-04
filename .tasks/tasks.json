@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "project": "KinderCare",
+  "project": "DocConnect",
   "lastTaskId": 47,
   "currentTaskId": null,
   "tasks": [
@@ -1583,7 +1583,8 @@
       "id": 45,
       "title": "Phase 1: Branding Update (KinderCare → DocConnect)",
       "description": "Update all branding from KinderCare/ToddlerHQ to DocConnect. Currently mixed branding across the site.",
-      "status": "pending",
+      "status": "done",
+      "completedAt": "2026-02-04T10:30:00Z",
       "priority": "high",
       "complexity": 3,
       "phase": "DC.1",
@@ -1591,15 +1592,15 @@
       "blockedBy": [44],
       "blocks": [],
       "subtasks": [
-        { "id": "45.1", "title": "Update logo component (src/components/ui/logo.tsx)", "done": false },
-        { "id": "45.2", "title": "Update header logo and text", "done": false },
-        { "id": "45.3", "title": "Update footer logo, text, and copyright", "done": false },
-        { "id": "45.4", "title": "Update all page titles (metadata)", "done": false },
-        { "id": "45.5", "title": "Update PWA manifest (public/site.webmanifest)", "done": false },
-        { "id": "45.6", "title": "Update favicon and app icons", "done": false },
-        { "id": "45.7", "title": "Update email templates (src/lib/email.ts)", "done": false },
-        { "id": "45.8", "title": "Update social media links (kindercare → docconnect)", "done": false },
-        { "id": "45.9", "title": "Update contact info (support@toddlerhq.com → support@docconnect.com)", "done": false }
+        { "id": "45.1", "title": "Update logo component (src/components/ui/logo.tsx)", "done": true },
+        { "id": "45.2", "title": "Update header logo and text", "done": true },
+        { "id": "45.3", "title": "Update footer logo, text, and copyright", "done": true },
+        { "id": "45.4", "title": "Update all page titles (metadata)", "done": true },
+        { "id": "45.5", "title": "Update PWA manifest (public/site.webmanifest)", "done": true },
+        { "id": "45.6", "title": "Update favicon and app icons", "done": false, "note": "Skipped - requires design assets" },
+        { "id": "45.7", "title": "Update email templates (src/lib/email.ts)", "done": true },
+        { "id": "45.8", "title": "Update social media links (kindercare → docconnect)", "done": true },
+        { "id": "45.9", "title": "Update contact info (support@toddlerhq.com → support@docconnect.com)", "done": true }
       ],
       "acceptanceCriteria": [
         "No 'KinderCare' text anywhere on site",
@@ -1621,16 +1622,24 @@
       "notes": [
         "2026-02-03: Audit found mixed branding - header shows 'KinderCare', content shows 'ToddlerHQ'",
         "Current state: Logo='K KinderCare', Footer='© 2026 KinderCare'",
-        "Social links: twitter.com/kindercare, facebook.com/kindercare"
+        "Social links: twitter.com/kindercare, facebook.com/kindercare",
+        "2026-02-04: COMPLETED - Updated 25+ files with DocConnect branding",
+        "  - Header/Footer: Logo 'K' → 'D', KinderCare → DocConnect",
+        "  - All page metadata titles updated",
+        "  - Email templates updated (lib/email.ts, notifications.ts, data-export.ts, account-deletion.ts)",
+        "  - TOTP issuer updated (lib/totp.ts)",
+        "  - Admin default settings updated",
+        "  - Social links updated to @docconnect",
+        "  - PWA manifest updated earlier (Session 22)"
       ],
       "createdAt": "2026-02-03T12:00:00Z",
-      "updatedAt": "2026-02-03T12:00:00Z"
+      "updatedAt": "2026-02-04T10:30:00Z"
     },
     {
       "id": 46,
       "title": "Phase 1: Content Update (daycare → healthcare terminology)",
       "description": "Update all content from daycare/childcare terminology to healthcare/medical terminology for DocConnect platform.",
-      "status": "pending",
+      "status": "in_progress",
       "priority": "high",
       "complexity": 4,
       "phase": "DC.1",
@@ -1638,17 +1647,17 @@
       "blockedBy": [44],
       "blocks": [],
       "subtasks": [
-        { "id": "46.1", "title": "Homepage: Hero, features, stats, CTAs", "done": false },
-        { "id": "46.2", "title": "Search page: Title, description, filters", "done": false },
-        { "id": "46.3", "title": "Features page: All sections", "done": false },
-        { "id": "46.4", "title": "For-daycares → For-providers page", "done": false },
-        { "id": "46.5", "title": "Pricing page: Plan descriptions", "done": false },
-        { "id": "46.6", "title": "About page: Description", "done": false },
-        { "id": "46.7", "title": "Register page: Role dropdown ('Parent looking for daycare' → 'Patient')", "done": false },
-        { "id": "46.8", "title": "Navigation: 'Find Daycares' → 'Find Doctors'", "done": false },
-        { "id": "46.9", "title": "Contact page: Description, email", "done": false },
-        { "id": "46.10", "title": "Help/Safety/Blog/Careers/Press pages", "done": false },
-        { "id": "46.11", "title": "Legal pages (privacy, terms, cookies)", "done": false }
+        { "id": "46.1", "title": "Homepage: Hero, features, stats, CTAs", "done": true },
+        { "id": "46.2", "title": "Search page: Title, description, filters", "done": true },
+        { "id": "46.3", "title": "Features page: All sections", "done": true },
+        { "id": "46.4", "title": "For-daycares → For-providers page", "done": true },
+        { "id": "46.5", "title": "Pricing page: Plan descriptions", "done": true },
+        { "id": "46.6", "title": "About page: Description", "done": true },
+        { "id": "46.7", "title": "Register page: Role dropdown ('Parent looking for daycare' → 'Patient')", "done": true },
+        { "id": "46.8", "title": "Navigation: 'Find Daycares' → 'Find Doctors'", "done": true },
+        { "id": "46.9", "title": "Contact page: Description, email", "done": true },
+        { "id": "46.10", "title": "Help/Safety/Blog/Careers/Press pages", "done": true },
+        { "id": "46.11", "title": "Legal pages (privacy, terms, cookies)", "done": true }
       ],
       "acceptanceCriteria": [
         "No 'daycare' terminology in user-facing content",
@@ -1671,16 +1680,18 @@
       ],
       "notes": [
         "2026-02-03: Audit found all pages still use daycare terminology",
-        "Mapping: daycare→provider, parent→patient, childcare→healthcare, tour→appointment"
+        "Mapping: daycare→provider, parent→patient, childcare→healthcare, tour→appointment",
+        "2026-02-04: Session 25 - Homepage, navigation, features, pricing, about, for-providers done",
+        "2026-02-04: Session 26 - All marketing pages done (help, safety, terms, privacy, cookies, contact, press, community, blog, careers, not-found)"
       ],
       "createdAt": "2026-02-03T12:00:00Z",
-      "updatedAt": "2026-02-03T12:00:00Z"
+      "updatedAt": "2026-02-04T15:00:00Z"
     },
     {
       "id": 47,
       "title": "Fix React Hydration Error on Search Page",
       "description": "Search page shows React error #418 (hydration mismatch). Likely caused by Mapbox GL dynamic import or SSR/client data inconsistency.",
-      "status": "pending",
+      "status": "done",
       "priority": "high",
       "complexity": 2,
       "phase": "DC.1",
@@ -1688,11 +1699,11 @@
       "blockedBy": [44],
       "blocks": [],
       "subtasks": [
-        { "id": "47.1", "title": "Investigate React error #418 cause", "done": false },
-        { "id": "47.2", "title": "Check search-results.tsx SSR handling", "done": false },
-        { "id": "47.3", "title": "Check search-map.tsx dynamic import", "done": false },
-        { "id": "47.4", "title": "Ensure Mapbox GL only loads client-side", "done": false },
-        { "id": "47.5", "title": "Test search page after fix", "done": false }
+        { "id": "47.1", "title": "Investigate React error #418 cause", "done": true },
+        { "id": "47.2", "title": "Check search-results.tsx SSR handling", "done": true },
+        { "id": "47.3", "title": "Check search-map.tsx dynamic import", "done": true },
+        { "id": "47.4", "title": "Ensure Mapbox GL only loads client-side", "done": true },
+        { "id": "47.5", "title": "Test search page after fix", "done": true }
       ],
       "acceptanceCriteria": [
         "No React hydration errors in console",
@@ -1708,10 +1719,13 @@
       "notes": [
         "2026-02-03: Error: Minified React error #418",
         "Appears on /search page load",
-        "Mapbox GL uses dynamic import with ssr: false"
+        "Mapbox GL uses dynamic import with ssr: false",
+        "2026-02-04: Fixed! Root cause: useSearchParams() in SearchFilters and SaveSearchButton without Suspense boundary",
+        "Solution: Wrapped both components in Suspense with skeleton fallbacks"
       ],
+      "completedAt": "2026-02-04T16:00:00Z",
       "createdAt": "2026-02-03T12:00:00Z",
-      "updatedAt": "2026-02-03T12:00:00Z"
+      "updatedAt": "2026-02-04T16:00:00Z"
     }
   ]
 }

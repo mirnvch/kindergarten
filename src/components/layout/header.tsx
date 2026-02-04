@@ -28,8 +28,8 @@ type HeaderProps = {
 };
 
 const navigation = [
-  { name: "Find Daycares", href: "/search" },
-  { name: "For Providers", href: "/for-daycares" },
+  { name: "Find Providers", href: "/search" },
+  { name: "For Providers", href: "/for-providers" },
   { name: "Pricing", href: "/pricing" },
   { name: "About", href: "/about" },
 ];
@@ -56,9 +56,9 @@ export function Header({ user }: HeaderProps) {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <span className="text-lg font-bold text-primary-foreground">K</span>
+            <span className="text-lg font-bold text-primary-foreground">D</span>
           </div>
-          <span className="text-xl font-bold">KinderCare</span>
+          <span className="text-xl font-bold">DocConnect</span>
         </Link>
 
         {/* Desktop Navigation */}

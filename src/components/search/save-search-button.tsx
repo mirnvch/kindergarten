@@ -137,7 +137,7 @@ export function SaveSearchButton() {
             <Label htmlFor="search-name">Search Name</Label>
             <Input
               id="search-name"
-              placeholder="e.g., Daycares near home"
+              placeholder="e.g., Providers near home"
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => {

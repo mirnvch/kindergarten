@@ -21,7 +21,7 @@ import {
 
 const navigation: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "My Children", href: "/dashboard/children", icon: Baby },
+  { name: "My Family", href: "/dashboard/children", icon: Baby },
   { name: "Bookings", href: "/dashboard/bookings", icon: Calendar },
   { name: "Favorites", href: "/dashboard/favorites", icon: Heart },
   { name: "Saved Searches", href: "/dashboard/saved-searches", icon: Bookmark },
@@ -42,10 +42,10 @@ export function ParentSidebar({ user, notificationCount = 0 }: ParentSidebarProp
       branding={{
         icon: (
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <span className="text-lg font-bold text-primary-foreground">K</span>
+            <span className="text-lg font-bold text-primary-foreground">D</span>
           </div>
         ),
-        text: "KinderCare",
+        text: "DocConnect",
         href: "/dashboard",
       }}
       headerSlot={<NotificationBell initialCount={notificationCount} />}
@@ -53,7 +53,7 @@ export function ParentSidebar({ user, notificationCount = 0 }: ParentSidebarProp
         <Button variant="ghost" className="w-full justify-start" asChild>
           <Link href="/search">
             <Search className="mr-2 h-4 w-4" />
-            Find Daycares
+            Find Providers
           </Link>
         </Button>
       }

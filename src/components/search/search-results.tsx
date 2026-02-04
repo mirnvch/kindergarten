@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
@@ -33,6 +33,27 @@ export function SearchResultsSkeleton() {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+// Loading skeleton for search filters (prevents hydration mismatch)
+function SearchFiltersSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <Skeleton className="h-10 flex-1" />
+        <Skeleton className="h-10 w-20" />
+        <Skeleton className="h-10 w-10" />
+        <Skeleton className="h-10 w-20 hidden sm:block" />
+      </div>
+      <div className="hidden lg:flex gap-4">
+        <Skeleton className="h-10 w-[180px]" />
+        <Skeleton className="h-10 w-[150px]" />
+        <Skeleton className="h-10 w-[180px]" />
+        <Skeleton className="h-10 w-[180px]" />
+        <Skeleton className="h-10 w-[140px]" />
+      </div>
     </div>
   );
 }
@@ -75,12 +96,15 @@ export function SearchResultsClient({
   return (
     <>
       <div className="mb-8">
-        <SearchFilters onViewChange={setView} currentView={view} />
+        {/* Wrap SearchFilters in Suspense to prevent hydration mismatch from useSearchParams */}
+        <Suspense fallback={<SearchFiltersSkeleton />}>
+          <SearchFilters onViewChange={setView} currentView={view} />
+        </Suspense>
       </div>
 
       {daycares.length === 0 ? (
         <div className="text-center py-12">
-          <h3 className="text-lg font-semibold">No daycares found</h3>
+          <h3 className="text-lg font-semibold">No providers found</h3>
           <p className="text-muted-foreground mt-2">
             Try adjusting your filters or search for a different location.
           </p>
@@ -92,9 +116,12 @@ export function SearchResultsClient({
         <>
           <div className="flex items-center justify-between mb-4">
             <p className="text-muted-foreground">
-              {pagination.total} daycare{pagination.total !== 1 ? "s" : ""} found
+              {pagination.total} provider{pagination.total !== 1 ? "s" : ""} found
             </p>
-            <SaveSearchButton />
+            {/* Wrap SaveSearchButton in Suspense to prevent hydration mismatch from useSearchParams */}
+            <Suspense fallback={<Skeleton className="h-9 w-28" />}>
+              <SaveSearchButton />
+            </Suspense>
           </div>
 
           {view === "list" ? (

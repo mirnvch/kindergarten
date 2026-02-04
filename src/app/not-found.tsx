@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { GoBackButton } from "@/components/ui/go-back-button";
 
 export const metadata: Metadata = {
-  title: "Page Not Found | ToddlerHQ",
+  title: "Page Not Found | DocConnect",
   description: "The page you're looking for doesn't exist or has been moved.",
 };
 
@@ -38,7 +38,7 @@ export default function NotFound() {
             className="text-sm text-primary hover:underline"
           >
             <Search className="mr-1 inline h-4 w-4" />
-            Search Daycares
+            Search Providers
           </Link>
           <Link href="/about" className="text-sm text-primary hover:underline">
             About Us

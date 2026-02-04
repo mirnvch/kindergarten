@@ -14,8 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: "Trust & Safety | ToddlerHQ",
-  description: "Learn about how ToddlerHQ keeps families and providers safe.",
+  title: "Trust & Safety | DocConnect",
+  description: "Learn about how DocConnect keeps patients and providers safe.",
 };
 
 const trustFeatures = [
@@ -23,13 +23,13 @@ const trustFeatures = [
     icon: UserCheck,
     title: "Provider Verification",
     description:
-      "We verify daycare providers through a multi-step process including license verification, insurance confirmation, and identity checks.",
+      "We verify healthcare providers through a multi-step process including license verification, insurance confirmation, and identity checks.",
   },
   {
     icon: FileCheck,
-    title: "Background Checks",
+    title: "Credential Verification",
     description:
-      "Verified providers have completed background checks. We partner with trusted screening services to ensure child safety.",
+      "Verified providers have completed credential verification. We partner with trusted screening services to ensure patient safety.",
   },
   {
     icon: Lock,
@@ -41,7 +41,7 @@ const trustFeatures = [
     icon: Eye,
     title: "Review Authenticity",
     description:
-      "Reviews come from verified parents who have actually used the daycare services. We monitor for fake or misleading reviews.",
+      "Reviews come from verified patients who have actually used the healthcare services. We monitor for fake or misleading reviews.",
   },
 ];
 
@@ -72,8 +72,8 @@ export default function SafetyPage() {
         <Shield className="mx-auto mb-4 h-16 w-16 text-primary" />
         <h1 className="mb-4 text-4xl font-bold">Trust & Safety</h1>
         <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-          At ToddlerHQ, safety is our top priority. We work hard to create a trusted
-          environment for families and childcare providers.
+          At DocConnect, safety is our top priority. We work hard to create a trusted
+          environment for patients and healthcare providers.
         </p>
       </div>
 
@@ -186,7 +186,7 @@ export default function SafetyPage() {
               <Link href="/contact">Report an Issue</Link>
             </Button>
             <Button variant="outline" asChild>
-              <a href="mailto:safety@toddlerhq.com">Email Safety Team</a>
+              <a href="mailto:safety@docconnect.com">Email Safety Team</a>
             </Button>
           </div>
         </div>

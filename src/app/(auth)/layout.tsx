@@ -10,7 +10,7 @@ export default function AuthLayout({
       <header className="border-b">
         <div className="container mx-auto px-4 py-4">
           <Link href="/" className="text-xl font-bold text-primary">
-            KinderCare
+            DocConnect
           </Link>
         </div>
       </header>
@@ -18,7 +18,7 @@ export default function AuthLayout({
         {children}
       </main>
       <footer className="border-t py-4 text-center text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} KinderCare. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} DocConnect. All rights reserved.</p>
       </footer>
     </div>
   );

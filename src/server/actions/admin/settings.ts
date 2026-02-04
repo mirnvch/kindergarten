@@ -115,9 +115,9 @@ export async function deleteSetting(key: string) {
 // Default settings structure
 export const DEFAULT_SETTINGS = {
   site: {
-    name: "KinderCare",
-    tagline: "Find the perfect daycare for your child",
-    contactEmail: "support@kindercare.com",
+    name: "DocConnect",
+    tagline: "Find the perfect healthcare provider",
+    contactEmail: "support@docconnect.com",
     supportPhone: "",
   },
   features: {

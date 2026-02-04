@@ -1,4 +1,4 @@
-# KinderCare Knowledge Base
+# DocConnect Knowledge Base
 
 > Этот файл содержит накопленные знания о проекте. Claude читает его в начале каждой сессии.
 
@@ -238,6 +238,63 @@ dev branch → Test on Vercel Preview → main branch → Production
 ---
 
 ## Session Notes
+
+### 2026-02-04 (Session 26 — Tasks #46 Marketing + #47 Hydration Fix COMPLETED)
+- **Task #46: Content Update (daycare → healthcare) — MARKETING PAGES COMPLETED**
+  - **Marketing pages updated:**
+    - `/help` — Articles updated to healthcare terminology (providers, appointments, patients)
+    - `/safety` — Trust features updated (daycare→healthcare providers, parents→patients)
+    - `/terms` — Full legal text updated (ToddlerHQ→DocConnect, daycare→healthcare)
+    - `/privacy` — Privacy policy updated (daycare→healthcare, parents→patients)
+    - `/cookies` — Cookie policy updated (ToddlerHQ→DocConnect)
+    - `/contact` — Contact info updated (toddlerhq→docconnect emails/social)
+    - `/press` — Press page updated with DocConnect branding
+    - `/community` — Social links and content updated for healthcare
+    - `/blog` — Blog content updated (childcare→healthcare)
+    - `/careers` — Careers page updated (family→patient first, childcare→healthcare)
+    - `/not-found` — 404 page updated
+  - **Legacy redirect fixed:** `/daycare/[slug]/enroll` now correctly redirects to `/provider/[slug]/book`
+  - **All ToddlerHQ references removed from marketing folder** (except legacy redirect pages)
+
+- **Task #47: Fix React Hydration Error on Search Page — COMPLETED**
+  - **Root cause:** `useSearchParams()` in `SearchFilters` and `SaveSearchButton` without Suspense boundary
+  - **Solution:** Wrapped both components in `<Suspense>` with skeleton fallbacks
+  - **Files modified:**
+    - `src/components/search/search-results.tsx` — Added Suspense around SearchFilters and SaveSearchButton
+    - `src/components/search/save-search-button.tsx` — Updated placeholder text
+  - **Also fixed:** User-facing text updated from "daycares" to "providers"
+  - **Tested with Playwright:** No console errors, page loads correctly
+  - **Build verified successful**
+
+- **Status after this session:**
+  - User-facing marketing pages: ✅ All updated
+  - Search page: ✅ No hydration errors
+  - Portal/Dashboard pages: ⏳ Internal routes still use "daycare" terminology (acceptable for internal code)
+  - Server actions: ⏳ ~600+ internal references remaining (searchDaycares, etc.) (acceptable for internal code)
+
+### 2026-02-04 (Session 25 — Tasks #45 COMPLETED, #46 IN PROGRESS)
+- **Task #45: Branding Update (KinderCare → DocConnect) — COMPLETED**
+  - All "KinderCare" references replaced with "DocConnect" in src/ (0 remaining)
+  - Updated 25+ files: headers, footers, email templates, TOTP issuer, admin settings
+  - Social links updated to @docconnect
+  - Build verified successful
+
+- **Task #46: Content Update (daycare → healthcare) — IN PROGRESS**
+  - Homepage: Updated all content to healthcare terminology
+    - Stats: Daycares→Providers, Families→Patients
+    - Features: childcare→healthcare, daycares→providers
+    - CTAs: "Find Daycares"→"Find Providers", "List Your Daycare"→"List Your Practice"
+  - Navigation: "Find Daycares"→"Find Providers"
+  - Footer: Updated product links
+  - About page: For Parents→For Patients, find daycare→find provider
+  - Sidebars: "My Children"→"My Family", "My Daycare"→"My Practice", "Find Daycares"→"Find Providers"
+  - For-providers page: Complete rewrite with healthcare content
+  - Renamed: /for-daycares → /for-providers, /register/daycare → /register/provider
+  - **Remaining:** ~687 occurrences in 93 files (mostly internal code/server actions)
+
+- **Next Steps:**
+  - Continue Task #46 (update remaining marketing pages, portal pages)
+  - Task #47: Fix React Hydration Error on Search Page
 
 ### 2026-02-04 (Session 24 — Task #44 Auth Fix COMPLETED)
 - **Task #44: Fix Production Auth — COMPLETED**

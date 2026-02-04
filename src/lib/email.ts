@@ -11,7 +11,7 @@ export function getResend() {
   return resend;
 }
 
-const FROM_EMAIL = process.env.FROM_EMAIL || "KinderCare <noreply@kindercare.app>";
+const FROM_EMAIL = process.env.FROM_EMAIL || "DocConnect <noreply@docconnect.app>";
 
 export interface SendEmailOptions {
   to: string | string[];
@@ -116,7 +116,7 @@ export function bookingConfirmationEmail({
 
     <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/bookings" style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px;">View Booking</a>
 
-    <p style="color: #666; font-size: 14px; margin-top: 30px;">Best regards,<br>The KinderCare Team</p>
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">Best regards,<br>The DocConnect Team</p>
   </div>
 </body>
 </html>
@@ -172,7 +172,7 @@ export function bookingReminderEmail({
 
     <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/bookings" style="display: inline-block; background: #f5576c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px;">View Details</a>
 
-    <p style="color: #666; font-size: 14px; margin-top: 30px;">See you tomorrow!<br>The KinderCare Team</p>
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">See you tomorrow!<br>The DocConnect Team</p>
   </div>
 </body>
 </html>
@@ -214,7 +214,7 @@ export function newMessageEmail({
 
     <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/messages/${threadId}" style="display: inline-block; background: #4facfe; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px;">Reply Now</a>
 
-    <p style="color: #666; font-size: 14px; margin-top: 30px;">Best regards,<br>The KinderCare Team</p>
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">Best regards,<br>The DocConnect Team</p>
   </div>
 </body>
 </html>
@@ -239,17 +239,17 @@ export function welcomeEmail({
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to KinderCare</title>
+  <title>Welcome to DocConnect</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">Welcome to KinderCare! 🎉</h1>
+    <h1 style="color: white; margin: 0; font-size: 24px;">Welcome to DocConnect! 🎉</h1>
   </div>
 
   <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
     <p>Hi ${userName},</p>
 
-    <p>Thank you for joining KinderCare! We're excited to have you on board.</p>
+    <p>Thank you for joining DocConnect! We're excited to have you on board.</p>
 
     ${isPatient ? `
     <p><strong>As a parent, you can:</strong></p>
@@ -271,7 +271,7 @@ export function welcomeEmail({
 
     <a href="${dashboardUrl}" style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px;">Go to Dashboard</a>
 
-    <p style="color: #666; font-size: 14px; margin-top: 30px;">Need help? Reply to this email and we'll be happy to assist.<br><br>Best regards,<br>The KinderCare Team</p>
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">Need help? Reply to this email and we'll be happy to assist.<br><br>Best regards,<br>The DocConnect Team</p>
   </div>
 </body>
 </html>
@@ -315,7 +315,7 @@ export function waitlistSpotAvailableEmail(
 
     <a href="${process.env.NEXT_PUBLIC_APP_URL}/daycare/${daycareSlug}" style="display: inline-block; background: #38ef7d; color: #333; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px; font-weight: 600;">View Daycare</a>
 
-    <p style="color: #666; font-size: 14px; margin-top: 30px;">Best regards,<br>The KinderCare Team</p>
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">Best regards,<br>The DocConnect Team</p>
   </div>
 </body>
 </html>
@@ -357,7 +357,7 @@ export function reviewResponseEmail({
 
     <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/reviews/${reviewId}" style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px;">View Full Response</a>
 
-    <p style="color: #666; font-size: 14px; margin-top: 30px;">Best regards,<br>The KinderCare Team</p>
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">Best regards,<br>The DocConnect Team</p>
   </div>
 </body>
 </html>
@@ -406,7 +406,7 @@ export function newTrustedDeviceEmail({
 
     <a href="${securitySettingsUrl}" style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px;">Review Security Settings</a>
 
-    <p style="color: #666; font-size: 14px; margin-top: 30px;">Best regards,<br>The KinderCare Team</p>
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">Best regards,<br>The DocConnect Team</p>
   </div>
 </body>
 </html>

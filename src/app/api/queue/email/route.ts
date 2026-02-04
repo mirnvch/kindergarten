@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const { error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || "KinderCare <noreply@kindercare.com>",
+      from: process.env.EMAIL_FROM || "DocConnect <noreply@docconnect.com>",
       to: job.to,
       subject: job.subject,
       html: job.html,
