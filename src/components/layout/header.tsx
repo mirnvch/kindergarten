@@ -42,8 +42,8 @@ export function Header({ user }: HeaderProps) {
     switch (user?.role) {
       case "ADMIN":
         return "/admin";
-      case "DAYCARE_OWNER":
-      case "DAYCARE_STAFF":
+      case "PROVIDER":
+      case "CLINIC_STAFF":
         return "/portal";
       default:
         return "/dashboard";

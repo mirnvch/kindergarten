@@ -83,7 +83,7 @@ const registerSchema = z.object({
   password: passwordSchema,
   firstName: nameSchema,
   lastName: nameSchema,
-  role: z.enum(["PARENT", "DAYCARE_OWNER"]).default("PARENT"),
+  role: z.enum(["PATIENT", "PROVIDER"]).default("PATIENT"),
 });
 
 const loginSchema = z.object({

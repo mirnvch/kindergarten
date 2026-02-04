@@ -226,10 +226,10 @@ export function welcomeEmail({
   role,
 }: {
   userName: string;
-  role: "PARENT" | "DAYCARE_OWNER";
+  role: "PATIENT" | "PROVIDER";
 }) {
-  const isParent = role === "PARENT";
-  const dashboardUrl = isParent
+  const isPatient = role === "PATIENT";
+  const dashboardUrl = isPatient
     ? `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`
     : `${process.env.NEXT_PUBLIC_APP_URL}/portal`;
 
@@ -251,7 +251,7 @@ export function welcomeEmail({
 
     <p>Thank you for joining KinderCare! We're excited to have you on board.</p>
 
-    ${isParent ? `
+    ${isPatient ? `
     <p><strong>As a parent, you can:</strong></p>
     <ul style="padding-left: 20px;">
       <li>Search for daycares in your area</li>

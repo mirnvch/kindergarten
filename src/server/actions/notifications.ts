@@ -331,7 +331,7 @@ export async function sendNewMessageNotification(
 
 export async function sendWelcomeEmail(
   userId: string,
-  role: "PARENT" | "DAYCARE_OWNER"
+  role: "PATIENT" | "PROVIDER"
 ) {
   const user = await db.user.findUnique({
     where: { id: userId },
@@ -343,11 +343,11 @@ export async function sendWelcomeEmail(
   await createNotification({
     userId,
     type: "welcome",
-    title: "Welcome to KinderCare!",
+    title: "Welcome to DocConnect!",
     body:
-      role === "PARENT"
-        ? "Start searching for the perfect daycare for your family."
-        : "Set up your daycare profile to start receiving bookings.",
+      role === "PATIENT"
+        ? "Start searching for the perfect healthcare provider."
+        : "Set up your provider profile to start receiving appointments.",
     data: { role },
   });
 

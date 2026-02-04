@@ -43,7 +43,7 @@ const registerSchema = z
     confirmPassword: z.string(),
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
-    role: z.enum(["PARENT", "DAYCARE_OWNER"]),
+    role: z.enum(["PATIENT", "PROVIDER"]),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -66,7 +66,7 @@ export function RegisterForm() {
       confirmPassword: "",
       firstName: "",
       lastName: "",
-      role: "PARENT",
+      role: "PATIENT",
     },
   });
 
@@ -212,11 +212,11 @@ export function RegisterForm() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="PARENT">
-                      Parent looking for daycare
+                    <SelectItem value="PATIENT">
+                      Patient looking for healthcare
                     </SelectItem>
-                    <SelectItem value="DAYCARE_OWNER">
-                      Daycare provider
+                    <SelectItem value="PROVIDER">
+                      Healthcare provider
                     </SelectItem>
                   </SelectContent>
                 </Select>
