@@ -8,11 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { updateDaycareProfile } from "@/server/actions/portal/daycare";
+import { updateProviderProfile } from "@/server/actions/portal/provider";
 import { toast } from "sonner";
 
-interface DaycareProfileFormProps {
-  daycare: {
+interface ProviderProfileFormProps {
+  provider: {
     id: string;
     name: string;
     description: string | null;
@@ -23,33 +23,26 @@ interface DaycareProfileFormProps {
     city: string;
     state: string;
     zipCode: string;
-    // These fields are optional for healthcare providers
-    capacity?: number;
-    minAge?: number;
-    maxAge?: number;
-    // Healthcare provider fields
     specialty?: string | null;
     credentials?: string | null;
     acceptingNewPatients?: boolean;
   };
 }
 
-export function DaycareProfileForm({ daycare }: DaycareProfileFormProps) {
+export function ProviderProfileForm({ provider }: ProviderProfileFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: daycare.name,
-    description: daycare.description || "",
-    email: daycare.email,
-    phone: daycare.phone,
-    website: daycare.website || "",
-    address: daycare.address,
-    city: daycare.city,
-    state: daycare.state,
-    zipCode: daycare.zipCode,
-    capacity: daycare.capacity ?? 0,
-    minAge: daycare.minAge ?? 0,
-    maxAge: daycare.maxAge ?? 0,
+    name: provider.name,
+    description: provider.description || "",
+    specialty: provider.specialty || "",
+    email: provider.email,
+    phone: provider.phone,
+    website: provider.website || "",
+    address: provider.address,
+    city: provider.city,
+    state: provider.state,
+    zipCode: provider.zipCode,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +50,7 @@ export function DaycareProfileForm({ daycare }: DaycareProfileFormProps) {
     setIsLoading(true);
 
     try {
-      const result = await updateDaycareProfile(formData);
+      const result = await updateProviderProfile(formData);
       if (result.success) {
         toast.success("Profile updated successfully");
         router.refresh();
@@ -82,12 +75,12 @@ export function DaycareProfileForm({ daycare }: DaycareProfileFormProps) {
         <CardHeader>
           <CardTitle>Basic Information</CardTitle>
           <CardDescription>
-            Your daycare name and description shown to parents
+            Your provider name and description shown to patients
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Daycare Name *</Label>
+            <Label htmlFor="name">Provider Name *</Label>
             <Input
               id="name"
               value={formData.name}
@@ -97,12 +90,22 @@ export function DaycareProfileForm({ daycare }: DaycareProfileFormProps) {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="specialty">Specialty</Label>
+            <Input
+              id="specialty"
+              value={formData.specialty}
+              onChange={(e) => updateField("specialty", e.target.value)}
+              placeholder="e.g., Family Medicine, Pediatrics, Cardiology"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => updateField("description", e.target.value)}
-              placeholder="Tell parents about your daycare, your philosophy, and what makes you special..."
+              placeholder="Tell patients about your practice, your approach, and what makes you special..."
               rows={5}
             />
           </div>
@@ -113,7 +116,7 @@ export function DaycareProfileForm({ daycare }: DaycareProfileFormProps) {
       <Card>
         <CardHeader>
           <CardTitle>Contact Information</CardTitle>
-          <CardDescription>How parents can reach you</CardDescription>
+          <CardDescription>How patients can reach you</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
@@ -147,7 +150,7 @@ export function DaycareProfileForm({ daycare }: DaycareProfileFormProps) {
               type="url"
               value={formData.website}
               onChange={(e) => updateField("website", e.target.value)}
-              placeholder="https://www.yourdaycare.com"
+              placeholder="https://www.yourpractice.com"
             />
           </div>
         </CardContent>
@@ -157,7 +160,7 @@ export function DaycareProfileForm({ daycare }: DaycareProfileFormProps) {
       <Card>
         <CardHeader>
           <CardTitle>Location</CardTitle>
-          <CardDescription>Your daycare address</CardDescription>
+          <CardDescription>Your practice address</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -199,64 +202,6 @@ export function DaycareProfileForm({ daycare }: DaycareProfileFormProps) {
                 onChange={(e) => updateField("zipCode", e.target.value)}
                 required
               />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Capacity & Age Range */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Capacity & Age Range</CardTitle>
-          <CardDescription>
-            How many children you can accommodate and age groups you serve
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="capacity">Capacity *</Label>
-              <Input
-                id="capacity"
-                type="number"
-                min={1}
-                value={formData.capacity}
-                onChange={(e) => updateField("capacity", parseInt(e.target.value) || 1)}
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                Maximum number of children
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="minAge">Minimum Age (months) *</Label>
-              <Input
-                id="minAge"
-                type="number"
-                min={0}
-                value={formData.minAge}
-                onChange={(e) => updateField("minAge", parseInt(e.target.value) || 0)}
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                e.g., 6 for 6 months old
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="maxAge">Maximum Age (months) *</Label>
-              <Input
-                id="maxAge"
-                type="number"
-                min={1}
-                value={formData.maxAge}
-                onChange={(e) => updateField("maxAge", parseInt(e.target.value) || 1)}
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                e.g., 60 for 5 years old
-              </p>
             </div>
           </div>
         </CardContent>

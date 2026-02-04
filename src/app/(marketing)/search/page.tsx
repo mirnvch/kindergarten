@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
 
-import { searchDaycares } from "@/server/actions/daycare";
+import { searchProviders } from "@/server/actions/provider";
 import { SearchResultsClient } from "@/components/search/search-results";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -41,7 +41,7 @@ async function SearchContent({ searchParams }: SearchPageProps) {
   const rawParams = await searchParams;
   const filters = parseSearchParams(publicSearchSchema, rawParams);
 
-  const { daycares, pagination } = await searchDaycares(filters);
+  const { providers, pagination } = await searchProviders(filters);
 
   // Convert filters to serializable format for client component
   const serializableFilters: Record<string, string | number | boolean | undefined> = {};
@@ -53,7 +53,7 @@ async function SearchContent({ searchParams }: SearchPageProps) {
 
   return (
     <SearchResultsClient
-      daycares={daycares}
+      providers={providers}
       pagination={pagination}
       filters={serializableFilters}
     />

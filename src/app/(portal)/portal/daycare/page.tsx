@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DaycareProfileForm } from "@/components/portal/daycare-profile-form";
-import { DaycarePhotosManager } from "@/components/portal/daycare-photos-manager";
+import { ProviderProfileForm } from "@/components/portal/provider-profile-form";
+import { ProviderPhotosManager } from "@/components/portal/provider-photos-manager";
 import { ProgramsManager } from "@/components/portal/programs-manager";
 import { ScheduleManager } from "@/components/portal/schedule-manager";
 import { PricingManager } from "@/components/portal/pricing-manager";
@@ -12,8 +12,8 @@ import { AmenitiesManager } from "@/components/portal/amenities-manager";
 import { StaffManager } from "@/components/portal/staff-manager";
 
 export const metadata: Metadata = {
-  title: "My Daycare | DocConnect Portal",
-  description: "Manage your daycare profile",
+  title: "My Practice | DocConnect Portal",
+  description: "Manage your provider profile",
 };
 
 async function getAllFacilities() {
@@ -22,7 +22,7 @@ async function getAllFacilities() {
   });
 }
 
-async function getDaycare(userId: string) {
+async function getProvider(userId: string) {
   const providerStaff = await db.providerStaff.findFirst({
     where: { userId, role: { in: ["owner", "manager"] } },
     include: {
@@ -54,27 +54,27 @@ async function getDaycare(userId: string) {
   return providerStaff?.provider;
 }
 
-export default async function DaycarePage() {
+export default async function ProviderPage() {
   const session = await auth();
   if (!session?.user) {
     redirect("/login");
   }
 
-  const [daycare, allFacilities] = await Promise.all([
-    getDaycare(session.user.id),
+  const [provider, allFacilities] = await Promise.all([
+    getProvider(session.user.id),
     getAllFacilities(),
   ]);
 
-  if (!daycare) {
+  if (!provider) {
     redirect("/portal/daycare/setup");
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">My Daycare</h1>
+        <h1 className="text-2xl font-bold">My Practice</h1>
         <p className="text-muted-foreground">
-          Manage your daycare profile and settings
+          Manage your provider profile and settings
         </p>
       </div>
 
@@ -82,49 +82,49 @@ export default async function DaycarePage() {
         <TabsList>
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="photos">Photos</TabsTrigger>
-          <TabsTrigger value="programs">Programs</TabsTrigger>
+          <TabsTrigger value="services">Services</TabsTrigger>
           <TabsTrigger value="schedule">Schedule</TabsTrigger>
           <TabsTrigger value="pricing">Pricing</TabsTrigger>
-          <TabsTrigger value="amenities">Amenities</TabsTrigger>
+          <TabsTrigger value="facilities">Facilities</TabsTrigger>
           <TabsTrigger value="staff">Staff</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
-          <DaycareProfileForm daycare={daycare} />
+          <ProviderProfileForm provider={provider} />
         </TabsContent>
 
         <TabsContent value="photos">
-          <DaycarePhotosManager photos={daycare.photos} />
+          <ProviderPhotosManager photos={provider.photos} />
         </TabsContent>
 
-        <TabsContent value="programs">
-          <ProgramsManager services={daycare.services} />
+        <TabsContent value="services">
+          <ProgramsManager services={provider.services} />
         </TabsContent>
 
         <TabsContent value="schedule">
-          <ScheduleManager schedule={daycare.schedule} />
+          <ScheduleManager schedule={provider.schedule} />
         </TabsContent>
 
         <TabsContent value="pricing">
           <PricingManager
             pricing={{
-              consultationFee: daycare.consultationFee,
-              telehealthFee: daycare.telehealthFee,
-              acceptsUninsured: daycare.acceptsUninsured,
-              slidingScalePricing: daycare.slidingScalePricing,
+              consultationFee: provider.consultationFee,
+              telehealthFee: provider.telehealthFee,
+              acceptsUninsured: provider.acceptsUninsured,
+              slidingScalePricing: provider.slidingScalePricing,
             }}
           />
         </TabsContent>
 
-        <TabsContent value="amenities">
+        <TabsContent value="facilities">
           <AmenitiesManager
             allAmenities={allFacilities}
-            selectedAmenityIds={daycare.facilities.map((f) => f.facilityId)}
+            selectedAmenityIds={provider.facilities.map((f) => f.facilityId)}
           />
         </TabsContent>
 
         <TabsContent value="staff">
-          <StaffManager staff={daycare.staff} />
+          <StaffManager staff={provider.staff} />
         </TabsContent>
       </Tabs>
     </div>

@@ -7,18 +7,10 @@ export type SearchFilters = {
   query?: string;
   city?: string;
   state?: string;
-  // Medical-specific filters
-  specialty?: string;
-  insurance?: string;
-  telemedicine?: boolean;
-  acceptingNewPatients?: boolean;
-  // Price filters
   minPrice?: number;
   maxPrice?: number;
-  // Rating filter
   minRating?: number;
-  // Language filter
-  language?: string;
+  amenities?: string[];
   // Geolocation search
   lat?: number;
   lng?: number;
@@ -31,31 +23,17 @@ export type ProviderSearchResult = {
   id: string;
   slug: string;
   name: string;
-  type: "DOCTOR" | "CLINIC" | "HOSPITAL";
   description: string | null;
+  specialty: string | null;
   city: string;
   state: string;
   address: string;
   latitude: number;
   longitude: number;
-  // Medical-specific
-  specialty: string | null;
-  credentials: string | null;
-  languages: string[];
-  // Insurance & Pricing
   consultationFee: number | null;
-  telehealthFee: number | null;
-  acceptedInsurance: string[];
-  acceptsMedicaid: boolean;
-  acceptsMedicare: boolean;
-  // Availability
   offersTelehealth: boolean;
-  acceptingNewPatients: boolean;
-  averageWaitDays: number | null;
-  // Ratings
   rating: number;
   reviewCount: number;
-  // Display
   primaryPhoto: string | null;
   isFeatured: boolean;
   isVerified: boolean;
@@ -102,32 +80,7 @@ export async function searchProviders(filters: SearchFilters) {
     }
   }
 
-  // Specialty filter
-  if (filters.specialty) {
-    where.specialty = { contains: filters.specialty, mode: "insensitive" };
-  }
-
-  // Insurance filter
-  if (filters.insurance) {
-    where.acceptedInsurance = { has: filters.insurance };
-  }
-
-  // Telemedicine filter
-  if (filters.telemedicine) {
-    where.offersTelehealth = true;
-  }
-
-  // Accepting new patients filter
-  if (filters.acceptingNewPatients !== undefined) {
-    where.acceptingNewPatients = filters.acceptingNewPatients;
-  }
-
-  // Language filter
-  if (filters.language) {
-    where.languages = { has: filters.language };
-  }
-
-  // Price filter (consultation fee)
+  // Price filter
   if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
     where.consultationFee = {};
     if (filters.minPrice !== undefined) {
@@ -143,7 +96,6 @@ export async function searchProviders(filters: SearchFilters) {
     where.OR = [
       { name: { contains: filters.query, mode: "insensitive" } },
       { description: { contains: filters.query, mode: "insensitive" } },
-      { specialty: { contains: filters.query, mode: "insensitive" } },
       { city: { contains: filters.query, mode: "insensitive" } },
     ];
   }
@@ -211,24 +163,15 @@ export async function searchProviders(filters: SearchFilters) {
       id: provider.id,
       slug: provider.slug,
       name: provider.name,
-      type: provider.type,
       description: provider.description,
+      specialty: provider.specialty,
       city: provider.city,
       state: provider.state,
       address: provider.address,
       latitude: provider.latitude,
       longitude: provider.longitude,
-      specialty: provider.specialty,
-      credentials: provider.credentials,
-      languages: provider.languages,
       consultationFee: provider.consultationFee ? Number(provider.consultationFee) : null,
-      telehealthFee: provider.telehealthFee ? Number(provider.telehealthFee) : null,
-      acceptedInsurance: provider.acceptedInsurance,
-      acceptsMedicaid: provider.acceptsMedicaid,
-      acceptsMedicare: provider.acceptsMedicare,
       offersTelehealth: provider.offersTelehealth,
-      acceptingNewPatients: provider.acceptingNewPatients,
-      averageWaitDays: provider.averageWaitDays,
       rating: Math.round(avgRating * 10) / 10,
       reviewCount: provider._count.reviews,
       primaryPhoto: provider.photos[0]?.url || null,
@@ -274,7 +217,7 @@ export async function searchProviders(filters: SearchFilters) {
   const skip = (page - 1) * limit;
   const paginatedResults = results.slice(skip, skip + limit);
 
-  // Remove internal sorting field (destructure to exclude _sortPriority)
+  // Remove internal sorting field
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const finalResults: ProviderSearchResult[] = paginatedResults.map(({ _sortPriority, ...rest }) => rest);
 
@@ -294,7 +237,7 @@ export async function getProviderBySlug(slug: string) {
     where: { slug, status: ProviderStatus.APPROVED, deletedAt: null },
     include: {
       photos: { orderBy: { order: "asc" } },
-      services: { where: { isActive: true } },
+      services: true,
       facilities: {
         include: { facility: true },
       },
@@ -380,13 +323,9 @@ export async function getFeaturedProviders(limit = 6) {
       id: provider.id,
       slug: provider.slug,
       name: provider.name,
-      type: provider.type,
-      specialty: provider.specialty,
-      credentials: provider.credentials,
       city: provider.city,
       state: provider.state,
-      consultationFee: provider.consultationFee ? Number(provider.consultationFee) : null,
-      offersTelehealth: provider.offersTelehealth,
+      consultationFee: Number(provider.consultationFee),
       rating: Math.round(avgRating * 10) / 10,
       reviewCount: provider.reviews.length,
       primaryPhoto: provider.photos[0]?.url || null,
@@ -415,44 +354,4 @@ export async function getLocations() {
   );
 
   return { states, citiesByState };
-}
-
-// Get unique specialties for filter dropdown
-export async function getSpecialties() {
-  const specialties = await db.provider.findMany({
-    where: { status: ProviderStatus.APPROVED, deletedAt: null, specialty: { not: null } },
-    select: { specialty: true },
-    distinct: ["specialty"],
-    orderBy: { specialty: "asc" },
-  });
-
-  return specialties
-    .map((s) => s.specialty)
-    .filter((s): s is string => s !== null);
-}
-
-// Get unique accepted insurances for filter dropdown
-export async function getAcceptedInsurances() {
-  const providers = await db.provider.findMany({
-    where: { status: ProviderStatus.APPROVED, deletedAt: null },
-    select: { acceptedInsurance: true },
-  });
-
-  const allInsurances = providers.flatMap((p) => p.acceptedInsurance);
-  const uniqueInsurances = [...new Set(allInsurances)].sort();
-
-  return uniqueInsurances;
-}
-
-// Get unique languages for filter dropdown
-export async function getLanguages() {
-  const providers = await db.provider.findMany({
-    where: { status: ProviderStatus.APPROVED, deletedAt: null },
-    select: { languages: true },
-  });
-
-  const allLanguages = providers.flatMap((p) => p.languages);
-  const uniqueLanguages = [...new Set(allLanguages)].sort();
-
-  return uniqueLanguages;
 }

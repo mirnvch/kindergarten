@@ -36,10 +36,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import {
-  addDaycarePhoto,
-  updateDaycarePhoto,
-  deleteDaycarePhoto,
-} from "@/server/actions/portal/daycare";
+  addProviderPhoto,
+  updateProviderPhoto,
+  deleteProviderPhoto,
+} from "@/server/actions/portal/provider";
 import { toast } from "sonner";
 
 interface Photo {
@@ -50,11 +50,11 @@ interface Photo {
   isPrimary: boolean;
 }
 
-interface DaycarePhotosManagerProps {
+interface ProviderPhotosManagerProps {
   photos: Photo[];
 }
 
-export function DaycarePhotosManager({ photos }: DaycarePhotosManagerProps) {
+export function ProviderPhotosManager({ photos }: ProviderPhotosManagerProps) {
   const router = useRouter();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newPhotoUrl, setNewPhotoUrl] = useState("");
@@ -69,7 +69,7 @@ export function DaycarePhotosManager({ photos }: DaycarePhotosManagerProps) {
 
     setIsLoading(true);
     try {
-      const result = await addDaycarePhoto(newPhotoUrl, newPhotoCaption || undefined);
+      const result = await addProviderPhoto(newPhotoUrl, newPhotoCaption || undefined);
       if (result.success) {
         toast.success("Photo added successfully");
         setIsAddDialogOpen(false);
@@ -88,7 +88,7 @@ export function DaycarePhotosManager({ photos }: DaycarePhotosManagerProps) {
 
   const handleSetPrimary = async (photoId: string) => {
     try {
-      const result = await updateDaycarePhoto(photoId, { isPrimary: true });
+      const result = await updateProviderPhoto(photoId, { isPrimary: true });
       if (result.success) {
         toast.success("Primary photo updated");
         router.refresh();
@@ -102,7 +102,7 @@ export function DaycarePhotosManager({ photos }: DaycarePhotosManagerProps) {
 
   const handleDelete = async (photoId: string) => {
     try {
-      const result = await deleteDaycarePhoto(photoId);
+      const result = await deleteProviderPhoto(photoId);
       if (result.success) {
         toast.success("Photo deleted");
         router.refresh();
@@ -121,7 +121,7 @@ export function DaycarePhotosManager({ photos }: DaycarePhotosManagerProps) {
           <div>
             <CardTitle>Photos</CardTitle>
             <CardDescription>
-              Add photos to showcase your daycare. The primary photo will be shown
+              Add photos to showcase your practice. The primary photo will be shown
               in search results.
             </CardDescription>
           </div>
@@ -136,7 +136,7 @@ export function DaycarePhotosManager({ photos }: DaycarePhotosManagerProps) {
               <DialogHeader>
                 <DialogTitle>Add Photo</DialogTitle>
                 <DialogDescription>
-                  Add a new photo to your daycare gallery
+                  Add a new photo to your provider gallery
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -158,7 +158,7 @@ export function DaycarePhotosManager({ photos }: DaycarePhotosManagerProps) {
                     id="photoCaption"
                     value={newPhotoCaption}
                     onChange={(e) => setNewPhotoCaption(e.target.value)}
-                    placeholder="Our outdoor playground"
+                    placeholder="Our waiting room"
                   />
                 </div>
               </div>
@@ -185,7 +185,7 @@ export function DaycarePhotosManager({ photos }: DaycarePhotosManagerProps) {
             </div>
             <h3 className="font-medium mb-1">No photos yet</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Add photos to help parents see what your daycare looks like
+              Add photos to help patients see your practice
             </p>
             <Button onClick={() => setIsAddDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
@@ -201,7 +201,7 @@ export function DaycarePhotosManager({ photos }: DaycarePhotosManagerProps) {
               >
                 <Image
                   src={photo.url}
-                  alt={photo.caption || "Daycare photo"}
+                  alt={photo.caption || "Provider photo"}
                   fill
                   className="object-cover"
                 />

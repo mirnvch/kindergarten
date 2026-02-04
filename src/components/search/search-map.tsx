@@ -5,15 +5,15 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 import { formatCurrency } from "@/lib/utils";
-import type { DaycareSearchResult } from "@/server/actions/daycare";
+import type { ProviderSearchResult } from "@/server/actions/provider";
 
 interface SearchMapProps {
-  daycares: DaycareSearchResult[];
+  providers: ProviderSearchResult[];
   center?: [number, number];
   zoom?: number;
 }
 
-export function SearchMap({ daycares, center, zoom = 10 }: SearchMapProps) {
+export function SearchMap({ providers, center, zoom = 10 }: SearchMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -23,11 +23,11 @@ export function SearchMap({ daycares, center, zoom = 10 }: SearchMapProps) {
     !token ? "Mapbox token not configured" : null
   );
 
-  // Calculate center from daycares if not provided
+  // Calculate center from providers if not provided
   const defaultCenter: [number, number] = center || (() => {
-    if (daycares.length === 0) return [-98.5795, 39.8283]; // US center
-    const lngs = daycares.map((d) => d.longitude);
-    const lats = daycares.map((d) => d.latitude);
+    if (providers.length === 0) return [-98.5795, 39.8283]; // US center
+    const lngs = providers.map((p) => p.longitude);
+    const lats = providers.map((p) => p.latitude);
     return [
       lngs.reduce((a, b) => a + b, 0) / lngs.length,
       lats.reduce((a, b) => a + b, 0) / lats.length,
@@ -60,7 +60,7 @@ export function SearchMap({ daycares, center, zoom = 10 }: SearchMapProps) {
     }
   }, [defaultCenter, token, zoom]);
 
-  // Update markers when daycares change
+  // Update markers when providers change
   useEffect(() => {
     if (!map.current) return;
 
@@ -69,33 +69,33 @@ export function SearchMap({ daycares, center, zoom = 10 }: SearchMapProps) {
     markersRef.current = [];
 
     // Add new markers
-    daycares.forEach((daycare) => {
+    providers.forEach((provider) => {
       const el = document.createElement("div");
-      el.className = "daycare-marker";
+      el.className = "provider-marker";
       el.innerHTML = `
         <div class="bg-primary text-primary-foreground px-2 py-1 rounded-full text-sm font-medium shadow-lg cursor-pointer hover:scale-110 transition-transform">
-          ${daycare.consultationFee ? formatCurrency(Number(daycare.consultationFee)) : daycare.specialty || "Provider"}
+          ${provider.consultationFee ? formatCurrency(Number(provider.consultationFee)) : provider.specialty || "Provider"}
         </div>
       `;
 
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
         <div class="p-2 min-w-[200px]">
-          <h3 class="font-semibold text-sm">${daycare.name}</h3>
-          <p class="text-xs text-gray-600">${daycare.specialty || "General Practice"}</p>
-          <p class="text-xs text-gray-500">${daycare.city}, ${daycare.state}</p>
+          <h3 class="font-semibold text-sm">${provider.name}</h3>
+          <p class="text-xs text-gray-600">${provider.specialty || "General Practice"}</p>
+          <p class="text-xs text-gray-500">${provider.city}, ${provider.state}</p>
           <div class="flex items-center gap-1 mt-1">
             <span class="text-yellow-500">★</span>
-            <span class="text-xs">${daycare.rating?.toFixed(1) || "New"}</span>
-            <span class="text-xs text-gray-400">(${daycare.reviewCount} reviews)</span>
+            <span class="text-xs">${provider.rating?.toFixed(1) || "New"}</span>
+            <span class="text-xs text-gray-400">(${provider.reviewCount} reviews)</span>
           </div>
-          <a href="/provider/${daycare.slug}" class="text-xs text-primary hover:underline mt-2 inline-block">
+          <a href="/provider/${provider.slug}" class="text-xs text-primary hover:underline mt-2 inline-block">
             View details →
           </a>
         </div>
       `);
 
       const marker = new mapboxgl.Marker(el)
-        .setLngLat([daycare.longitude, daycare.latitude])
+        .setLngLat([provider.longitude, provider.latitude])
         .setPopup(popup)
         .addTo(map.current!);
 
@@ -103,12 +103,12 @@ export function SearchMap({ daycares, center, zoom = 10 }: SearchMapProps) {
     });
 
     // Fit bounds to show all markers
-    if (daycares.length > 1) {
+    if (providers.length > 1) {
       const bounds = new mapboxgl.LngLatBounds();
-      daycares.forEach((d) => bounds.extend([d.longitude, d.latitude]));
+      providers.forEach((p) => bounds.extend([p.longitude, p.latitude]));
       map.current.fitBounds(bounds, { padding: 50, maxZoom: 14 });
     }
-  }, [daycares, token]);
+  }, [providers, token]);
 
   if (mapError) {
     return (

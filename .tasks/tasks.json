@@ -1639,7 +1639,7 @@
       "id": 46,
       "title": "Phase 1: Content Update (daycare → healthcare terminology)",
       "description": "Update all content from daycare/childcare terminology to healthcare/medical terminology for DocConnect platform.",
-      "status": "in_progress",
+      "status": "done",
       "priority": "high",
       "complexity": 4,
       "phase": "DC.1",
@@ -1657,14 +1657,18 @@
         { "id": "46.8", "title": "Navigation: 'Find Daycares' → 'Find Doctors'", "done": true },
         { "id": "46.9", "title": "Contact page: Description, email", "done": true },
         { "id": "46.10", "title": "Help/Safety/Blog/Careers/Press pages", "done": true },
-        { "id": "46.11", "title": "Legal pages (privacy, terms, cookies)", "done": true }
+        { "id": "46.11", "title": "Legal pages (privacy, terms, cookies)", "done": true },
+        { "id": "46.12", "title": "Rename components/daycare → components/provider", "done": true },
+        { "id": "46.13", "title": "Rename server actions daycare.ts → provider.ts", "done": true },
+        { "id": "46.14", "title": "Update all imports to use provider terminology", "done": true }
       ],
       "acceptanceCriteria": [
         "No 'daycare' terminology in user-facing content",
         "No 'childcare' terminology",
         "No 'parent/family' when referring to users (use 'patient')",
         "'Find Doctors' or 'Find Providers' in navigation",
-        "Healthcare-focused messaging throughout"
+        "Healthcare-focused messaging throughout",
+        "Code uses 'provider' naming (components, actions, variables)"
       ],
       "affectedFiles": [
         "src/app/(marketing)/page.tsx",
@@ -1676,16 +1680,20 @@
         "src/app/(auth)/register/page.tsx",
         "src/components/layout/header.tsx",
         "src/components/layout/footer.tsx",
-        "src/app/(marketing)/**/*.tsx"
+        "src/components/provider/*",
+        "src/server/actions/provider.ts",
+        "src/server/actions/portal/provider.ts"
       ],
       "notes": [
         "2026-02-03: Audit found all pages still use daycare terminology",
         "Mapping: daycare→provider, parent→patient, childcare→healthcare, tour→appointment",
         "2026-02-04: Session 25 - Homepage, navigation, features, pricing, about, for-providers done",
-        "2026-02-04: Session 26 - All marketing pages done (help, safety, terms, privacy, cookies, contact, press, community, blog, careers, not-found)"
+        "2026-02-04: Session 26 - All marketing pages done (help, safety, terms, privacy, cookies, contact, press, community, blog, careers, not-found)",
+        "2026-02-04: Session 27 - Complete code refactoring: renamed components/daycare→provider, actions/daycare.ts→provider.ts, portal/daycare.ts→portal/provider.ts, updated all imports"
       ],
+      "completedAt": "2026-02-04T20:00:00Z",
       "createdAt": "2026-02-03T12:00:00Z",
-      "updatedAt": "2026-02-04T15:00:00Z"
+      "updatedAt": "2026-02-04T20:00:00Z"
     },
     {
       "id": 47,

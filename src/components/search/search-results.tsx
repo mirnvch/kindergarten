@@ -7,10 +7,10 @@ import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 import { SearchFilters } from "./search-filters";
 import { SaveSearchButton } from "./save-search-button";
-import { DaycareCard } from "@/components/daycare/daycare-card";
+import { ProviderCard } from "@/components/provider/provider-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { DaycareSearchResult } from "@/server/actions/daycare";
+import type { ProviderSearchResult } from "@/server/actions/provider";
 
 // Loading skeleton for search results
 export function SearchResultsSkeleton() {
@@ -76,7 +76,7 @@ const SearchMap = dynamic(
 );
 
 interface SearchResultsClientProps {
-  daycares: DaycareSearchResult[];
+  providers: ProviderSearchResult[];
   pagination: {
     page: number;
     limit: number;
@@ -87,7 +87,7 @@ interface SearchResultsClientProps {
 }
 
 export function SearchResultsClient({
-  daycares,
+  providers,
   pagination,
   filters,
 }: SearchResultsClientProps) {
@@ -102,7 +102,7 @@ export function SearchResultsClient({
         </Suspense>
       </div>
 
-      {daycares.length === 0 ? (
+      {providers.length === 0 ? (
         <div className="text-center py-12">
           <h3 className="text-lg font-semibold">No providers found</h3>
           <p className="text-muted-foreground mt-2">
@@ -126,12 +126,12 @@ export function SearchResultsClient({
 
           {view === "list" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {daycares.map((daycare) => (
-                <DaycareCard key={daycare.id} daycare={daycare} />
+              {providers.map((provider) => (
+                <ProviderCard key={provider.id} provider={provider} />
               ))}
             </div>
           ) : (
-            <SearchMap daycares={daycares} />
+            <SearchMap providers={providers} />
           )}
 
           {/* Pagination */}

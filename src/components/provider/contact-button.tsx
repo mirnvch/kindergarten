@@ -71,7 +71,7 @@ export function ContactProviderButton({
   if (!isAuthenticated) {
     return (
       <Button variant="outline" className="w-full" size="lg" asChild>
-        <Link href="/login?callbackUrl=/search">
+        <Link href="/login?callbackUrl=/provider">
           <MessageCircle className="mr-2 h-4 w-4" />
           Sign in to Contact
         </Link>
@@ -92,7 +92,7 @@ export function ContactProviderButton({
           <DialogHeader>
             <DialogTitle>Contact {providerName}</DialogTitle>
             <DialogDescription>
-              Send a message to the provider&apos;s office. They typically respond within 24
+              Send a message to the healthcare provider. They typically respond within 24
               hours.
             </DialogDescription>
           </DialogHeader>
