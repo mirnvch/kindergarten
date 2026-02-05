@@ -277,9 +277,9 @@ dev branch → Test on Vercel Preview → main branch → Production
   - Added "Back to Home" link in parent sidebar
   - Consolidated .env files
 
-- **Documentation Completed (Late Session):**
-  - **docs/setup/** — Getting Started guide, Environment Variables
-  - **docs/architecture/** — Overview, Data Flow (from earlier session)
+- **Documentation Completed:**
+  - **docs/setup/** — Getting Started guide, Environment Variables, README
+  - **docs/architecture/** — Overview, Data Flow
   - **docs/architecture/adr/** — 5 ADR records:
     - ADR-001: Database — Supabase PostgreSQL
     - ADR-002: Authentication — NextAuth.js v5
@@ -290,7 +290,40 @@ dev branch → Test on Vercel Preview → main branch → Production
   - **docs/ui/** — Components, Accessibility, Design System
   - **.tasks/roadmap.md** — Development roadmap (Phase 0-6)
 
-- **Total documentation:** 22 files, ~9600 lines
+- **Commits & Deployment:**
+  - `b8754fa` — docs: add comprehensive project documentation (22 files, +9591 lines)
+  - `39253c6` — docs: update knowledge.md with Session 29 progress
+  - Pushed to remote: `7abb74f..39253c6 main -> main`
+
+- **Documentation Structure:**
+
+  ```
+  docs/
+  ├── setup/
+  │   ├── README.md           # Index + quick start
+  │   ├── getting-started.md  # Full installation guide
+  │   └── environment.md      # All env variables
+  ├── architecture/
+  │   ├── overview.md         # System architecture
+  │   ├── data-flow.md        # Data flow diagrams
+  │   └── adr/                # Architecture Decision Records
+  │       ├── README.md       # ADR index
+  │       ├── template.md     # ADR template
+  │       └── 001-005.md      # 5 ADR documents
+  ├── guides/
+  │   ├── backend.md          # Server actions, Prisma
+  │   ├── frontend.md         # React, components
+  │   ├── testing.md          # Vitest, Playwright
+  │   ├── security.md         # Auth, 2FA, GDPR
+  │   ├── seo.md              # SEO optimization
+  │   └── performance.md      # Caching, optimization
+  └── ui/
+      ├── components.md       # shadcn/ui components
+      ├── accessibility.md    # WCAG compliance
+      └── design-system.md    # Colors, typography
+  ```
+
+- **Total:** 22+ documentation files, ~9600 lines
 
 ### 2026-02-04 (Session 28 — Error Handling Standardization COMPLETED)
 
@@ -537,12 +570,14 @@ dev branch → Test on Vercel Preview → main branch → Production
   - DAYCARE_OWNER → PROVIDER
   - DAYCARE_STAFF → CLINIC_STAFF
 - **Текущая ошибка билда:**
+
   ```
   Type error: Property 'daycareStaff' does not exist on type 'PrismaClient'
   ```
 
   - Некоторые portal pages всё ещё используют `db.daycareStaff` вместо `db.providerStaff`
   - Также нужно заменить `include: { daycare: {...} }` на `include: { provider: {...} }`
+
 - **Файлы для исправления (завтра):**
   - Portal pages с `db.daycareStaff`:
     - src/app/(portal)/portal/billing/page.tsx
