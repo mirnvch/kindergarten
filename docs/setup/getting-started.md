@@ -253,6 +253,56 @@ git commit -m "docs: update readme"     # Documentation
 
 ---
 
+## Docker Setup (Альтернативный способ)
+
+Для воспроизводимого окружения используйте Docker Compose.
+
+### 1. Запуск сервисов
+
+```bash
+docker compose up -d
+```
+
+Это запустит:
+
+| Сервис   | Порт | Описание                      |
+| -------- | ---- | ----------------------------- |
+| postgres | 5432 | PostgreSQL 16 база данных     |
+| redis    | 6379 | Redis 7 для кэширования       |
+| mailpit  | 8025 | Email preview UI (SMTP: 1025) |
+
+### 2. Настройка .env
+
+```bash
+cp .env.docker.example .env.local
+```
+
+### 3. Применение схемы
+
+```bash
+npx prisma db push
+npx prisma db seed
+```
+
+### 4. Просмотр email
+
+Откройте http://localhost:8025 для просмотра отправленных писем.
+
+### Управление Docker
+
+```bash
+docker compose up -d     # Запустить в фоне
+docker compose down      # Остановить
+docker compose logs -f   # Смотреть логи
+docker compose ps        # Статус сервисов
+
+# Сбросить данные
+docker compose down -v   # Удалить volumes
+docker compose up -d
+```
+
+---
+
 ## Troubleshooting
 
 ### Prisma: "Cannot find database"
