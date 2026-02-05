@@ -17,7 +17,9 @@ const ContentSecurityPolicy = `
   form-action 'self';
   frame-ancestors 'self';
   upgrade-insecure-requests;
-`.replace(/\s{2,}/g, ' ').trim();
+`
+  .replace(/\s{2,}/g, " ")
+  .trim();
 
 // Security headers for all routes
 const securityHeaders = [
@@ -53,6 +55,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   images: {
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "https",

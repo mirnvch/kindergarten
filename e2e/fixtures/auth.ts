@@ -2,23 +2,23 @@
 import { test as base, expect, Page } from "@playwright/test";
 
 /**
- * Test accounts from knowledge.md
+ * Test accounts from seed.ts
  * These accounts should exist in the test database
  */
 export const TEST_ACCOUNTS = {
   parent: {
-    email: "test.parent@kindergarten.com",
+    email: "john.patient@example.com",
     password: "Test123!",
-    role: "PARENT",
+    role: "PATIENT",
   },
   owner: {
-    email: "test.owner@kindergarten.com",
+    email: "dr.martinez@example.com",
     password: "Test123!",
-    role: "DAYCARE_OWNER",
+    role: "PROVIDER",
   },
   admin: {
-    email: "admin@kindergarten.com",
-    password: "Admin123!",
+    email: "admin@docconnect.com",
+    password: "Test123!",
     role: "ADMIN",
   },
 } as const;
