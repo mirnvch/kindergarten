@@ -12,14 +12,29 @@ export default defineConfig({
     exclude: ["node_modules", ".next", "e2e"],
     coverage: {
       provider: "v8",
-      reporter: ["text", "json", "html"],
+      reporter: ["text", "json", "html", "lcov"],
+      include: [
+        "src/lib/**/*.ts",
+        "src/server/services/**/*.ts",
+        "src/server/repositories/**/*.ts",
+        "src/server/validators/**/*.ts",
+        "src/hooks/**/*.ts",
+      ],
       exclude: [
         "node_modules",
         ".next",
         "**/*.d.ts",
         "**/*.config.*",
         "**/types/*",
+        "**/*.test.ts",
+        "**/__tests__/**",
       ],
+      thresholds: {
+        statements: 70,
+        branches: 70,
+        functions: 70,
+        lines: 70,
+      },
     },
   },
   resolve: {

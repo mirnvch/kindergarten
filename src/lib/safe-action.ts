@@ -38,7 +38,6 @@ import { auth } from "@/lib/auth";
 import { rateLimit, type RateLimitType } from "@/lib/rate-limit";
 import { ActionResult } from "@/types/action-result";
 import {
-  AppError,
   ValidationError,
   UnauthorizedError,
   RateLimitError,
@@ -66,6 +65,12 @@ export interface ActionContext {
 }
 
 /**
+ * Authorization check function type.
+ * Throws ForbiddenError if authorization fails.
+ */
+export type AuthorizeFn = (ctx: ActionContext) => void;
+
+/**
  * Options for createSafeAction.
  */
 export interface SafeActionOptions {
@@ -75,6 +80,14 @@ export interface SafeActionOptions {
   rateLimit?: RateLimitType;
   /** Custom rate limit identifier (default: userId or IP) */
   rateLimitKey?: (ctx: ActionContext) => string;
+  /**
+   * Authorization check function.
+   * Use helpers from @/lib/authorization:
+   * - requirePermission("admin:delete-user")
+   * - requireRole("ADMIN", "PROVIDER")
+   * - requireAnyPermission("booking:create", "admin:all")
+   */
+  authorize?: AuthorizeFn;
 }
 
 /**
@@ -127,7 +140,7 @@ export function createSafeAction<TInput, TOutput>(
   handler: (data: TInput, ctx: ActionContext) => Promise<TOutput>,
   options?: SafeActionOptions
 ): (input: TInput) => Promise<SafeActionResult<TOutput>> {
-  const { requireAuth = true, rateLimit: rateLimitType, rateLimitKey } = options ?? {};
+  const { requireAuth = true, rateLimit: rateLimitType, rateLimitKey, authorize } = options ?? {};
 
   return async (input: TInput): Promise<SafeActionResult<TOutput>> => {
     try {
@@ -146,6 +159,11 @@ export function createSafeAction<TInput, TOutput>(
         email: session?.user?.email ?? "",
         ip,
       };
+
+      // ─── Authorization ───────────────────────────────────────────────
+      if (authorize) {
+        authorize(ctx); // Throws ForbiddenError if check fails
+      }
 
       // ─── Rate Limiting ────────────────────────────────────────────────
       if (rateLimitType) {

@@ -6,10 +6,18 @@ on:
   pull_request:
     branches: [main]
 
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   NODE_VERSION: "22"
 
 jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Lint — Run ESLint
+  # ─────────────────────────────────────────────────────────────────────────────
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -28,6 +36,9 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Type Check — Run TypeScript compiler
+  # ─────────────────────────────────────────────────────────────────────────────
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest
@@ -49,6 +60,48 @@ jobs:
       - name: Run TypeScript
         run: npx tsc --noEmit
 
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Unit Tests — Run Vitest with coverage
+  # ─────────────────────────────────────────────────────────────────────────────
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+        continue-on-error: true
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Build — Build Next.js application
+  # ─────────────────────────────────────────────────────────────────────────────
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -69,13 +122,54 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-
+            nextjs-${{ runner.os }}-
+
       - name: Build application
         run: npm run build
 
-  test:
-    name: Test
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: |
+            .next/
+            !.next/cache
+          retention-days: 1
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # E2E Tests — Run Playwright tests
+  # ─────────────────────────────────────────────────────────────────────────────
+  e2e:
+    name: E2E Tests
     runs-on: ubuntu-latest
-    needs: [lint, typecheck]
+    needs: [build]
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
+      AUTH_SECRET: "test-secret-for-e2e"
+      NEXTAUTH_URL: "http://localhost:3000"
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
 
@@ -88,8 +182,61 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate Prisma Client
-        run: npx prisma generate
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
 
-      - name: Run unit tests
-        run: npm run test:run
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: .next/
+
+      - name: Setup database
+        run: |
+          npx prisma generate
+          npx prisma db push --skip-generate
+          npx prisma db seed
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Run E2E tests
+        run: npm run test:e2e -- --project=chromium
+        env:
+          PLAYWRIGHT_TEST_BASE_URL: http://localhost:3000
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload Playwright traces
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Summary — Final status check
+  # ─────────────────────────────────────────────────────────────────────────────
+  ci-success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck, test, build, e2e]
+    if: always()
+    steps:
+      - name: Check all jobs passed
+        run: |
+          if [[ "${{ needs.lint.result }}" != "success" ]] ||
+             [[ "${{ needs.typecheck.result }}" != "success" ]] ||
+             [[ "${{ needs.test.result }}" != "success" ]] ||
+             [[ "${{ needs.build.result }}" != "success" ]] ||
+             [[ "${{ needs.e2e.result }}" != "success" ]]; then
+            echo "One or more jobs failed"
+            exit 1
+          fi
+          echo "All jobs passed successfully!"

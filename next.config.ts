@@ -2,26 +2,8 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 import withPWAInit from "@ducanh2912/next-pwa";
 
-// Content Security Policy
-// Note: 'unsafe-inline' and 'unsafe-eval' required for Next.js hydration/development
-const ContentSecurityPolicy = `
-  default-src 'self';
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.pusher.com https://api.mapbox.com https://va.vercel-scripts.com;
-  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.mapbox.com;
-  img-src 'self' blob: data: https://*.supabase.co https://res.cloudinary.com https://images.unsplash.com https://*.googleusercontent.com https://api.mapbox.com;
-  font-src 'self' https://fonts.gstatic.com;
-  connect-src 'self' https://*.pusher.com wss://*.pusher.com https://api.mapbox.com https://events.mapbox.com https://*.supabase.co https://*.sentry.io https://va.vercel-scripts.com;
-  frame-src 'self';
-  object-src 'none';
-  base-uri 'self';
-  form-action 'self';
-  frame-ancestors 'self';
-  upgrade-insecure-requests;
-`
-  .replace(/\s{2,}/g, " ")
-  .trim();
-
 // Security headers for all routes
+// Note: CSP is set dynamically by middleware.ts with per-request nonce
 const securityHeaders = [
   {
     key: "X-DNS-Prefetch-Control",
@@ -32,25 +14,11 @@ const securityHeaders = [
     value: "max-age=63072000; includeSubDomains; preload",
   },
   {
-    key: "X-Frame-Options",
-    value: "SAMEORIGIN",
-  },
-  {
-    key: "X-Content-Type-Options",
-    value: "nosniff",
-  },
-  {
-    key: "Referrer-Policy",
-    value: "strict-origin-when-cross-origin",
-  },
-  {
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(self), interest-cohort=()",
   },
-  {
-    key: "Content-Security-Policy",
-    value: ContentSecurityPolicy,
-  },
+  // Note: X-Frame-Options, X-Content-Type-Options, Referrer-Policy
+  // are set by middleware.ts alongside the CSP header
 ];
 
 const nextConfig: NextConfig = {
