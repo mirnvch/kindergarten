@@ -10,6 +10,9 @@ import { formatCurrency } from "@/lib/utils";
 import { FavoriteButton } from "@/components/parent/favorite-button";
 import type { FavoriteItem } from "@/types";
 
+// Force dynamic rendering - uses auth() which requires headers
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Favorites | DocConnect",
   description: "Your saved healthcare providers",

@@ -7,6 +7,9 @@ import { getPatientAppointments } from "@/server/actions/appointments";
 import { BookingCard } from "@/components/parent/booking-card";
 import type { AppointmentWithRelations } from "@/types";
 
+// Force dynamic rendering - uses auth() which requires headers
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "My Appointments | DocConnect",
   description: "View and manage your appointments",

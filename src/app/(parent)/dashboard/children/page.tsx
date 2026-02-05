@@ -6,6 +6,9 @@ import { getChildren } from "@/server/actions/children";
 import { ChildCard } from "@/components/parent/child-card";
 import type { Child } from "@/types";
 
+// Force dynamic rendering - uses auth() which requires headers
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "My Family | DocConnect",
   description: "Manage your family members' profiles",
