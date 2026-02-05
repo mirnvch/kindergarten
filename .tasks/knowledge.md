@@ -7,13 +7,16 @@
 ## Architecture Decisions
 
 ### NextAuth v5 + Prisma (Edge Runtime)
+
 **Проблема:** Prisma adapter не работает в Edge Runtime (middleware).
 **Решение:** Разделение конфига:
+
 - `auth.config.ts` — Edge-compatible (без adapter, bcrypt)
 - `auth.ts` — полный конфиг с adapter
 - Middleware импортирует только `auth.config.ts`
 
 ### Route Groups Structure (Current - Monolith)
+
 ```
 src/app/
 ├── (auth)/       # Login, register — без layout
@@ -32,6 +35,7 @@ src/app/
 **Причина отмены:** Монолит проще для текущего масштаба проекта. При необходимости можно вернуться к monorepo позже.
 
 **Текущая архитектура:** Монолит с route groups
+
 ```
 src/app/
 ├── (auth)/       # Login, register
@@ -42,60 +46,64 @@ src/app/
 ```
 
 ### Role-Based Access
-| Role | Access |
-|------|--------|
-| PARENT | /dashboard/* |
-| DAYCARE_OWNER | /portal/* |
-| DAYCARE_STAFF | /portal/* (limited) |
-| ADMIN | /admin/* |
+
+| Role          | Access               |
+| ------------- | -------------------- |
+| PARENT        | /dashboard/\*        |
+| DAYCARE_OWNER | /portal/\*           |
+| DAYCARE_STAFF | /portal/\* (limited) |
+| ADMIN         | /admin/\*            |
 
 ### Portal RBAC Matrix (Owner vs Manager vs Staff)
-| Action | Owner | Manager | Staff |
-|--------|:-----:|:-------:|:-----:|
-| **Profile** | | | |
-| Edit daycare profile | ✅ | ✅ | ❌ |
-| Manage photos | ✅ | ✅ | ❌ |
-| Manage programs | ✅ | ✅ | ❌ |
-| Edit schedule | ✅ | ✅ | ❌ |
-| Edit pricing | ✅ | ✅ | ❌ |
-| Manage amenities | ✅ | ✅ | ❌ |
-| **Staff** | | | |
-| Add staff member | ✅ | ❌ | ❌ |
-| Remove staff member | ✅ | ❌ | ❌ |
-| Change staff role | ✅ | ❌ | ❌ |
-| **Bookings** | | | |
-| View bookings | ✅ | ✅ | ✅ |
-| Confirm booking | ✅ | ✅ | ❌ |
-| Decline booking | ✅ | ✅ | ❌ |
-| Mark completed | ✅ | ✅ | ✅ |
-| **Messages** | | | |
-| View messages | ✅ | ✅ | ✅ |
-| Send messages | ✅ | ✅ | ❌ |
-| Bulk messaging | ✅ | ❌ | ❌ |
-| **Reviews** | | | |
-| View reviews | ✅ | ✅ | ✅ |
-| Respond to reviews | ✅ | ✅ | ❌ |
-| **Billing** | | | |
-| View billing | ✅ | ❌ | ❌ |
-| Manage subscription | ✅ | ❌ | ❌ |
-| **Analytics** | | | |
-| View basic analytics | ✅ | ✅ | ✅ |
-| View premium analytics | ✅ | ✅ | ❌ |
-| Export data | ✅ | ❌ | ❌ |
-| **Verification** | | | |
-| Submit verification | ✅ | ❌ | ❌ |
-| View verification status | ✅ | ✅ | ✅ |
+
+| Action                   | Owner | Manager | Staff |
+| ------------------------ | :---: | :-----: | :---: |
+| **Profile**              |       |         |       |
+| Edit daycare profile     |  ✅   |   ✅    |  ❌   |
+| Manage photos            |  ✅   |   ✅    |  ❌   |
+| Manage programs          |  ✅   |   ✅    |  ❌   |
+| Edit schedule            |  ✅   |   ✅    |  ❌   |
+| Edit pricing             |  ✅   |   ✅    |  ❌   |
+| Manage amenities         |  ✅   |   ✅    |  ❌   |
+| **Staff**                |       |         |       |
+| Add staff member         |  ✅   |   ❌    |  ❌   |
+| Remove staff member      |  ✅   |   ❌    |  ❌   |
+| Change staff role        |  ✅   |   ❌    |  ❌   |
+| **Bookings**             |       |         |       |
+| View bookings            |  ✅   |   ✅    |  ✅   |
+| Confirm booking          |  ✅   |   ✅    |  ❌   |
+| Decline booking          |  ✅   |   ✅    |  ❌   |
+| Mark completed           |  ✅   |   ✅    |  ✅   |
+| **Messages**             |       |         |       |
+| View messages            |  ✅   |   ✅    |  ✅   |
+| Send messages            |  ✅   |   ✅    |  ❌   |
+| Bulk messaging           |  ✅   |   ❌    |  ❌   |
+| **Reviews**              |       |         |       |
+| View reviews             |  ✅   |   ✅    |  ✅   |
+| Respond to reviews       |  ✅   |   ✅    |  ❌   |
+| **Billing**              |       |         |       |
+| View billing             |  ✅   |   ❌    |  ❌   |
+| Manage subscription      |  ✅   |   ❌    |  ❌   |
+| **Analytics**            |       |         |       |
+| View basic analytics     |  ✅   |   ✅    |  ✅   |
+| View premium analytics   |  ✅   |   ✅    |  ❌   |
+| Export data              |  ✅   |   ❌    |  ❌   |
+| **Verification**         |       |         |       |
+| Submit verification      |  ✅   |   ❌    |  ❌   |
+| View verification status |  ✅   |   ✅    |  ✅   |
 
 ---
 
 ## Patterns Used
 
 ### Server Actions
+
 - Все мутации через Server Actions в `src/server/actions/`
 - Валидация с Zod
 - Возвращают `{ success: boolean, error?: string, data?: T }`
 
 ### Components Structure
+
 ```
 src/components/
 ├── ui/           # shadcn/ui components
@@ -106,6 +114,7 @@ src/components/
 ```
 
 ### Database Queries
+
 - Всегда использовать `select` для оптимизации
 - Prisma schema: camelCase в коде, snake_case в БД через `@@map`
 - Транзакции для связанных операций
@@ -113,11 +122,13 @@ src/components/
 ### Buttons & Links Best Practices
 
 **Навигация vs Действия:**
+
 - `<Link href="...">` — для навигации между страницами (SEO, accessibility, pre-fetch)
 - `<Button onClick={...}>` — для действий (submit, toggle, modal open)
 - `<Button asChild><Link>` — для стилизованной навигации (Button UI + Link семантика)
 
 **Icon-only Buttons:**
+
 ```tsx
 // ПРАВИЛЬНО — есть aria-label для screen readers
 <Button variant="ghost" size="icon" aria-label="Edit program">
@@ -131,6 +142,7 @@ src/components/
 ```
 
 **Внешние ссылки:**
+
 ```tsx
 // ПРАВИЛЬНО — безопасность (noopener) + приватность (noreferrer)
 <a href={url} target="_blank" rel="noopener noreferrer">
@@ -142,6 +154,7 @@ src/components/
 ```
 
 **Навигация после действия:**
+
 ```tsx
 // ПРАВИЛЬНО — сначала действие, потом навигация
 const handleSubmit = async () => {
@@ -161,6 +174,7 @@ const handleSubmit = async () => {
 ```
 
 **Screen Reader Support:**
+
 ```tsx
 // Для визуально скрытого текста
 <span className="sr-only">Notifications</span>
@@ -171,12 +185,15 @@ const handleSubmit = async () => {
 ## Known Issues & Solutions
 
 ### Issue: Session не обновляется после изменения роли
+
 **Решение:** Использовать `update` callback в auth config для синхронизации session с JWT.
 
 ### Issue: Hydration mismatch в sidebar
+
 **Решение:** Компоненты с `usePathname()` должны быть `"use client"`.
 
 ### Issue: Prisma в Vercel Edge Functions
+
 **Решение:** Не импортировать Prisma в middleware. Использовать JWT strategy вместо database sessions.
 
 ---
@@ -184,9 +201,11 @@ const handleSubmit = async () => {
 ## API Endpoints
 
 ### Webhooks
+
 - `/api/webhooks/stripe` — Stripe events (planned)
 
 ### Auth
+
 - `/api/auth/*` — NextAuth.js handlers
 
 ---
@@ -194,6 +213,7 @@ const handleSubmit = async () => {
 ## Environment Variables
 
 ### Required
+
 - `DATABASE_URL` — Supabase Transaction Pooler (port 6543)
 - `DIRECT_URL` — Supabase Session Pooler (port 5432, для миграций)
 - `AUTH_SECRET` — NextAuth secret
@@ -201,6 +221,7 @@ const handleSubmit = async () => {
 - `AUTH_GOOGLE_SECRET` — Google OAuth
 
 ### Optional
+
 - `STRIPE_SECRET_KEY` — Stripe API (Phase 2)
 - `STRIPE_WEBHOOK_SECRET` — Stripe webhooks
 - `RESEND_API_KEY` — Email service (Phase 1.4)
@@ -215,23 +236,27 @@ const handleSubmit = async () => {
 ## Git Workflow
 
 ### Development → Testing → Production
+
 ```
 dev branch → Test on Vercel Preview → main branch → Production
 ```
 
 **Правила:**
+
 1. Новый функционал разрабатывается в `dev` ветке
 2. Тестирование на Vercel Preview: `https://kindergarten-git-dev-*.vercel.app`
 3. После успешного тестирования — merge в `main`
 4. `main` автоматически деплоится на production: `https://kindergarten-lime.vercel.app`
 
 **OAuth ограничения:**
+
 - Google OAuth настроен только для production домена
 - Preview deployment требует добавления redirect URI в Google Console
 - Для тестирования OAuth на preview нужно добавить:
   `https://kindergarten-git-dev-*.vercel.app/api/auth/callback/google`
 
 **Vercel Protection:**
+
 - Preview deployments защищены Vercel Authentication по умолчанию
 - Для тестирования без авторизации — отключить в Settings → Deployment Protection
 
@@ -239,7 +264,36 @@ dev branch → Test on Vercel Preview → main branch → Production
 
 ## Session Notes
 
+### 2026-02-05 (Session 29 — Documentation & Development Workflow)
+
+- **Development Workflow Improvements (Early Session):**
+  - Added Husky git hooks (pre-commit, commit-msg)
+  - Added Commitlint for conventional commits
+  - Added Prettier configuration
+  - Added lint-staged for staged files linting
+  - Added accessibility tests with @axe-core/playwright
+  - Created RECOMMENDATIONS.md (1662 lines)
+  - Next.js 16 migration: middleware.ts → proxy.ts
+  - Added "Back to Home" link in parent sidebar
+  - Consolidated .env files
+
+- **Documentation Completed (Late Session):**
+  - **docs/setup/** — Getting Started guide, Environment Variables
+  - **docs/architecture/** — Overview, Data Flow (from earlier session)
+  - **docs/architecture/adr/** — 5 ADR records:
+    - ADR-001: Database — Supabase PostgreSQL
+    - ADR-002: Authentication — NextAuth.js v5
+    - ADR-003: Email — Resend
+    - ADR-004: Payments — Stripe
+    - ADR-005: Real-time — Pusher
+  - **docs/guides/** — Backend, Frontend, Testing, Security, SEO, Performance
+  - **docs/ui/** — Components, Accessibility, Design System
+  - **.tasks/roadmap.md** — Development roadmap (Phase 0-6)
+
+- **Total documentation:** 22 files, ~9600 lines
+
 ### 2026-02-04 (Session 28 — Error Handling Standardization COMPLETED)
+
 - **Task #4: Fix UI/UX accessibility issues — COMPLETED**
   - Button icon sizes updated to WCAG 44px minimum:
     - `icon`: `size-9` → `size-11` (44px)
@@ -271,6 +325,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Deployed to production:** https://toddlerhq.com
 
 ### 2026-02-04 (Session 27 — Task #46 Code Refactoring COMPLETED)
+
 - **Task #46: Content Update — CODE LEVEL REFACTORING COMPLETED**
   - **Components renamed:**
     - `src/components/daycare/` → `src/components/provider/`
@@ -301,6 +356,7 @@ dev branch → Test on Vercel Preview → main branch → Production
   - **Task #46 marked as DONE**
 
 ### 2026-02-04 (Session 26 — Tasks #46 Marketing + #47 Hydration Fix COMPLETED)
+
 - **Task #46: Content Update (daycare → healthcare) — MARKETING PAGES COMPLETED**
   - **Marketing pages updated:**
     - `/help` — Articles updated to healthcare terminology (providers, appointments, patients)
@@ -334,6 +390,7 @@ dev branch → Test on Vercel Preview → main branch → Production
   - Server actions: ⏳ ~600+ internal references remaining (searchDaycares, etc.) (acceptable for internal code)
 
 ### 2026-02-04 (Session 25 — Tasks #45 COMPLETED, #46 IN PROGRESS)
+
 - **Task #45: Branding Update (KinderCare → DocConnect) — COMPLETED**
   - All "KinderCare" references replaced with "DocConnect" in src/ (0 remaining)
   - Updated 25+ files: headers, footers, email templates, TOTP issuer, admin settings
@@ -358,6 +415,7 @@ dev branch → Test on Vercel Preview → main branch → Production
   - Task #47: Fix React Hydration Error on Search Page
 
 ### 2026-02-04 (Session 24 — Task #44 Auth Fix COMPLETED)
+
 - **Task #44: Fix Production Auth — COMPLETED**
 - **Root Cause Found:** Role enum mismatch
   - `auth.ts` used `PARENT`/`DAYCARE_OWNER`
@@ -382,29 +440,34 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Next:** Task #45 (Branding), #46 (Content), #47 (Hydration)
 
 ### 2026-02-03 (Session 23 — Production Audit)
+
 - **Полный аудит production сайта toddlerhq.com**
 - **КРИТИЧЕСКИЕ ПРОБЛЕМЫ найдены:**
 
 #### 1. Брендинг НЕ обновлён (Phase 1 не выполнена)
-| Место | Текущее | Должно быть |
-|-------|---------|-------------|
-| Логотип | "K KinderCare" | "DocConnect" |
-| Page titles | "KinderCare" | "DocConnect" |
-| Footer | "© 2026 KinderCare" | "© 2026 DocConnect" |
-| Контент | "ToddlerHQ" (смешано!) | "DocConnect" |
+
+| Место       | Текущее                | Должно быть         |
+| ----------- | ---------------------- | ------------------- |
+| Логотип     | "K KinderCare"         | "DocConnect"        |
+| Page titles | "KinderCare"           | "DocConnect"        |
+| Footer      | "© 2026 KinderCare"    | "© 2026 DocConnect" |
+| Контент     | "ToddlerHQ" (смешано!) | "DocConnect"        |
 
 #### 2. Контент НЕ обновлён для медицины
+
 - Всё ещё "Find Daycares", "childcare", "parents", "families"
 - Должно быть: "Find Doctors", "healthcare", "patients"
 
 #### 3. Функциональность НЕ РАБОТАЕТ
-| Функция | Статус | Ошибка |
-|---------|--------|--------|
-| Регистрация | ❌ | "Registration failed" |
-| Логин | ❌ | "Invalid email or password" |
-| Поиск | ❌ | Пусто + React error #418 |
+
+| Функция     | Статус | Ошибка                      |
+| ----------- | ------ | --------------------------- |
+| Регистрация | ❌     | "Registration failed"       |
+| Логин       | ❌     | "Invalid email or password" |
+| Поиск       | ❌     | Пусто + React error #418    |
 
 #### 4. База данных
+
 - Seed data НЕ загружен в production
 - Нет пользователей и провайдеров
 
@@ -412,11 +475,13 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Приоритет:** #44 (auth) → #45 (branding) → #46 (content) → #47 (hydration)
 
 #### Прогресс по Task #44 (Auth Fix):
+
 - ✅ Добавлен `DIRECT_URL` в Vercel production env vars
 - ⏳ **Следующий шаг:** `npx prisma db push` для синхронизации схемы с production БД
 - ⏳ Затем: загрузка seed data (опционально)
 
 ### 2026-02-03 (Session 22 — DocConnect Migration FINALIZED)
+
 - **Phase 4: All remaining files committed — COMPLETED**
 - **Lint warnings fixed:** 30 → 0
   - Удалены неиспользуемые импорты (Clock, Users, ArrowUpRight, Eye, useState, etc.)
@@ -445,6 +510,7 @@ dev branch → Test on Vercel Preview → main branch → Production
   - Ручное тестирование основных flow
 
 ### 2026-02-03 (Session 21 — DocConnect Migration Phase 4 COMPLETE)
+
 - **Phase 4: Fix TypeScript build errors — COMPLETED**
 - **Build прошёл успешно!** `npm run build` без ошибок TypeScript
 - **Изменения терминологии (завершены):**
@@ -456,6 +522,7 @@ dev branch → Test on Vercel Preview → main branch → Production
   - `isTelemedicine` → `isTelehealth`
 
 ### 2026-02-02 (Session 20 — DocConnect Migration Phase 4)
+
 - **Миграция ToddlerHQ → DocConnect — IN PROGRESS**
 - **Выполнено в предыдущей сессии:**
   - Фаза 2: База данных (Prisma schema) — DONE
@@ -473,6 +540,7 @@ dev branch → Test on Vercel Preview → main branch → Production
   ```
   Type error: Property 'daycareStaff' does not exist on type 'PrismaClient'
   ```
+
   - Некоторые portal pages всё ещё используют `db.daycareStaff` вместо `db.providerStaff`
   - Также нужно заменить `include: { daycare: {...} }` на `include: { provider: {...} }`
 - **Файлы для исправления (завтра):**
@@ -486,6 +554,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** Исправить оставшиеся ошибки билда, продолжить Phase 4
 
 ### 2026-02-02 (Session 19 — CodeRabbit Review)
+
 - **CodeRabbit Review Fixes — COMPLETED**
 - Fixed 11 issues found by CodeRabbit:
   - **Major:** Created `GoBackButton` client component (not-found.tsx used javascript:)
@@ -504,6 +573,7 @@ dev branch → Test on Vercel Preview → main branch → Production
   - Check knowledge.md patterns BEFORE coding
 
 ### 2026-02-02 (Session 19 continued)
+
 - **Navigation Link Audit — COMPLETED**
 - Found and fixed 3 broken links:
   1. `/parent/children/${id}/edit` → `/dashboard/children/${id}/edit` (child-card.tsx)
@@ -513,6 +583,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - Total pages now: **64**
 
 ### 2026-02-02 (Session 19)
+
 - **Task #42: Create 17 Missing Pages — COMPLETED**
 - Created all missing pages that were linked from navigation, buttons, and CTA elements:
   - **Phase 1: Critical (Navigation)**
@@ -546,6 +617,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Lint verified:** No new errors (only pre-existing warnings)
 
 ### 2026-02-02 (Session 18)
+
 - **Documentation Sync — COMPLETED**
 - Обновлены файлы документации для соответствия реальному состоянию проекта:
   - **CLAUDE.md:**
@@ -558,6 +630,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - Проект деплоится как монолит на https://www.toddlerhq.com
 
 ### 2026-02-02 (Session 17)
+
 - **Task #41: Полный рефакторинг согласно Best Practices — COMPLETED**
 - Реализованы все 7 фаз рефакторинга:
   - **Фаза 1: Централизованный ActionResult**
@@ -597,6 +670,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Общая оценка проекта:** 7.7/10 → 9.0/10
 
 ### 2026-01-31 (Session 16)
+
 - **Architecture Audit & Roadmap Update — COMPLETED**
 - Проведён полный аудит Admin и Portal секций:
   - **Что хорошо:** Route groups, Server Components, separation of concerns, auth в layout
@@ -613,6 +687,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** Task #29 (Zod validation) или Task #30 (Error boundaries)
 
 ### 2026-01-31 (Session 15)
+
 - **Button/Link Accessibility Audit — COMPLETED**
 - Проверены все компоненты на соответствие best practices:
   - **External links:** Добавлен `rel="noopener noreferrer"` в:
@@ -632,6 +707,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** Все основные задачи завершены
 
 ### 2026-01-31 (Session 14 continued)
+
 - **Task #14: Analytics Dashboard — COMPLETED**
 - Implemented comprehensive analytics system:
   - **Prisma Models:**
@@ -662,6 +738,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** All main tasks complete. Push notifications (11.5) deferred.
 
 ### 2026-01-31 (Session 14)
+
 - **Task #11: Mobile PWA — COMPLETED**
 - Implemented Progressive Web App with offline support:
   - **PWA Manifest** (`public/site.webmanifest`):
@@ -690,8 +767,8 @@ dev branch → Test on Vercel Preview → main branch → Production
     disable: process.env.NODE_ENV === "development",
     register: true,
     cacheOnFrontEndNav: true,
-    workboxOptions: { skipWaiting: true, clientsClaim: true }
-  })
+    workboxOptions: { skipWaiting: true, clientsClaim: true },
+  });
   ```
 - **Icon Generation** (`scripts/generate-pwa-icons.js`):
   - Uses sharp library to generate PNG icons from SVG source
@@ -701,6 +778,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** Task #14 (Analytics Dashboard)
 
 ### 2026-01-31 (Session 13)
+
 - **Git Workflow Established:**
   - dev branch для разработки
   - Vercel preview для тестирования
@@ -713,6 +791,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** Тестирование OAuth на production
 
 ### 2026-01-31 (Session 12 continued)
+
 - **Task #27: Trusted Device for 2FA — COMPLETED**
 - Implemented "Trust this device" feature:
   - Device fingerprinting: SHA256(user-agent + accept-language)
@@ -742,6 +821,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** Task #11 (PWA), #14 (Analytics)
 
 ### 2026-01-31 (Session 12)
+
 - **Task #25: 2FA for OAuth Logins — COMPLETED**
 - Implemented cookie-based 2FA session verification:
   - `set2FASessionVerified(userId)` — устанавливает httpOnly cookie с 24h TTL
@@ -762,6 +842,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** Task #11 (PWA), #14 (Analytics)
 
 ### 2026-01-30 (Session 11)
+
 - **Sitemap & Navigation Documentation — COMPLETED**
 - Создана полная дорожная карта проекта по best practices:
   - **Источники:** NN/g, Slickplan, IxDF, LogRocket, Aten Design
@@ -792,6 +873,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** Использовать sitemap при добавлении новых страниц
 
 ### 2026-01-30 (Session 10)
+
 - **Task #13: Security Enhancements — COMPLETED**
 - Implemented 5 security features:
   - **Two-Factor Authentication (2FA)**
@@ -853,6 +935,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** Task #11 (PWA), #12 (Verification), #14 (Analytics), #25 (OAuth 2FA)
 
 ### 2026-01-30 (Session 9)
+
 - **Authentication Validation — COMPLETED**
   - Google OAuth fully working with custom PrismaAdapter
   - Fixed firstName/lastName mapping from OAuth profile
@@ -872,6 +955,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** Task #11 (PWA), #13 (Security), #14 (Analytics)
 
 ### 2026-01-30 (Session 8)
+
 - **Task #12: Verification System — COMPLETED**
   - Prisma models: `VerificationRequest`, `VerificationDocument`
   - Enum: `VerificationStatus` (PENDING, IN_REVIEW, APPROVED, REJECTED)
@@ -899,6 +983,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** Task #11 (PWA), #13 (Security), #14 (Analytics)
 
 ### 2026-01-30 (Session 7)
+
 - **Real-time Messaging TESTED & WORKING**
 - Исправлены проблемы:
   - DATABASE_URL в Vercel указывал на старую VPS БД (212.74.231.49)
@@ -951,6 +1036,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** Task #11-14 (PWA, Verification, Security, Analytics)
 
 ### 2026-01-30 (Session 6)
+
 - **Task #8: Search Improvements — COMPLETED**
   - Mapbox GL map view with markers/popups
   - Geolocation search (Haversine formula, radius filter)
@@ -979,6 +1065,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** Task #11-14 (PWA, Verification, Security, Analytics)
 
 ### 2026-01-30 (Session 5)
+
 - **Infrastructure Sprint — ALL TASKS COMPLETED**
 - **PostgreSQL мигрирован на Supabase**
   - Transaction Pooler (port 6543) для runtime
@@ -1013,7 +1100,7 @@ dev branch → Test on Vercel Preview → main branch → Production
   - #20: Email queue (QStash, 3 retries)
   - #21: Webhook idempotency (WebhookEvent table)
   - #22: Redis caching layer (notifications count)
-  - #23: SQL aggregation (groupBy + _avg instead of in-memory)
+  - #23: SQL aggregation (groupBy + \_avg instead of in-memory)
   - #24: Health endpoint (/api/health)
 - Новые файлы:
   - `src/lib/rate-limit.ts`
@@ -1032,6 +1119,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** Task #8-14 (features) или deploy
 
 ### 2026-01-29 (Session 4)
+
 - **Task #7: Waitlist System — COMPLETED**
 - Завершены все 4 подзадачи:
   - 7.1: Waitlist join button на заполненных садах
@@ -1048,6 +1136,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** Task #8-14
 
 ### 2026-01-29 (Session 3)
+
 - **Task #2: Enhance Daycare Portal — COMPLETED**
 - Завершены все 7 подзадач:
   - 2.1: Profile editor (basic info, contact, location, capacity)
@@ -1109,6 +1198,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - **Следующее:** Task #7 — Waitlist System
 
 ### 2026-01-29 (Session 2)
+
 - **Task #1: Admin Panel — COMPLETED**
 - Завершены все 6 подзадач:
   - 1.4: Daycare moderation (approve/reject/suspend/reactivate/delete/featured)
@@ -1118,6 +1208,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 - Обновлён CLAUDE.md с новым workflow для задач
 
 ### 2026-01-29 (Session 1)
+
 - Создана система задач в `.tasks/`
 - Начата работа над Admin Panel (#1)
 - Готово: layout, sidebar, dashboard, user management (3/6 подзадач)
@@ -1127,6 +1218,7 @@ dev branch → Test on Vercel Preview → main branch → Production
 ## Quick Reference
 
 ### Создать новую страницу в admin
+
 ```bash
 # 1. Создать page.tsx
 touch src/app/(admin)/admin/[feature]/page.tsx
@@ -1136,17 +1228,20 @@ touch src/app/(admin)/admin/[feature]/page.tsx
 ```
 
 ### Проверить типы
+
 ```bash
 npm run build  # TypeScript check
 ```
 
 ### Deploy
+
 ```bash
 vercel --prod          # Production
 vercel                 # Preview (auto for PRs)
 ```
 
 ### Staging Environment
+
 ```bash
 # 1. Create staging branch
 git checkout -b staging
