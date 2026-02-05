@@ -10,6 +10,7 @@ import {
   MessageSquare,
   Settings,
   Search,
+  Home,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notifications/notification-bell";
@@ -50,12 +51,20 @@ export function ParentSidebar({ user, notificationCount = 0 }: ParentSidebarProp
       }}
       headerSlot={<NotificationBell initialCount={notificationCount} />}
       footerSlot={
-        <Button variant="ghost" className="w-full justify-start" asChild>
-          <Link href="/search">
-            <Search className="mr-2 h-4 w-4" />
-            Find Providers
-          </Link>
-        </Button>
+        <div className="space-y-1">
+          <Button variant="ghost" className="w-full justify-start" asChild>
+            <Link href="/search">
+              <Search className="mr-2 h-4 w-4" />
+              Find Providers
+            </Link>
+          </Button>
+          <Button variant="ghost" className="w-full justify-start" asChild>
+            <Link href="/">
+              <Home className="mr-2 h-4 w-4" />
+              Back to Home
+            </Link>
+          </Button>
+        </div>
       }
       basePath="/dashboard"
     />
